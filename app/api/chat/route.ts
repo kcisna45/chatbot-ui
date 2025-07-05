@@ -1,27 +1,24 @@
+// app/api/chat/route.ts
 import { NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
 export async function POST(req: Request) {
 const body = await req.json();
-const { model, messages, temperature } = body;
+const { messages } = body;
 
-const response = await fetch(process.env.NEXT_PUBLIC_BACKEND_URL!, {
-method: 'POST',
-headers: {
-'Content-Type': 'application/json',
-'Authorization': `Bearer ${process.env.NEXT_PUBLIC_API_KEY!}`,
-},
-body: JSON.stringify({
-model,
-messages,
-temperature,
-}),
-});
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-if (!response.ok) {
-const errorText = await response.text();
-return NextResponse.json({ error: errorText }, { status: response.status });
+const { data, error } = await supabase
+.from('messages')
+.insert([{ content: JSON.stringify(messages), role: 'user' }]);
+
+if (error) {
+console.error(error);
+return NextResponse.json({ error: error.message }, { status: 500 });
 }
 
-const data = await response.json();
-return NextResponse.json(data);
+return NextResponse.json({ result: 'Message saved to Supabase!', data });
 }
