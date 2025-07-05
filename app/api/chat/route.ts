@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 
 export async function POST(req: Request) {
+console.log("OPENAI_API_KEY:", process.env.OPENAI_API_KEY);
+
 const body = await req.json();
 const { messages } = body;
 
