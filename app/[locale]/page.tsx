@@ -1,28 +1,34 @@
-"use client"
+"use client";
 
-import { ChatbotUISVG } from "@/components/icons/chatbotui-svg"
-import { IconArrowRight } from "@tabler/icons-react"
-import { useTheme } from "next-themes"
-import Link from "next/link"
+import { ChatbotUISVG } from "@/components/icons/chatbotui-svg";
+import { IconArrowRight } from "@tabler/icons-react";
+import { useTheme } from "next-themes";
+import Link from "next/link";
+import Chat from "@/components/Chat"; // Import your Chat component
 
 export default function HomePage() {
-  const { theme } = useTheme()
+const { theme } = useTheme();
 
-  return (
-    <div className="flex size-full flex-col items-center justify-center">
-      <div>
-        <ChatbotUISVG theme={theme === "dark" ? "dark" : "light"} scale={0.3} />
-      </div>
+return (
+<div className="flex flex-col items-center justify-center min-h-screen p-4">
+<div>
+<ChatbotUISVG theme={theme === "dark" ? "dark" : "light"} scale={0.3} />
+</div>
 
-      <div className="mt-2 text-4xl font-bold">Chatbot UI</div>
+<h1 className="mt-2 text-4xl font-bold">Chatbot UI</h1>
 
-      <Link
-        className="mt-4 flex w-[200px] items-center justify-center rounded-md bg-blue-500 p-2 font-semibold"
-        href="/login"
-      >
-        Start Chatting
-        <IconArrowRight className="ml-1" size={20} />
-      </Link>
-    </div>
-  )
+{/* Chat UI inserted here */}
+<div className="w-full max-w-3xl mt-6">
+<Chat />
+</div>
+
+<Link
+href="/login"
+className="mt-6 flex w-[200px] items-center justify-center rounded-md bg-blue-500 p-2 font-semibold text-white"
+>
+Start Chatting
+<IconArrowRight className="ml-1" size={20} />
+</Link>
+</div>
+);
 }
