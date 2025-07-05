@@ -1,24 +1,27 @@
-// app/api/chat/route.ts
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
 export async function POST(req: Request) {
 const body = await req.json();
 const { messages } = body;
 
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+const response = await fetch("https://api.openai.com/v1/chat/completions", {
+method: "POST",
+headers: {
+"Content-Type": "application/json",
+"Authorization": `Bearer ${process.env.OPENAI_API_KEY}`,
+},
+body: JSON.stringify({
+model: "gpt-3.5-turbo", // or gpt-4 if your key supports it
+messages,
+temperature: 0.7,
+}),
+});
 
-const { data, error } = await supabase
-.from('messages')
-.insert([{ content: JSON.stringify(messages), role: 'user' }]);
-
-if (error) {
-console.error(error);
-return NextResponse.json({ error: error.message }, { status: 500 });
+if (!response.ok) {
+const errorText = await response.text();
+return NextResponse.json({ error: errorText }, { status: response.status });
 }
 
-return NextResponse.json({ result: 'Message saved to Supabase!', data });
+const data = await response.json();
+return NextResponse.json({ result: data.choices[0].message.content });
 }
