@@ -1,6 +1,33 @@
 import Chat from "@/components/Chat";
+import { cookies } from "next/headers";
+import { createServerClient } from "@supabase/ssr";
+import { Database } from "@/supabase/types";
+import { redirect } from "next/navigation";
 
-export default function ChatPage() {
+export default async function ChatPage() {
+const cookieStore = cookies();
+
+const supabase = createServerClient<Database>(
+process.env.NEXT_PUBLIC_SUPABASE_URL!,
+process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+{
+cookies: {
+get(name: string) {
+return cookieStore.get(name)?.value;
+},
+},
+}
+);
+
+const {
+data: { session },
+} = await supabase.auth.getSession();
+
+if (!session) {
+// Not logged in — redirect to login page
+return redirect("/login");
+}
+
 return (
 <main className="flex flex-col h-screen">
 <header className="p-4 shadow bg-white">
