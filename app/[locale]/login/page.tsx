@@ -1,109 +1,82 @@
-import { Brand } from "@/components/ui/brand"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { SubmitButton } from "@/components/ui/submit-button"
-import { createClient } from "@/lib/supabase/server"
-import { Database } from "@/supabase/types"
-import { createServerClient } from "@supabase/ssr"
-import { get } from "@vercel/edge-config"
-import { Metadata } from "next"
-import { cookies, headers } from "next/headers"
-import { redirect } from "next/navigation"
+import { Brand } from "@/components/ui/brand";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { SubmitButton } from "@/components/ui/submit-button";
+import { createClient } from "@/lib/supabase/server";
+import { Database } from "@/supabase/types";
+import { createServerClient } from "@supabase/ssr";
+import { get } from "@vercel/edge-config";
+import { Metadata } from "next";
+import { cookies, headers } from "next/headers";
+import { redirect } from "next/navigation";
 
 export const metadata: Metadata = {
-title: "Login"
-}
+title: "Login",
+};
 
 export default async function Login({
-searchParams
+searchParams,
 }: {
-searchParams: { message: string }
+searchParams: { message: string };
 }) {
-const cookieStore = cookies()
+const cookieStore = cookies();
 const supabase = createServerClient<Database>(
 process.env.NEXT_PUBLIC_SUPABASE_URL!,
 process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
 {
 cookies: {
 get(name: string) {
-return cookieStore.get(name)?.value
+return cookieStore.get(name)?.value;
+},
+},
 }
-}
-}
-)
-const session = (await supabase.auth.getSession()).data.session
+);
+
+const session = (await supabase.auth.getSession()).data.session;
 
 if (session) {
-const { data: homeWorkspace, error } = await supabase
+let { data: homeWorkspace, error: homeWorkspaceError } = await supabase
 .from("workspaces")
 .select("*")
 .eq("user_id", session.user.id)
 .eq("is_home", true)
-.single()
+.single();
 
 if (!homeWorkspace) {
-throw new Error(error.message)
+const { data: newWorkspace, error: createError } = await supabase
+.from("workspaces")
+.insert([{ user_id: session.user.id, is_home: true, name: "Home Workspace" }])
+.select()
+.single();
+
+if (!newWorkspace || createError) {
+throw new Error(
+createError?.message ||
+homeWorkspaceError?.message ||
+"Failed to create home workspace"
+);
 }
 
-return redirect(`/${homeWorkspace.id}/chat`)
+homeWorkspace = newWorkspace;
+}
+
+return redirect(`/${homeWorkspace.id}/chat`);
 }
 
 const handleOAuthLogin = async () => {
-"use server"
+"use server";
 
-const origin = headers().get("origin")
-const cookieStore = cookies()
-const supabase = createClient(cookieStore)
+const origin = headers().get("origin");
+const cookieStore = cookies();
+const supabase = createClient(cookieStore);
 
 await supabase.auth.signInWithOAuth({
-provider: 'google',
+provider: "google",
 options: {
-redirectTo: `${origin}/auth/callback`
-}
-})
-}
-
-const signIn = async (formData: FormData) => {
-"use server"
-
-const email = formData.get("email") as string
-const password = formData.get("password") as string
-const cookieStore = cookies()
-const supabase = createClient(cookieStore)
-
-const { data, error } = await supabase.auth.signInWithPassword({
-email,
-password
-})
-
-if (error) {
-return redirect(`/login?message=${error.message}`)
-}
-
-const { data: homeWorkspace, error: homeWorkspaceError } = await supabase
-.from("workspaces")
-.select("*")
-.eq("user_id", data.user.id)
-.eq("is_home", true)
-.single()
-
-if (!homeWorkspace) {
-throw new Error(
-homeWorkspaceError?.message || "An unexpected error occurred"
-)
-}
-
-return redirect(`/${homeWorkspace.id}/chat`)
-}
-
-const getEnvVarOrEdgeConfigValue = async (name: string) => {
-"use server"
-if (process.env.EDGE_CONFIG) {
-return await get<string>(name)
-}
-
-return process.env[name]
-}
+redirectTo: `${origin}/auth/callback`,
+},
+});
+};
 
 const signIn = async (formData: FormData) => {
 "use server";
@@ -122,7 +95,6 @@ if (error) {
 return redirect(`/login?message=${encodeURIComponent(error.message)}`);
 }
 
-// Look for existing home workspace
 let { data: homeWorkspace, error: homeWorkspaceError } = await supabase
 .from("workspaces")
 .select("*")
@@ -130,7 +102,6 @@ let { data: homeWorkspace, error: homeWorkspaceError } = await supabase
 .eq("is_home", true)
 .single();
 
-// If none exists, create it
 if (!homeWorkspace) {
 const { data: newWorkspace, error: createError } = await supabase
 .from("workspaces")
@@ -140,7 +111,9 @@ const { data: newWorkspace, error: createError } = await supabase
 
 if (!newWorkspace || createError) {
 throw new Error(
-createError?.message || homeWorkspaceError?.message || "Failed to create home workspace"
+createError?.message ||
+homeWorkspaceError?.message ||
+"Failed to create home workspace"
 );
 }
 
@@ -150,27 +123,24 @@ homeWorkspace = newWorkspace;
 return redirect(`/${homeWorkspace.id}/chat`);
 };
 
-return redirect("/setup")
-}
-
 const handleResetPassword = async (formData: FormData) => {
-"use server"
+"use server";
 
-const origin = headers().get("origin")
-const email = formData.get("email") as string
-const cookieStore = cookies()
-const supabase = createClient(cookieStore)
+const origin = headers().get("origin");
+const email = formData.get("email") as string;
+const cookieStore = cookies();
+const supabase = createClient(cookieStore);
 
 const { error } = await supabase.auth.resetPasswordForEmail(email, {
-redirectTo: `${origin}/auth/callback?next=/login/password`
-})
+redirectTo: `${origin}/auth/callback?next=/login/password`,
+});
 
 if (error) {
-return redirect(`/login?message=${error.message}`)
+return redirect(`/login?message=${error.message}`);
 }
 
-return redirect("/login?message=Check email to reset password")
-}
+return redirect("/login?message=Check email to reset password");
+};
 
 return (
 <div className="flex w-full flex-1 flex-col justify-center gap-2 px-8 sm:max-w-md">
@@ -204,13 +174,6 @@ placeholder="••••••••"
 Login
 </SubmitButton>
 
-<SubmitButton
-formAction={signUp}
-className="border-foreground/20 mb-2 rounded-md border px-4 py-2"
->
-Sign Up
-</SubmitButton>
-
 <div className="text-muted-foreground mt-1 flex justify-center text-sm">
 <span className="mr-1">Forgot your password?</span>
 <button
@@ -237,5 +200,6 @@ Continue with Google
 </SubmitButton>
 </form>
 </div>
-)
+);
 }
+
