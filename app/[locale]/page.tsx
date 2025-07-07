@@ -5,9 +5,26 @@ import { IconArrowRight } from "@tabler/icons-react";
 import { useTheme } from "next-themes";
 import Link from "next/link";
 import Chat from "@/components/Chat"; // Import your Chat component
+import { useEffect } from "react";
+import { supabase } from "@/lib/supabase/browser-client";
 
 export default function HomePage() {
 const { theme } = useTheme();
+
+useEffect(() => {
+const params = new URLSearchParams(window.location.search);
+const accessToken = params.get("access_token");
+const refreshToken = params.get("refresh_token");
+
+if (accessToken && refreshToken) {
+supabase.auth.setSession({
+access_token: accessToken,
+refresh_token: refreshToken,
+});
+// Optional: remove tokens from URL
+window.history.replaceState({}, document.title, window.location.pathname);
+}
+}, []);
 
 return (
 <div className="flex flex-col items-center justify-center min-h-screen p-4">
