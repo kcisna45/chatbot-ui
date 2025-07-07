@@ -91,6 +91,8 @@ email,
 password,
 });
 
+console.log("signIn result", data, error);
+  
 if (error) {
 return redirect(`/login?message=${encodeURIComponent(error.message)}`);
 }
