@@ -105,46 +105,50 @@ return await get<string>(name)
 return process.env[name]
 }
 
-const signUp = async (formData: FormData) => {
-"use server"
+const signIn = async (formData: FormData) => {
+"use server";
 
-const email = formData.get("email") as string
-const password = formData.get("password") as string
+const email = formData.get("email") as string;
+const password = formData.get("password") as string;
+const cookieStore = cookies();
+const supabase = createClient(cookieStore);
 
-const emailDomainWhitelistPatternsString = await getEnvVarOrEdgeConfigValue(
-"EMAIL_DOMAIN_WHITELIST"
-)
-const emailDomainWhitelist = emailDomainWhitelistPatternsString?.trim()
-? emailDomainWhitelistPatternsString?.split(",")
-: []
-const emailWhitelistPatternsString =
-await getEnvVarOrEdgeConfigValue("EMAIL_WHITELIST")
-const emailWhitelist = emailWhitelistPatternsString?.trim()
-? emailWhitelistPatternsString?.split(",")
-: []
-
-if (emailDomainWhitelist.length > 0 || emailWhitelist.length > 0) {
-const domainMatch = emailDomainWhitelist?.includes(email.split("@")[1])
-const emailMatch = emailWhitelist?.includes(email)
-if (!domainMatch && !emailMatch) {
-return redirect(
-`/login?message=Email ${email} is not allowed to sign up.`
-)
-}
-}
-
-const cookieStore = cookies()
-const supabase = createClient(cookieStore)
-
-const { error } = await supabase.auth.signUp({
+const { data, error } = await supabase.auth.signInWithPassword({
 email,
-password
-})
+password,
+});
 
 if (error) {
-console.error(error)
-return redirect(`/login?message=${error.message}`)
+return redirect(`/login?message=${encodeURIComponent(error.message)}`);
 }
+
+// Look for existing home workspace
+let { data: homeWorkspace, error: homeWorkspaceError } = await supabase
+.from("workspaces")
+.select("*")
+.eq("user_id", data.user.id)
+.eq("is_home", true)
+.single();
+
+// If none exists, create it
+if (!homeWorkspace) {
+const { data: newWorkspace, error: createError } = await supabase
+.from("workspaces")
+.insert([{ user_id: data.user.id, is_home: true, name: "Home Workspace" }])
+.select()
+.single();
+
+if (!newWorkspace || createError) {
+throw new Error(
+createError?.message || homeWorkspaceError?.message || "Failed to create home workspace"
+);
+}
+
+homeWorkspace = newWorkspace;
+}
+
+return redirect(`/${homeWorkspace.id}/chat`);
+};
 
 return redirect("/setup")
 }
