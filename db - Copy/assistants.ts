@@ -6,10 +6,10 @@ export const getAssistantById = async (assistantId: string) => {
     .from("assistants")
     .select("*")
     .eq("id", assistantId)
-    .maybeSingle()
+    .single()
 
-  if (!assistant || error) {
-    throw new Error(error?.message || "Assistant not found")
+  if (!assistant) {
+    throw new Error(error.message)
   }
 
   return assistant
@@ -22,16 +22,16 @@ export const getAssistantWorkspacesByWorkspaceId = async (
     .from("workspaces")
     .select(
       `
-id,
-name,
-assistants (*)
-`
+      id,
+      name,
+      assistants (*)
+    `
     )
     .eq("id", workspaceId)
-    .maybeSingle()
+    .single()
 
-  if (!workspace || error) {
-    throw new Error(error?.message || "Workspace not found")
+  if (!workspace) {
+    throw new Error(error.message)
   }
 
   return workspace
@@ -44,16 +44,16 @@ export const getAssistantWorkspacesByAssistantId = async (
     .from("assistants")
     .select(
       `
-id,
-name,
-workspaces (*)
-`
+      id, 
+      name, 
+      workspaces (*)
+    `
     )
     .eq("id", assistantId)
-    .maybeSingle()
+    .single()
 
-  if (!assistant || error) {
-    throw new Error(error?.message || "Assistant not found")
+  if (!assistant) {
+    throw new Error(error.message)
   }
 
   return assistant
@@ -146,10 +146,10 @@ export const updateAssistant = async (
     .update(assistant)
     .eq("id", assistantId)
     .select("*")
-    .maybeSingle()
+    .single()
 
-  if (!updatedAssistant || error) {
-    throw new Error(error?.message || "Failed to update assistant")
+  if (error) {
+    throw new Error(error.message)
   }
 
   return updatedAssistant
