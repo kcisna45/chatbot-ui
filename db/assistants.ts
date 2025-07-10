@@ -2,183 +2,183 @@ import { supabase } from "@/lib/supabase/browser-client"
 import { TablesInsert, TablesUpdate } from "@/supabase/types"
 
 export const getAssistantById = async (assistantId: string) => {
-  const { data: assistant, error } = await supabase
-    .from("assistants")
-    .select("*")
-    .eq("id", assistantId)
-    .single()
+const { data: assistant, error } = await supabase
+.from("assistants")
+.select("*")
+.eq("id", assistantId)
+.maybeSingle()
 
-  if (!assistant) {
-    throw new Error(error.message)
-  }
+if (!assistant || error) {
+throw new Error(error?.message || "Assistant not found")
+}
 
-  return assistant
+return assistant
 }
 
 export const getAssistantWorkspacesByWorkspaceId = async (
-  workspaceId: string
+workspaceId: string
 ) => {
-  const { data: workspace, error } = await supabase
-    .from("workspaces")
-    .select(
-      `
-      id,
-      name,
-      assistants (*)
-    `
-    )
-    .eq("id", workspaceId)
-    .single()
+const { data: workspace, error } = await supabase
+.from("workspaces")
+.select(
+`
+id,
+name,
+assistants (*)
+`
+)
+.eq("id", workspaceId)
+.maybeSingle()
 
-  if (!workspace) {
-    throw new Error(error.message)
-  }
+if (!workspace || error) {
+throw new Error(error?.message || "Workspace not found")
+}
 
-  return workspace
+return workspace
 }
 
 export const getAssistantWorkspacesByAssistantId = async (
-  assistantId: string
+assistantId: string
 ) => {
-  const { data: assistant, error } = await supabase
-    .from("assistants")
-    .select(
-      `
-      id, 
-      name, 
-      workspaces (*)
-    `
-    )
-    .eq("id", assistantId)
-    .single()
+const { data: assistant, error } = await supabase
+.from("assistants")
+.select(
+`
+id,
+name,
+workspaces (*)
+`
+)
+.eq("id", assistantId)
+.maybeSingle()
 
-  if (!assistant) {
-    throw new Error(error.message)
-  }
+if (!assistant || error) {
+throw new Error(error?.message || "Assistant not found")
+}
 
-  return assistant
+return assistant
 }
 
 export const createAssistant = async (
-  assistant: TablesInsert<"assistants">,
-  workspace_id: string
+assistant: TablesInsert<"assistants">,
+workspace_id: string
 ) => {
-  const { data: createdAssistant, error } = await supabase
-    .from("assistants")
-    .insert([assistant])
-    .select("*")
-    .single()
+const { data: createdAssistant, error } = await supabase
+.from("assistants")
+.insert([assistant])
+.select("*")
+.single()
 
-  if (error) {
-    throw new Error(error.message)
-  }
+if (error) {
+throw new Error(error.message)
+}
 
-  await createAssistantWorkspace({
-    user_id: createdAssistant.user_id,
-    assistant_id: createdAssistant.id,
-    workspace_id
-  })
+await createAssistantWorkspace({
+user_id: createdAssistant.user_id,
+assistant_id: createdAssistant.id,
+workspace_id
+})
 
-  return createdAssistant
+return createdAssistant
 }
 
 export const createAssistants = async (
-  assistants: TablesInsert<"assistants">[],
-  workspace_id: string
+assistants: TablesInsert<"assistants">[],
+workspace_id: string
 ) => {
-  const { data: createdAssistants, error } = await supabase
-    .from("assistants")
-    .insert(assistants)
-    .select("*")
+const { data: createdAssistants, error } = await supabase
+.from("assistants")
+.insert(assistants)
+.select("*")
 
-  if (error) {
-    throw new Error(error.message)
-  }
+if (error) {
+throw new Error(error.message)
+}
 
-  await createAssistantWorkspaces(
-    createdAssistants.map(assistant => ({
-      user_id: assistant.user_id,
-      assistant_id: assistant.id,
-      workspace_id
-    }))
-  )
+await createAssistantWorkspaces(
+createdAssistants.map(assistant => ({
+user_id: assistant.user_id,
+assistant_id: assistant.id,
+workspace_id
+}))
+)
 
-  return createdAssistants
+return createdAssistants
 }
 
 export const createAssistantWorkspace = async (item: {
-  user_id: string
-  assistant_id: string
-  workspace_id: string
+user_id: string
+assistant_id: string
+workspace_id: string
 }) => {
-  const { data: createdAssistantWorkspace, error } = await supabase
-    .from("assistant_workspaces")
-    .insert([item])
-    .select("*")
-    .single()
+const { data: createdAssistantWorkspace, error } = await supabase
+.from("assistant_workspaces")
+.insert([item])
+.select("*")
+.single()
 
-  if (error) {
-    throw new Error(error.message)
-  }
+if (error) {
+throw new Error(error.message)
+}
 
-  return createdAssistantWorkspace
+return createdAssistantWorkspace
 }
 
 export const createAssistantWorkspaces = async (
-  items: { user_id: string; assistant_id: string; workspace_id: string }[]
+items: { user_id: string; assistant_id: string; workspace_id: string }[]
 ) => {
-  const { data: createdAssistantWorkspaces, error } = await supabase
-    .from("assistant_workspaces")
-    .insert(items)
-    .select("*")
+const { data: createdAssistantWorkspaces, error } = await supabase
+.from("assistant_workspaces")
+.insert(items)
+.select("*")
 
-  if (error) throw new Error(error.message)
+if (error) throw new Error(error.message)
 
-  return createdAssistantWorkspaces
+return createdAssistantWorkspaces
 }
 
 export const updateAssistant = async (
-  assistantId: string,
-  assistant: TablesUpdate<"assistants">
+assistantId: string,
+assistant: TablesUpdate<"assistants">
 ) => {
-  const { data: updatedAssistant, error } = await supabase
-    .from("assistants")
-    .update(assistant)
-    .eq("id", assistantId)
-    .select("*")
-    .single()
+const { data: updatedAssistant, error } = await supabase
+.from("assistants")
+.update(assistant)
+.eq("id", assistantId)
+.select("*")
+.maybeSingle()
 
-  if (error) {
-    throw new Error(error.message)
-  }
+if (!updatedAssistant || error) {
+throw new Error(error?.message || "Failed to update assistant")
+}
 
-  return updatedAssistant
+return updatedAssistant
 }
 
 export const deleteAssistant = async (assistantId: string) => {
-  const { error } = await supabase
-    .from("assistants")
-    .delete()
-    .eq("id", assistantId)
+const { error } = await supabase
+.from("assistants")
+.delete()
+.eq("id", assistantId)
 
-  if (error) {
-    throw new Error(error.message)
-  }
+if (error) {
+throw new Error(error.message)
+}
 
-  return true
+return true
 }
 
 export const deleteAssistantWorkspace = async (
-  assistantId: string,
-  workspaceId: string
+assistantId: string,
+workspaceId: string
 ) => {
-  const { error } = await supabase
-    .from("assistant_workspaces")
-    .delete()
-    .eq("assistant_id", assistantId)
-    .eq("workspace_id", workspaceId)
+const { error } = await supabase
+.from("assistant_workspaces")
+.delete()
+.eq("assistant_id", assistantId)
+.eq("workspace_id", workspaceId)
 
-  if (error) throw new Error(error.message)
+if (error) throw new Error(error.message)
 
-  return true
+return true
 }
