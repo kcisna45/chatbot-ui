@@ -2,70 +2,89 @@ import { supabase } from "@/lib/supabase/browser-client"
 import { TablesInsert, TablesUpdate } from "@/supabase/types"
 
 export const getProfileByUserId = async (userId: string) => {
-  const { data: profile, error } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("user_id", userId)
-    .single()
+console.log("🪵 getProfileByUserId called with:", userId);
 
-  if (!profile) {
-    throw new Error(error.message)
-  }
+const { data: profile, error } = await supabase
+.from("profiles")
+.select("*")
+.eq("user_id", userId)
+.single()
 
-  return profile
+if (!profile) {
+throw new Error(error?.message || `No profile found for user_id: ${userId}`)
+}
+
+return profile
 }
 
 export const getProfilesByUserId = async (userId: string) => {
-  const { data: profiles, error } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("user_id", userId)
+console.log("🪵 getProfilesByUserId called with:", userId);
 
-  if (!profiles) {
-    throw new Error(error.message)
-  }
+const { data: profiles, error } = await supabase
+.from("profiles")
+.select("*")
+.eq("user_id", userId)
 
-  return profiles
+if (!profiles) {
+throw new Error(error?.message || `No profiles found for user_id: ${userId}`)
+}
+
+return profiles
 }
 
 export const createProfile = async (profile: TablesInsert<"profiles">) => {
-  const { data: createdProfile, error } = await supabase
-    .from("profiles")
-    .insert([profile])
-    .select("*")
-    .single()
+console.log("🪵 createProfile called with:", profile);
 
-  if (error) {
-    throw new Error(error.message)
-  }
+const { data: createdProfile, error } = await supabase
+.from("profiles")
+.insert([profile])
+.select("*")
+.single()
 
-  return createdProfile
+if (error) {
+throw new Error(error.message)
+}
+
+return createdProfile
 }
 
 export const updateProfile = async (
-  profileId: string,
-  profile: TablesUpdate<"profiles">
+profileId: string,
+profile: TablesUpdate<"profiles">
 ) => {
-  const { data: updatedProfile, error } = await supabase
-    .from("profiles")
-    .update(profile)
-    .eq("id", profileId)
-    .select("*")
-    .single()
+console.log("🪵 updateProfile called with:", profileId, profile);
 
-  if (error) {
-    throw new Error(error.message)
-  }
+const { data: updatedProfile, error } = await supabase
+.from("profiles")
+.update(profile)
+.eq("id", profileId)
+.select("*")
+.single()
 
-  return updatedProfile
+if (error) {
+throw new Error(error.message)
+}
+
+return updatedProfile
 }
 
 export const deleteProfile = async (profileId: string) => {
-  const { error } = await supabase.from("profiles").delete().eq("id", profileId)
+console.log("🪵 deleteProfile called with:", profileId);
 
-  if (error) {
-    throw new Error(error.message)
-  }
+const { error } = await supabase
+.from("profiles")
+.delete()
+.eq("id", profileId)
 
-  return true
+if (error) {
+throw new Error(error.message)
 }
+
+return true
+}
+
+
+
+
+
+
