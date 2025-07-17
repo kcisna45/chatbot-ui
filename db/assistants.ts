@@ -15,40 +15,58 @@ throw new Error(error?.message || "Assistant not found")
 return assistant
 }
 
-export const getAssistantWorkspacesByWorkspaceId = async (workspaceId: string) => {
-const { data, error } = await supabase
-.from("assistant_workspaces")
-.select(`
+export const getAssistantWorkspacesByWorkspaceId = async (
+workspaceId: string
+) => {
+const { data: workspace, error } = await supabase
+.from("workspaces")
+.select(
+`
+id,
+name,
+assistant_workspaces (
 id,
 assistant_id,
-workspace_id,
-assistants(*)
-`)
-.eq("workspace_id", workspaceId)
+user_id,
+created_at
+)
+`
+)
+.eq("id", workspaceId)
+.maybeSingle()
 
-if (!data || error) {
-throw new Error(error?.message || "No assistants found for workspace")
+if (!workspace || error) {
+throw new Error(error?.message || "Workspace not found")
 }
 
-return data
+return workspace
 }
 
-export const getAssistantWorkspacesByAssistantId = async (assistantId: string) => {
-const { data, error } = await supabase
-.from("assistant_workspaces")
-.select(`
+export const getAssistantWorkspacesByAssistantId = async (
+assistantId: string
+) => {
+const { data: assistant, error } = await supabase
+.from("assistants")
+.select(
+`
 id,
-assistant_id,
+name,
+assistant_workspaces (
+id,
 workspace_id,
-workspaces(*)
-`)
-.eq("assistant_id", assistantId)
+user_id,
+created_at
+)
+`
+)
+.eq("id", assistantId)
+.maybeSingle()
 
-if (!data || error) {
-throw new Error(error?.message || "No workspaces found for assistant")
+if (!assistant || error) {
+throw new Error(error?.message || "Assistant not found")
 }
 
-return data
+return assistant
 }
 
 export const createAssistant = async (
