@@ -1,4 +1,4 @@
-import { supabase } from "@/lib/supabaseClient"
+import { supabase } from "@/lib/supabase/Client"
 import { Tables, TablesInsert, TablesUpdate } from "@/supabase/types"
 
 export async function createChat(newChat: TablesInsert<"chats">) {
