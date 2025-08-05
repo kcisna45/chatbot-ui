@@ -6,11 +6,9 @@ import type { ThemeProviderProps } from "next-themes/dist/types"
 import { FC } from "react"
 
 export const Providers: FC<ThemeProviderProps> = ({ children, ...props }) => {
-return (
-<NextThemesProvider {...props}>
-<TooltipProvider>
-{children}
-</TooltipProvider>
-</NextThemesProvider>
-)
+  return (
+    <NextThemesProvider {...props}>
+      <TooltipProvider>{children}</TooltipProvider>
+    </NextThemesProvider>
+  )
 }
