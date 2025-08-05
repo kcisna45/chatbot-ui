@@ -31,6 +31,30 @@ setChatId(null)
 }
 
 // Create a new chat session on backend
+const handleCreateChat = async () => {
+  try {
+    const res = await fetch("/api/create-chat", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      }
+    })
+
+    if (!res.ok) {
+      throw new Error("Failed to create new chat")
+    }
+
+    const data = await res.json()
+    const newChatId = data.chatId
+
+    setMessages([])
+    setChatId(newChatId)
+    setInput("")
+  } catch (error) {
+    console.error("Error creating new chat:", error)
+  }
+}
+
 const handleCreateChat = async (): Promise<string | null> => {
 try {
 const response = await fetch("/api/chat/create", {
