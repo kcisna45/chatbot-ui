@@ -23,26 +23,10 @@ export default function Chat() {
     scrollToBottom()
   }, [messages])
 
-  // Reset chat state to start fresh
   const handleNewChat = () => {
     setMessages([])
     setInput("")
     setChatId(null)
-  }
-
-      if (!res.ok) {
-        throw new Error("Failed to create new chat")
-      }
-
-      const data = await res.json()
-      const newChatId = data.chatId
-
-      setMessages([])
-      setChatId(newChatId)
-      setInput("")
-    } catch (error) {
-      console.error("Error creating new chat:", error)
-    }
   }
 
   const handleCreateChat = async (): Promise<string | null> => {
@@ -51,15 +35,6 @@ export default function Chat() {
         method: "POST"
       })
       if (!response.ok) throw new Error("Failed to create chat session")
-
-      const handleCreateChat = () => {
-        const newMessage = {
-          id: crypto.randomUUID(),
-          role: "user",
-          content: "New chat started."
-        }
-        setMessages([newMessage])
-      }
 
       const data = await response.json()
       setChatId(data.chatId)
@@ -76,10 +51,8 @@ export default function Chat() {
 
     let currentChatId = chatId
     if (!currentChatId) {
-      // Create new chat session if none exists
       currentChatId = await handleCreateChat()
       if (!currentChatId) {
-        // Failed to create chat, show error message
         setMessages(prev => [
           ...prev,
           {
@@ -198,8 +171,9 @@ export default function Chat() {
           className="rounded-r bg-blue-500 px-4 py-2 text-white disabled:opacity-50"
         >
           {isLoading ? "Sending..." : "Send"}
-        </button>
+      </button>
       </form>
     </div>
   )
 }
+
