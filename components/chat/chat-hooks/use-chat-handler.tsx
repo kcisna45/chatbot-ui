@@ -1,51 +1,57 @@
 "use client"
 
-import { ChatMessage } from "@/types"
+import { ChatMessage, Chat } from "@/types"
 import { useState } from "react"
 import { v4 as uuidv4 } from "uuid"
 import { useChatStore } from "@/providers/chat-store"
 import { useMessageHandler } from "@/lib/hooks/use-message-handler"
-import { useChats } from "@/lib/hooks/use-chats"
 import { useMessages } from "@/lib/hooks/use-messages"
 
 export const useChatHandler = () => {
   const { currentChat, setCurrentChat, setChats } = useChatStore()
   const { setChatMessages } = useMessageHandler()
-  const { handleCreateChat } = useChats()
   const { handleCreateMessages } = useMessages()
   const [isTyping, setIsTyping] = useState(false)
 
-const handleFocusChatInput = () => {
-  const inputElement = document.querySelector("input");
-  if (inputElement) {
-    inputElement.focus();
+  const handleCreateChat = (initialMessage?: string): Chat => {
+    const newChat: Chat = {
+      id: uuidv4(),
+      title: initialMessage ? initialMessage.slice(0, 20) : "New Chat",
+      messages: [],
+    }
+
+    setChats((prev) => [newChat, ...prev])
+    setCurrentChat(newChat)
+    return newChat
   }
-};
-  
+
+  const handleFocusChatInput = () => {
+    const inputElement = document.querySelector("input")
+    if (inputElement) {
+      inputElement.focus()
+    }
+  }
+
   const handleSendMessage = async (
     messageContent: string,
     chatMessages: ChatMessage[],
     isRegeneration: boolean
   ) => {
-    // 🚀 Step 1: Confirm the function is firing
     console.log("🚀 handleSendMessage triggered:", {
       messageContent,
       chatMessages,
       isRegeneration
     })
 
-    if (!currentChat) {
-      const chat = await handleCreateChat(messageContent)
-      if (!chat) return
-      setCurrentChat(chat)
-      setChats(prev => [chat, ...prev])
-    }
+    let activeChat = currentChat
 
-    if (!currentChat) return
+    if (!activeChat) {
+      activeChat = handleCreateChat(messageContent)
+    }
 
     const userMessage: ChatMessage = {
       id: uuidv4(),
-      chat_id: currentChat.id,
+      chat_id: activeChat.id,
       content: messageContent,
       role: "user",
       created_at: new Date().toISOString()
@@ -53,20 +59,16 @@ const handleFocusChatInput = () => {
 
     const updatedMessages = [...chatMessages, userMessage]
 
-    // 🧠 Step 2: Log the messages before generation
-    console.log(
-      "🧠 Setting chat messages (before generation):",
-      updatedMessages
-    )
+    console.log("🧠 Setting chat messages (before generation):", updatedMessages)
 
     setChatMessages(updatedMessages)
     setIsTyping(true)
 
-    const generatedText = "This is a placeholder response from the AI." // <-- Replace with your generateText() call if needed
+    const generatedText = "This is a placeholder response from the AI."
 
     const assistantMessage: ChatMessage = {
       id: uuidv4(),
-      chat_id: currentChat.id,
+      chat_id: activeChat.id,
       content: generatedText,
       role: "assistant",
       created_at: new Date().toISOString()
@@ -74,15 +76,13 @@ const handleFocusChatInput = () => {
 
     const finalMessages = [...updatedMessages, assistantMessage]
 
-    // 🧠 Step 3: Log the messages after assistant response
     console.log("🧠 Setting chat messages (final):", finalMessages)
 
     setChatMessages(finalMessages)
     setIsTyping(false)
 
-    // 📨 Step 4: Log before saving to DB
     console.log("📨 Creating messages with:", {
-      currentChat,
+      activeChat,
       messageContent,
       generatedText,
       chatMessagesLength: chatMessages.length
@@ -92,8 +92,9 @@ const handleFocusChatInput = () => {
   }
 
   return {
+    handleCreateChat,
     handleFocusChatInput,
     handleSendMessage,
-    isTyping
+    isTyping,
   }
 }
