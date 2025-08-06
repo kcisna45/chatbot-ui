@@ -17,10 +17,10 @@ export const useChatHandler = () => {
     const newChat: Chat = {
       id: uuidv4(),
       title: initialMessage ? initialMessage.slice(0, 20) : "New Chat",
-      messages: [],
+      messages: []
     }
 
-    setChats((prev) => [newChat, ...prev])
+    setChats(prev => [newChat, ...prev])
     setCurrentChat(newChat)
     return newChat
   }
@@ -59,7 +59,10 @@ export const useChatHandler = () => {
 
     const updatedMessages = [...chatMessages, userMessage]
 
-    console.log("🧠 Setting chat messages (before generation):", updatedMessages)
+    console.log(
+      "🧠 Setting chat messages (before generation):",
+      updatedMessages
+    )
 
     setChatMessages(updatedMessages)
     setIsTyping(true)
@@ -95,6 +98,6 @@ export const useChatHandler = () => {
     handleCreateChat,
     handleFocusChatInput,
     handleSendMessage,
-    isTyping,
+    isTyping
   }
 }

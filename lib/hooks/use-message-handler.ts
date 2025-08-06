@@ -14,6 +14,6 @@ export const useMessageHandler = () => {
 
   return {
     setChatMessages,
-    handleIncomingMessage,
+    handleIncomingMessage
   }
 }
