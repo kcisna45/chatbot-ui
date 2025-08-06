@@ -15,6 +15,13 @@ export const useChatHandler = () => {
   const { handleCreateMessages } = useMessages()
   const [isTyping, setIsTyping] = useState(false)
 
+const handleFocusChatInput = () => {
+  const inputElement = document.querySelector("input");
+  if (inputElement) {
+    inputElement.focus();
+  }
+};
+  
   const handleSendMessage = async (
     messageContent: string,
     chatMessages: ChatMessage[],
@@ -85,6 +92,7 @@ export const useChatHandler = () => {
   }
 
   return {
+    handleFocusChatInput,
     handleSendMessage,
     isTyping
   }
