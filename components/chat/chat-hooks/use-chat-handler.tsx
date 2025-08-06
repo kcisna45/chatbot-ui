@@ -67,7 +67,23 @@ export const useChatHandler = () => {
     setChatMessages(updatedMessages)
     setIsTyping(true)
 
-    const generatedText = "This is a placeholder response from the AI."
+    let generatedText = ""
+
+    try {
+      const response = await fetch("/api/generate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ messages: updatedMessages })
+      })
+
+      const data = await response.json()
+      generatedText = data.reply
+    } catch (error) {
+      console.error("Failed to get AI response:", error)
+      generatedText = "⚠️ Sorry, I couldn't get a response from the AI."
+    }
 
     const assistantMessage: ChatMessage = {
       id: uuidv4(),
