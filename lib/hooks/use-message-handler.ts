@@ -6,12 +6,14 @@ export const useMessageHandler = () => {
   const setChatMessages = (messages) => {
     setMessages(messages)
   }
-  
+
+    const handleIncomingMessage: (message: any) => {
+      console.log("Mock handler received message:", message)
+}
+
   return {
     SetChatMesssages,
     handleIncomeingMessage,
-  const handleIncomingMessage: (message: any) => {
-      console.log("Mock handler received message:", message)
     }
   }
 }
