@@ -8,7 +8,7 @@ export const useMessageHandler = () => {
   }
   
   return {
-    SeChatMesssages,
+    SetChatMesssages,
     handleIncomeingMessage,
   const handleIncomingMessage: (message: any) => {
       console.log("Mock handler received message:", message)
