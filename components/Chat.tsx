@@ -62,6 +62,15 @@ method: "POST"
 })
 if (!response.ok) throw new Error("Failed to create chat session")
 
+const handleCreateChat = () => {
+const newMessage = {
+id: crypto.randomUUID(),
+role: "user",
+content: "New chat started.",
+};
+setMessages([newMessage]);
+};
+
 const data = await response.json()
 setChatId(data.chatId)
 return data.chatId
@@ -152,7 +161,13 @@ disabled={isLoading}
 >
 New Chat
 </button>
-
+<button
+type="button"
+onClick={handleCreateChat}
+className="mb-4 rounded bg-green-500 px-4 py-2 text-white hover:bg-green-600"
+>
+New Chat
+</button>
 <div className="mb-4 flex-1 overflow-y-auto rounded border bg-white p-4">
 {messages.length === 0 && (
 <p className="text-center text-gray-500">Start the conversation...</p>
