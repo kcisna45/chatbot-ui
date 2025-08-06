@@ -7,7 +7,7 @@ export const useMessageHandler = () => {
     setMessages(messages)
   }
 
-    const handleIncomingMessage: (message: any) => {
+  const handleIncomingMessage: (message: any) => {
       console.log("Mock handler received message:", message)
 }
 
