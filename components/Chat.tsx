@@ -12,7 +12,6 @@ export default function Chat() {
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState("")
   const [isLoading, setIsLoading] = useState(false)
-  const [chatId, setChatId] = useState<string | null>(null)
   const messagesEndRef = useRef<HTMLDivElement | null>(null)
 
   const scrollToBottom = () => {
@@ -26,45 +25,11 @@ export default function Chat() {
   const handleNewChat = () => {
     setMessages([])
     setInput("")
-    setChatId(null)
-  }
-
-  const handleCreateChat = async (): Promise<string | null> => {
-    try {
-      const response = await fetch("/api/chat/create", {
-        method: "POST"
-      })
-      if (!response.ok) throw new Error("Failed to create chat session")
-
-      const data = await response.json()
-      setChatId(data.chatId)
-      return data.chatId
-    } catch (error) {
-      console.error("Error creating chat:", error)
-      return null
-    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!input.trim()) return
-
-    let currentChatId = chatId
-    if (!currentChatId) {
-      currentChatId = await handleCreateChat()
-      if (!currentChatId) {
-        setMessages(prev => [
-          ...prev,
-          {
-            id: crypto.randomUUID(),
-            role: "assistant",
-            content:
-              "Unable to start a new chat session. Please try again later."
-          }
-        ])
-        return
-      }
-    }
 
     const userMessage: Message = {
       id: crypto.randomUUID(),
@@ -77,13 +42,12 @@ export default function Chat() {
     setIsLoading(true)
 
     try {
-      const response = await fetch("/api/chat/", {
+      const response = await fetch("/api/chat", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          chatId: currentChatId,
           messages: [...messages, userMessage].map(({ role, content }) => ({
             role,
             content
@@ -96,6 +60,7 @@ export default function Chat() {
       }
 
       const data = await response.json()
+
       const assistantMessage: Message = {
         id: crypto.randomUUID(),
         role: "assistant",
@@ -125,13 +90,7 @@ export default function Chat() {
       >
         New Chat
       </button>
-      <button
-        type="button"
-        onClick={handleCreateChat}
-        className="mb-4 rounded bg-green-500 px-4 py-2 text-white hover:bg-green-600"
-      >
-        New Chat
-      </button>
+
       <div className="mb-4 flex-1 overflow-y-auto rounded border bg-white p-4">
         {messages.length === 0 && (
           <p className="text-center text-gray-500">Start the conversation...</p>
