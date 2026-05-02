@@ -1,3 +1,4 @@
+"use client"
 import Loading from "@/app/[locale]/loading"
 import { useChatHandler } from "@/components/chat/chat-hooks/use-chat-handler"
 import { ChatbotUIContext } from "@/context/context"
@@ -5,7 +6,7 @@ import { getAssistantToolsByAssistantId } from "@/db/assistant-tools"
 import { getChatFilesByChatId } from "@/db/chat-files"
 import { getChatById } from "@/db/chats"
 import { getMessageFileItemsByMessageId } from "@/db/message-file-items"
-import { getMessagesByChatId } from "@/db/messages"
+import { getMessagesByChat } from "@/db/messages"
 import { getMessageImageFromStorage } from "@/db/storage/message-images"
 import { convertBlobToBase64 } from "@/lib/blob-to-b64"
 import useHotkey from "@/lib/hooks/use-hotkey"
@@ -77,7 +78,7 @@ export const ChatUI: FC<ChatUIProps> = ({}) => {
   }, [])
 
   const fetchMessages = async () => {
-    const fetchedMessages = await getMessagesByChatId(params.chatid as string)
+    const fetchedMessages = await getMessagesByChat(params.chatid as string)
 
     const imagePromises: Promise<MessageImage>[] = fetchedMessages.flatMap(
       message =>
