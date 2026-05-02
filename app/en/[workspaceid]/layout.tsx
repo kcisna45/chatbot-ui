@@ -1,183 +1,120 @@
-"use client"
-
-import { Dashboard } from "@/components/ui/dashboard"
-import { ChatbotUIContext } from "@/context/context"
-import { getAssistantWorkspacesByWorkspaceId } from "@/db/assistants"
-import { getChatsByWorkspaceId } from "@/db/chats"
-import { getCollectionWorkspacesByWorkspaceId } from "@/db/collections"
-import { getFileWorkspacesByWorkspaceId } from "@/db/files"
-import { getFoldersByWorkspaceId } from "@/db/folders"
-import { getModelWorkspacesByWorkspaceId } from "@/db/models"
-import { getPresetWorkspacesByWorkspaceId } from "@/db/presets"
-import { getPromptWorkspacesByWorkspaceId } from "@/db/prompts"
-import { getAssistantImageFromStorage } from "@/db/storage/assistant-images"
-import { getToolWorkspacesByWorkspaceId } from "@/db/tools"
-import { getWorkspaceById } from "@/db/workspaces"
-import { convertBlobToBase64 } from "@/lib/blob-to-b64"
-import { supabase } from "@/lib/supabase/browser-client"
-import { LLMID } from "@/types"
-import { useParams, useRouter, useSearchParams } from "next/navigation"
-import { ReactNode, useContext, useEffect, useState } from "react"
-import Loading from "../loading"
-
-interface WorkspaceLayoutProps {
-  children: ReactNode
-}
-
-export default function WorkspaceLayout({ children }: WorkspaceLayoutProps) {
-  const router = useRouter()
-
-  const params = useParams()
-  const searchParams = useSearchParams()
-  const workspaceId = params.workspaceid as string
-
-  const {
-    setChatSettings,
-    setAssistants,
-    setAssistantImages,
-    setChats,
-    setCollections,
-    setFolders,
-    setFiles,
-    setPresets,
-    setPrompts,
-    setTools,
-    setModels,
-    selectedWorkspace,
-    setSelectedWorkspace,
-    setSelectedChat,
-    setChatMessages,
-    setUserInput,
-    setIsGenerating,
-    setFirstTokenReceived,
-    setChatFiles,
-    setChatImages,
-    setNewMessageFiles,
-    setNewMessageImages,
-    setShowFilesDisplay
-  } = useContext(ChatbotUIContext)
-
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    ;(async () => {
-      const session = (await supabase.auth.getSession()).data.session
-
-      if (!session) {
-        return router.push("/login")
-      } else {
-        await fetchWorkspaceData(workspaceId)
+;[
+  {
+    resource: "/c:/Users/kcisn/chatbot-ui/app/en/[workspaceid]/layout.tsx",
+    owner: "typescript",
+    code: "18047",
+    severity: 8,
+    message: "'params' is possibly 'null'.",
+    source: "ts",
+    startLineNumber: 31,
+    startColumn: 21,
+    endLineNumber: 31,
+    endColumn: 27,
+    origin: "extHost1"
+  },
+  {
+    resource: "/c:/Users/kcisn/chatbot-ui/app/en/[workspaceid]/layout.tsx",
+    owner: "typescript",
+    code: "2345",
+    severity: 8,
+    message:
+      "Argument of type 'SelectQueryError<\"column 'id' does not exist on 'assistant_workspaces'.\">[]' is not assignable to parameter of type 'SetStateAction<{ context_length: number; created_at: string; description: string; embeddings_provider: string; folder_id: string | null; id: string; image_path: string; include_profile_context: boolean; ... 7 more ...; user_id: string; }[]>'.\n  Type 'SelectQueryError<\"column 'id' does not exist on 'assistant_workspaces'.\">[]' is not assignable to type '{ context_length: number; created_at: string; description: string; embeddings_provider: string; folder_id: string | null; id: string; image_path: string; include_profile_context: boolean; ... 7 more ...; user_id: string; }[]'.\n    Type '{ error: true; } & String' is missing the following properties from type '{ context_length: number; created_at: string; description: string; embeddings_provider: string; folder_id: string | null; id: string; image_path: string; include_profile_context: boolean; ... 7 more ...; user_id: string; }': context_length, created_at, description, embeddings_provider, and 12 more.",
+    source: "ts",
+    startLineNumber: 90,
+    startColumn: 15,
+    endLineNumber: 90,
+    endColumn: 49,
+    origin: "extHost1"
+  },
+  {
+    resource: "/c:/Users/kcisn/chatbot-ui/app/en/[workspaceid]/layout.tsx",
+    owner: "typescript",
+    code: "2339",
+    severity: 8,
+    message:
+      "Property 'image_path' does not exist on type 'SelectQueryError<\"column 'id' does not exist on 'assistant_workspaces'.\">'.",
+    source: "ts",
+    startLineNumber: 93,
+    startColumn: 16,
+    endLineNumber: 93,
+    endColumn: 26,
+    origin: "extHost1"
+  },
+  {
+    resource: "/c:/Users/kcisn/chatbot-ui/app/en/[workspaceid]/layout.tsx",
+    owner: "typescript",
+    code: "2339",
+    severity: 8,
+    message:
+      "Property 'image_path' does not exist on type 'SelectQueryError<\"column 'id' does not exist on 'assistant_workspaces'.\">'.",
+    source: "ts",
+    startLineNumber: 96,
+    startColumn: 59,
+    endLineNumber: 96,
+    endColumn: 69,
+    origin: "extHost1"
+  },
+  {
+    resource: "/c:/Users/kcisn/chatbot-ui/app/en/[workspaceid]/layout.tsx",
+    owner: "typescript",
+    code: "2339",
+    severity: 8,
+    message:
+      "Property 'id' does not exist on type 'SelectQueryError<\"column 'id' does not exist on 'assistant_workspaces'.\">'.",
+    source: "ts",
+    startLineNumber: 103,
+    startColumn: 24,
+    endLineNumber: 103,
+    endColumn: 26,
+    origin: "extHost1"
+  },
+  {
+    resource: "/c:/Users/kcisn/chatbot-ui/app/en/[workspaceid]/layout.tsx",
+    owner: "typescript",
+    code: "2339",
+    severity: 8,
+    message:
+      "Property 'image_path' does not exist on type 'SelectQueryError<\"column 'id' does not exist on 'assistant_workspaces'.\">'.",
+    source: "ts",
+    startLineNumber: 104,
+    startColumn: 17,
+    endLineNumber: 104,
+    endColumn: 27,
+    origin: "extHost1"
+  },
+  {
+    resource: "/c:/Users/kcisn/chatbot-ui/app/en/[workspaceid]/layout.tsx",
+    owner: "typescript",
+    code: "18047",
+    severity: 8,
+    message: "'searchParams' is possibly 'null'.",
+    source: "ts",
+    startLineNumber: 126,
+    startColumn: 9,
+    endLineNumber: 126,
+    endColumn: 21,
+    origin: "extHost1"
+  },
+  {
+    resource: "/c:/Users/kcisn/chatbot-ui/app/en/[workspaceid]/layout.tsx",
+    owner: "eslint1",
+    code: {
+      value: "react-hooks/exhaustive-deps",
+      target: {
+        $mid: 1,
+        path: "/facebook/react/issues/14920",
+        scheme: "https",
+        authority: "github.com"
       }
-    })()
-  }, [])
-
-  useEffect(() => {
-    ;(async () => await fetchWorkspaceData(workspaceId))()
-
-    setUserInput("")
-    setChatMessages([])
-    setSelectedChat(null)
-
-    setIsGenerating(false)
-    setFirstTokenReceived(false)
-
-    setChatFiles([])
-    setChatImages([])
-    setNewMessageFiles([])
-    setNewMessageImages([])
-    setShowFilesDisplay(false)
-  }, [workspaceId])
-
-  const fetchWorkspaceData = async (workspaceId: string) => {
-    setLoading(true)
-
-    const workspace = await getWorkspaceById(workspaceId)
-    setSelectedWorkspace(workspace)
-
-    const assistantData = await getAssistantWorkspacesByWorkspaceId(workspaceId)
-    setAssistants(assistantData.assistant_workspaces)
-
-    for (const assistant of assistantData.assistant_workspaces) {
-      let url = ""
-
-      if (assistant.image_path) {
-        url = (await getAssistantImageFromStorage(assistant.image_path)) || ""
-      }
-
-      if (url) {
-        const response = await fetch(url)
-        const blob = await response.blob()
-        const base64 = await convertBlobToBase64(blob)
-
-        setAssistantImages(prev => [
-          ...prev,
-          {
-            assistantId: assistant.id,
-            path: assistant.image_path,
-            base64,
-            url
-          }
-        ])
-      } else {
-        setAssistantImages(prev => [
-          ...prev,
-          {
-            assistantId: assistant.id,
-            path: assistant.image_path,
-            base64: "",
-            url
-          }
-        ])
-      }
-    }
-
-    const chats = await getChatsByWorkspaceId(workspaceId)
-    setChats(chats)
-
-    const collectionData =
-      await getCollectionWorkspacesByWorkspaceId(workspaceId)
-    setCollections(collectionData.collections)
-
-    const folders = await getFoldersByWorkspaceId(workspaceId)
-    setFolders(folders)
-
-    const fileData = await getFileWorkspacesByWorkspaceId(workspaceId)
-    setFiles(fileData.files)
-
-    const presetData = await getPresetWorkspacesByWorkspaceId(workspaceId)
-    setPresets(presetData.presets)
-
-    const promptData = await getPromptWorkspacesByWorkspaceId(workspaceId)
-    setPrompts(promptData.prompts)
-
-    const toolData = await getToolWorkspacesByWorkspaceId(workspaceId)
-    setTools(toolData.tools)
-
-    const modelData = await getModelWorkspacesByWorkspaceId(workspaceId)
-    setModels(modelData.models)
-
-    setChatSettings({
-      model: (searchParams.get("model") ||
-        workspace?.default_model ||
-        "gpt-4-1106-preview") as LLMID,
-      prompt:
-        workspace?.default_prompt ||
-        "You are a friendly, helpful AI assistant.",
-      temperature: workspace?.default_temperature || 0.5,
-      contextLength: workspace?.default_context_length || 4096,
-      includeProfileContext: workspace?.include_profile_context || true,
-      includeWorkspaceInstructions:
-        workspace?.include_workspace_instructions || true,
-      embeddingsProvider:
-        (workspace?.embeddings_provider as "openai" | "local") || "openai"
-    })
-
-    setLoading(false)
+    },
+    severity: 4,
+    message:
+      "React Hook useEffect has a missing dependency: 'fetchWorkspaceData'. Either include it or remove the dependency array.",
+    source: "eslint",
+    startLineNumber: 81,
+    startColumn: 4,
+    endLineNumber: 81,
+    endColumn: 25,
+    origin: "extHost1"
   }
-
-  if (loading) {
-    return <Loading />
-  }
-
-  return <Dashboard>{children}</Dashboard>
-}
+]

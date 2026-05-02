@@ -1,3 +1,6 @@
+"use client"
+
+import React from "react"
 import { IconLoader2 } from "@tabler/icons-react"
 
 export default function Loading() {
