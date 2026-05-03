@@ -1,6 +1,6 @@
 "use client"
 
-import { supabase } from "@/lib/supabase/client"
+import { supabase } from "@/lib/supabase/fix"
 import { useParams, useRouter, useSearchParams } from "next/navigation"
 import { FC, ReactNode, useContext, useEffect, useState } from "react"
 import { ChatbotUIContext } from "@/context/context"

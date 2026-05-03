@@ -1,4 +1,4 @@
-import { supabase } from "@/lib/supabase/client"
+import { supabase } from "@/lib/supabase/fix"
 // Updated this path to ensure it matches your folder structure
 import { Tables, TablesInsert, TablesUpdate } from "@/types"
 
