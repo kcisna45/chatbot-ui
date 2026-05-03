@@ -1,19 +1,7 @@
-import React from "react"
+"use client"
+
 import { ChatUI } from "@/components/chat/chat-ui"
 
-interface PageProps {
-  params: { locale: string }
+export default function WorkspacePage() {
+  return <ChatUI />
 }
-
-const Page: React.FC<PageProps> = ({ params }) => {
-  const chatId = "chat-123"
-  const userId = "user-123"
-
-  return (
-    <div className="flex size-full flex-col">
-      <ChatUI chatId={chatId} userId={userId} />
-    </div>
-  )
-}
-
-export default Page
