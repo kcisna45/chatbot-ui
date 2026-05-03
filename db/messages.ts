@@ -1,4 +1,4 @@
-import { supabase } from "@/lib/supabase/Client"
+import { supabase } from "@/lib/supabase/client"
 import { Tables, TablesInsert, TablesUpdate } from "@/supabase/types"
 
 export async function createMessages(newMessages: TablesInsert<"messages">[]) {
