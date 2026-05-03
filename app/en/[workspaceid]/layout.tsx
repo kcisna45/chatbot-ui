@@ -26,9 +26,7 @@ const WorkspaceLayout: FC<WorkspaceLayoutProps> = ({ children }) => {
     // @ts-ignore - 'params' check
     const workspaceId = params?.workspaceid as string
 
-    const { data, error } = await supabase
-      .from("workspaces")
-      .select("*")
+    const { data, error } = await supabase.from("workspaces").select("*")
 
     if (error) {
       console.error(error)
@@ -38,7 +36,7 @@ const WorkspaceLayout: FC<WorkspaceLayoutProps> = ({ children }) => {
     if (data) {
       // @ts-ignore - schema mismatch bypass
       setWorkspaces(data)
-      
+
       // @ts-ignore - column id check
       const selectedWorkspace = data.find(w => w.id === workspaceId)
       if (selectedWorkspace) {

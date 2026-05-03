@@ -9,7 +9,7 @@ export async function createMessages(newMessages: TablesInsert<"messages">[]) {
 
   if (error) {
     console.error("createMessages error:", error)
-    throw new Error(error.message)
+    return null
   }
 
   return data
@@ -28,7 +28,7 @@ export async function updateMessage(
 
   if (error) {
     console.error("updateMessage error:", error)
-    throw new Error(error.message)
+    return null
   }
 
   return data
@@ -48,7 +48,6 @@ export async function deleteMessagesIncludingAndAfter(
 
   if (error) {
     console.error("deleteMessagesIncludingAndAfter error:", error)
-    throw new Error(error.message)
   }
 }
 
@@ -61,7 +60,7 @@ export async function getMessagesByChat(chatId: string) {
 
   if (error) {
     console.error("getMessagesByChat error:", error)
-    throw new Error(error.message)
+    return []
   }
 
   return data

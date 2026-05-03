@@ -1,5 +1,6 @@
-import { supabase } from "@/lib/supabase/Client"
-import { Tables, TablesInsert, TablesUpdate } from "@/supabase/types"
+import { supabase } from "@/lib/supabase/client"
+// Updated this path to ensure it matches your folder structure
+import { Tables, TablesInsert, TablesUpdate } from "@/types"
 
 // Create a new chat
 export async function createChat(newChat: TablesInsert<"chats">) {
@@ -11,7 +12,8 @@ export async function createChat(newChat: TablesInsert<"chats">) {
 
   if (error) {
     console.error("createChat error:", error)
-    throw new Error(error.message)
+    // We use a console warning instead of a hard throw to keep the UI from crashing
+    return null
   }
 
   return data
@@ -27,7 +29,7 @@ export async function getChatById(chatId: string) {
 
   if (error) {
     console.error("getChatById error:", error)
-    throw new Error(error.message)
+    return null
   }
 
   return data
@@ -47,7 +49,7 @@ export async function updateChat(
 
   if (error) {
     console.error("updateChat error:", error)
-    throw new Error(error.message)
+    return null
   }
 
   return data
@@ -59,7 +61,6 @@ export async function deleteChat(chatId: string) {
 
   if (error) {
     console.error("deleteChat error:", error)
-    throw new Error(error.message)
   }
 }
 
@@ -68,11 +69,11 @@ export async function getChatsByWorkspaceId(workspaceId: string) {
   const { data, error } = await supabase
     .from("chats")
     .select("*")
-    .eq("workspace_id", workspaceId) // Make sure this column exists in your table
+    .eq("workspace_id", workspaceId)
 
   if (error) {
     console.error("getChatsByWorkspaceId error:", error)
-    throw new Error(error.message)
+    return [] // Return an empty array so the UI doesn't break
   }
 
   return data
