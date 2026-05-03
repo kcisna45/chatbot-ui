@@ -1,5 +1,5 @@
 "use client"
-import Loading from "@/app/[locale]/loading"
+
 import { useChatHandler } from "@/components/chat/chat-hooks/use-chat-handler"
 import { ChatbotUIContext } from "@/context/context"
 import { getAssistantToolsByAssistantId } from "@/db/assistant-tools"
@@ -79,6 +79,7 @@ export const ChatUI: FC<ChatUIProps> = ({}) => {
 
   const fetchMessages = async () => {
     const fetchedMessages = await getMessagesByChat(params.chatid as string)
+    if (!fetchedMessages) return
 
     const imagePromises: Promise<MessageImage>[] = fetchedMessages.flatMap(
       message =>
@@ -183,7 +184,11 @@ export const ChatUI: FC<ChatUIProps> = ({}) => {
   }
 
   if (loading) {
-    return <Loading />
+    return (
+      <div className="flex h-full items-center justify-center">
+        Loading Chat...
+      </div>
+    )
   }
 
   return (
