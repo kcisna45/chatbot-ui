@@ -3,7 +3,12 @@ import { createClient } from "@supabase/supabase-js"
 import { OpenAIStream, StreamingTextResponse } from "ai"
 import { ServerRuntime } from "next"
 import OpenAI from "openai"
-import { ChatCompletionCreateParamsBase } from "openai/resources/chat/completions.mjs"
+
+type ChatCompletionCreateParamsBase = {
+  messages: any[]
+  model: string
+  stream?: boolean
+}
 
 export const runtime: ServerRuntime = "edge"
 
