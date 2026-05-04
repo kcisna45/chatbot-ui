@@ -1,13 +1,12 @@
 import Chat from "@/components/Chat"
 import { cookies } from "next/headers"
 import { createServerClient } from "@supabase/ssr"
-import { Database } from "@/supabase/types"
 import { redirect } from "next/navigation"
 
 export default async function ChatPage() {
   const cookieStore = cookies()
 
-  const supabase = createServerClient<Database>(
+  const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
