@@ -3,7 +3,12 @@ import { ChatSettings } from "@/types"
 import { OpenAIStream, StreamingTextResponse } from "ai"
 import { ServerRuntime } from "next"
 import OpenAI from "openai"
-import { ChatCompletionCreateParamsBase } from "openai/resources/chat/completions.mjs"
+
+type ChatCompletionCreateParamsBase = {
+  messages: any[]
+  model: string
+  stream?: boolean
+}
 
 export const runtime: ServerRuntime = "edge"
 
@@ -32,7 +37,7 @@ export async function POST(request: Request) {
       stream: true
     })
 
-    const stream = OpenAIStream(response)
+    const stream = OpenAIStream(response as any)
 
     return new StreamingTextResponse(stream)
   } catch (error: any) {
