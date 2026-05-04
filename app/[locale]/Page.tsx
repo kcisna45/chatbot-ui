@@ -14,7 +14,7 @@ const Page: React.FC<PageProps> = ({ params }) => {
 
   return (
     <div className="flex size-full flex-col">
-      <ChatUI chatId={chatId} userId={userId} />
+      <ChatUI />
     </div>
   )
 }
