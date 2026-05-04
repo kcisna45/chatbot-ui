@@ -11,7 +11,6 @@ import {
   fetchOpenRouterModels
 } from "@/lib/models/fetch-models"
 import { supabase } from "@/lib/supabase/browser-client"
-import { TablesUpdate } from "@/supabase/types"
 import { useRouter } from "next/navigation"
 import { useContext, useEffect, useState } from "react"
 import { APIStep } from "../../../components/setup/api-step"
@@ -120,7 +119,7 @@ export default function SetupPage() {
     const user = session.user
     const profile = await getProfileByUserId(user.id)
 
-    const updateProfilePayload: TablesUpdate<"profiles"> = {
+    const updateProfilePayload: any = {
       ...profile,
       has_onboarded: true,
       display_name: displayName,
