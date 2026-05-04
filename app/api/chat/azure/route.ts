@@ -2,7 +2,12 @@ import { checkApiKey, getServerProfile } from "@/lib/server/server-chat-helpers"
 import { ChatAPIPayload } from "@/types"
 import { OpenAIStream, StreamingTextResponse } from "ai"
 import OpenAI from "openai"
-import { ChatCompletionCreateParamsBase } from "openai/resources/chat/completions.mjs"
+
+type ChatCompletionCreateParamsBase = {
+  messages: any[]
+  model: string
+  stream?: boolean
+}
 
 export const runtime = "edge"
 
