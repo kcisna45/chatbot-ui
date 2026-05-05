@@ -126,7 +126,7 @@ export default function SetupPage() {
     if (!dbProfile) return
 
     const updateProfilePayload: any = {
-      ...fetchedProfile,
+      ...profile,
       has_onboarded: true,
       display_name: displayName,
       username,
