@@ -75,10 +75,10 @@ export default function SetupPage() {
           setUsername(fetchedProfile.username || "")
         }
 
-        if (!profile.has_onboarded) {
+        if (!fetchedProfile.has_onboarded) {
           setLoading(false)
         } else {
-          const data = await fetchHostedModels(profile)
+          const data = await fetchHostedModels(fetchedProfile)
 
           if (!data) return
 
@@ -123,7 +123,7 @@ export default function SetupPage() {
     if (!dbProfile) return
 
     const updateProfilePayload: any = {
-      ...profile,
+      ...fetchedProfile,
       has_onboarded: true,
       display_name: displayName,
       username,
