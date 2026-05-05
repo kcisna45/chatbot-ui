@@ -254,7 +254,6 @@ const RetrievalToggle = ({}) => {
   return (
     <div className="flex items-center">
       <WithTooltip
-        side="top"
         display={
           <div>
             {useRetrieval
