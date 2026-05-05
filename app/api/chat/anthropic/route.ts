@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const profile = await getServerProfile()
+    const profile = (await getServerProfile()) as any
 
     checkApiKey(profile.anthropic_api_key, "Anthropic")
 

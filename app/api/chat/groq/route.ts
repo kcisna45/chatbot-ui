@@ -13,7 +13,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const profile = await getServerProfile()
+    const profile = (await getServerProfile()) as any
 
     checkApiKey(profile.groq_api_key, "G")
 

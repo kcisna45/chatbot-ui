@@ -20,7 +20,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const profile = await getServerProfile()
+    const profile = (await getServerProfile()) as any
 
     checkApiKey(profile.openrouter_api_key, "OpenRouter")
 

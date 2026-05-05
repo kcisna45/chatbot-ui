@@ -12,7 +12,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const profile = await getServerProfile()
+    const profile = (await getServerProfile()) as any
 
     checkApiKey(profile.google_gemini_api_key, "Google")
 
