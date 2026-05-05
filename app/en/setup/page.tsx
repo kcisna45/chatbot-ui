@@ -85,7 +85,10 @@ export default function SetupPage() {
           setEnvKeyMap(data.envKeyMap)
           setAvailableHostedModels(data.hostedModels)
 
-          if (profile["openrouter_api_key"] || data.envKeyMap["openrouter"]) {
+          if (
+            fetchedProfile["openrouter_api_key"] ||
+            data.envKeyMap["openrouter"]
+          ) {
             const openRouterModels = await fetchOpenRouterModels()
             if (!openRouterModels) return
             setAvailableOpenRouterModels(openRouterModels)
