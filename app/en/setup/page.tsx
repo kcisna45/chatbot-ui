@@ -69,7 +69,7 @@ export default function SetupPage() {
       } else {
         const user = session.user
 
-        const fetchedprofile = await getProfileByUserId(user.id)
+        const fetchedProfile = await getProfileByUserId(user.id)
         if (fetchedProfile) {
           setProfile(fetchedProfile)
           setUsername(fetchedProfile.username || "")
@@ -119,7 +119,8 @@ export default function SetupPage() {
     }
 
     const user = session.user
-    const profile = await getProfileByUserId(user.id)
+    const dbProfile = await getProfileByUserId(user.id)
+    if (!dbProfile) return
 
     const updateProfilePayload: any = {
       ...profile,
