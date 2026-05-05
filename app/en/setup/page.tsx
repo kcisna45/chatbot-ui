@@ -122,11 +122,15 @@ export default function SetupPage() {
     }
 
     const user = session.user
-    const dbProfile = await getProfileByUserId(user.id)
-    if (!dbProfile) return
+    const dbProfile = await getProfileByUserId(user.id) // 1. Fetch it from DB
+
+    if (!dbProfile) {
+      // 2. Guard check to make TypeScript happy
+      return router.push("/login")
+    }
 
     const updateProfilePayload: any = {
-      ...profile,
+      ...dbProfile, // 3. Change 'profile' to 'dbProfile' here!
       has_onboarded: true,
       display_name: displayName,
       username,
@@ -147,10 +151,15 @@ export default function SetupPage() {
       azure_openai_embeddings_id: azureOpenaiEmbeddingsID
     }
 
-    const updatedProfile = await updateProfile(profile.id, updateProfilePayload)
+    // 4. Change 'profile.id' to 'dbProfile.id' here:
+    const updatedProfile = await updateProfile(
+      dbProfile.id,
+      updateProfilePayload
+    )
     setProfile(updatedProfile)
 
-    const workspaces = await getWorkspacesByUserId(profile.user_id)
+    // 5. Change 'profile.user_id' to 'dbProfile.user_id' here:
+    const workspaces = await getWorkspacesByUserId(dbProfile.user_id)
     const homeWorkspace = workspaces.find(w => w.is_home)
 
     // There will always be a home workspace
