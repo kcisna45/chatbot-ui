@@ -20,7 +20,7 @@ export async function POST(request: Request) {
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     )
 
-    const profile = await getServerProfile()
+    const profile = (await getServerProfile()) as any
 
     if (embeddingsProvider === "openai") {
       if (profile.use_azure_openai) {
