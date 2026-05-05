@@ -10,7 +10,7 @@ import {
   adaptMessagesForGoogleGemini
 } from "@/lib/build-prompt"
 import { consumeReadableStream } from "@/lib/consume-stream"
-import { Tables, TablesInsert } from "@/supabase/types"
+import { Tables } from "@/supabase/types"
 import {
   ChatFile,
   ChatMessage,
@@ -404,7 +404,7 @@ export const handleCreateMessages = async (
   setChatImages: React.Dispatch<React.SetStateAction<MessageImage[]>>,
   selectedAssistant: Tables<"assistants"> | null
 ) => {
-  const finalUserMessage: TablesInsert<"messages"> = {
+  const finalUserMessage: Partial<Tables<"messages">> = {
     chat_id: currentChat.id,
     assistant_id: null,
     user_id: profile.user_id,
