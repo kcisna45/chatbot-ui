@@ -40,7 +40,7 @@ export default function SetupPage() {
 
   // Profile Step
   const [displayName, setDisplayName] = useState("")
-  const [username, setUsername] = useState(profile?.username || "")
+  const [username, setUsername] = useState((profile as any)?.username || "")
   const [usernameAvailable, setUsernameAvailable] = useState(true)
 
   // API Step
@@ -69,9 +69,11 @@ export default function SetupPage() {
       } else {
         const user = session.user
 
-        const profile = await getProfileByUserId(user.id)
-        setProfile(profile)
-        setUsername(profile.username)
+        const fetchedprofile = await getProfileByUserId(user.id)
+        if (fetchedProfile) {
+          setProfile(fetchedProfile)
+          setUsername(fetchedProfile.username || "")
+        }
 
         if (!profile.has_onboarded) {
           setLoading(false)
