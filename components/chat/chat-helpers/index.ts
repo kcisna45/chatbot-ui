@@ -353,7 +353,7 @@ export const handleCreateChat = async (
   messageContent: string,
   selectedAssistant: any,
   newMessageFiles: ChatFile[],
-  setSelectedChat: React.Dispatch<React.SetStateAction<any> | null>>,
+  setSelectedChat: React.Dispatch<React.SetStateAction<any | null>>,
   setChats: React.Dispatch<React.SetStateAction<any[]>>,
   setChatFiles: React.Dispatch<React.SetStateAction<ChatFile[]>>
 ) => {
@@ -402,7 +402,6 @@ export const handleCreateMessages = async (
   setChatImages: React.Dispatch<React.SetStateAction<MessageImage[]>>,
   selectedAssistant: any | null
 ) => {
-
   const finalUserMessage: any = {
     chat_id: currentChat.id,
     assistant_id: null,
