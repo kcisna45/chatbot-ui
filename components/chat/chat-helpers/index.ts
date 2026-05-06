@@ -353,8 +353,8 @@ export const handleCreateChat = async (
   messageContent: string,
   selectedAssistant: any,
   newMessageFiles: ChatFile[],
-  setSelectedChat: React.Dispatch<React.SetStateAction<Tables<"chats"> | null>>,
-  setChats: React.Dispatch<React.SetStateAction<Tables<"chats">[]>>,
+  setSelectedChat: React.Dispatch<React.SetStateAction<any> | null>>,
+  setChats: React.Dispatch<React.SetStateAction<any[]>>,
   setChatFiles: React.Dispatch<React.SetStateAction<ChatFile[]>>
 ) => {
   const createdChat = await createChat({
