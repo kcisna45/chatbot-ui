@@ -111,7 +111,7 @@ export const FilePicker: FC<FilePickerProps> = ({
             </div>
           ) : (
             <>
-              {[...filteredFiles, ...filteredCollections].map((item, index) => (
+              {[...filteredFiles, ...filteredCollections].map((item: any, index: number) => (
                 <div
                   key={item.id}
                   ref={ref => {

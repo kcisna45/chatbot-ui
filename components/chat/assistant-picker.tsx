@@ -81,7 +81,7 @@ export const AssistantPicker: FC<AssistantPickerProps> = ({}) => {
             </div>
           ) : (
             <>
-              {filteredAssistants.map((item, index) => (
+              {filteredAssistants.map((item: any, index: number) => (
                 <div
                   key={item.id}
                   ref={ref => {

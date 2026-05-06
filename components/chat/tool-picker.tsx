@@ -79,7 +79,7 @@ export const ToolPicker: FC<ToolPickerProps> = ({}) => {
             </div>
           ) : (
             <>
-              {filteredTools.map((item, index) => (
+              {filteredTools.map((item: any, index: number) => (
                 <div
                   key={item.id}
                   ref={ref => {
