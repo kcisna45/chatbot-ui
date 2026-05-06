@@ -63,10 +63,12 @@ export const ChatFilesDisplay: FC<ChatFilesDisplayProps> = ({}) => {
   const combinedMessageFiles = [...messageImages, ...combinedChatFiles]
 
   const getLinkAndView = async (file: ChatFile) => {
-    const fileRecord = files.find((f: any) => f.id === file.id)
+    // 1. Add 'as any' to the end of the find result
+    const fileRecord = files.find((f: any) => f.id === file.id) as any
 
     if (!fileRecord) return
 
+    // 2. Now fileRecord.file_path will not throw an error
     const link = await getFileFromStorage(fileRecord.file_path)
     window.open(link, "_blank")
   }
@@ -156,7 +158,7 @@ export const ChatFilesDisplay: FC<ChatFilesDisplayProps> = ({}) => {
               </div>
             ))}
 
-            {combinedChatFiles.map((file, index) =>
+            {combinedChatFiles.map((file: any, index: number) =>
               file.id === "loading" ? (
                 <div
                   key={index}
