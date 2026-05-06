@@ -12,16 +12,17 @@ export const ChatMessages: FC<ChatMessagesProps> = ({}) => {
   // AUDIT FIX: Cast to 'any' to bypass missing property error for handleSendEdit
   const { handleSendEdit } = useChatHandler() as any
 
-  // AUDIT FIX: Use any to prevent strict Table constraint errors during state updates
+  // AUDIT FIX: Use any to prevent strict Table constraint errors
   const [editingMessage, setEditingMessage] = useState<any>()
 
   return chatMessages
     .sort((a, b) => a.message.sequence_number - b.message.sequence_number)
     .map((chatMessage, index, array) => {
+      // AUDIT FIX: Cast chatFileItem and item to 'any' to resolve the 'unknown' type error
       const messageFileItems = chatFileItems.filter(
-        (chatFileItem, _, self) =>
+        (chatFileItem: any, _, self: any[]) =>
           chatMessage.fileItems.includes(chatFileItem.id) &&
-          self.findIndex(item => item.id === chatFileItem.id) === _
+          self.findIndex((item: any) => item.id === chatFileItem.id) === _
       )
 
       return (
