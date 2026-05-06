@@ -27,7 +27,7 @@ export const AssistantPicker: FC<AssistantPickerProps> = ({}) => {
     }
   }, [focusAssistant])
 
-  const filteredAssistants = assistants.filter(assistant =>
+  const filteredAssistants = assistants.filter(assistant: any =>
     assistant.name.toLowerCase().includes(atCommand.toLowerCase())
   )
 
