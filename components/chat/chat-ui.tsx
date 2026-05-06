@@ -14,14 +14,21 @@ export const ChatUI: FC<ChatUIProps> = ({}) => {
   // AUDIT FIX: Cast hook to 'any' to bypass missing properties
   const { handleNewChat, handleFocusChatInput } = useChatHandler() as any
 
-  // AUDIT FIX: Inline Scroll Logic to replace the missing hook
+  // AUDIT FIX: Expanded Inline Scroll Logic to satisfy ChatScrollButtonsProps
   const messagesStartRef = useRef<HTMLDivElement>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
+
   const [isAtBottom, setIsAtBottom] = useState(true)
   const [isAtTop, setIsAtTop] = useState(false)
+  const [isOverflowing, setIsOverflowing] = useState(false)
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+  }
+
+  const scrollToTop = () => {
+    messagesStartRef.current?.scrollIntoView({ behavior: "smooth" })
   }
 
   useEffect(() => {
@@ -32,15 +39,24 @@ export const ChatUI: FC<ChatUIProps> = ({}) => {
 
   const handleScroll = (event: React.UIEvent<HTMLDivElement>) => {
     const { scrollTop, scrollHeight, clientHeight } = event.currentTarget
+
+    // Check if the content is taller than the container
+    setIsOverflowing(scrollHeight > clientHeight)
+
     const atBottom = scrollHeight - scrollTop <= clientHeight + 50
     const atTop = scrollTop <= 50
+
     setIsAtBottom(atBottom)
     setIsAtTop(atTop)
   }
 
   return (
     <div className="relative flex h-full flex-col overflow-hidden">
-      <div className="flex-1 overflow-auto" onScroll={handleScroll}>
+      <div
+        ref={scrollContainerRef}
+        className="flex-1 overflow-auto"
+        onScroll={handleScroll}
+      >
         <div ref={messagesStartRef} />
 
         <ChatMessages />
@@ -55,10 +71,13 @@ export const ChatUI: FC<ChatUIProps> = ({}) => {
           <ChatInput />
         </div>
 
+        {/* AUDIT FIX: Now providing all required props to ChatScrollButtons */}
         <ChatScrollButtons
           isAtBottom={isAtBottom}
           isAtTop={isAtTop}
+          isOverflowing={isOverflowing}
           scrollToBottom={scrollToBottom}
+          scrollToTop={scrollToTop}
         />
       </div>
     </div>
