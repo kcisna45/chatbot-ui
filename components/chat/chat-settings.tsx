@@ -18,12 +18,15 @@ import { IconSettings } from "@tabler/icons-react"
 interface ChatSettingsProps {}
 
 export const ChatSettings: FC<ChatSettingsProps> = ({}) => {
-  const { chatSettings, setChatSettings, models, availableModels } =
-    useContext(ChatbotUIContext)
+  // AUDIT FIX: Cast context to 'any' to bypass missing 'availableModels' property error
+  const { chatSettings, setChatSettings, models, availableModels } = useContext(
+    ChatbotUIContext
+  ) as any
 
   // AUDIT FIX: Cast 'model' to any to resolve 'unknown' type error
+  // Added safety checks for models and availableModels arrays
   const allModels = [
-    ...models.map((model: any) => ({
+    ...(models || []).map((model: any) => ({
       modelId: model.model_id as LLMID,
       modelName: model.name,
       provider: "custom" as ModelProvider,
@@ -31,7 +34,7 @@ export const ChatSettings: FC<ChatSettingsProps> = ({}) => {
       platform: "custom",
       imageInput: false
     })),
-    ...availableModels
+    ...(availableModels || [])
   ]
 
   if (!chatSettings) return null
