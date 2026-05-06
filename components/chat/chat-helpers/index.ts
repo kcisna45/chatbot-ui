@@ -398,12 +398,11 @@ export const handleCreateMessages = async (
   isRegeneration: boolean,
   retrievedFileItems: any[],
   setChatMessages: React.Dispatch<React.SetStateAction<ChatMessage[]>>,
-  setChatFileItems: React.Dispatch<
-    React.SetStateAction<any[]>
-  >,
+  setChatFileItems: React.Dispatch<React.SetStateAction<any[]>>,
   setChatImages: React.Dispatch<React.SetStateAction<MessageImage[]>>,
   selectedAssistant: any | null
 ) => {
+
   const finalUserMessage: any = {
     chat_id: currentChat.id,
     assistant_id: null,
