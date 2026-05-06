@@ -158,7 +158,6 @@ export const handleLocalChat = async (
 ) => {
   const formattedMessages = await buildFinalMessages(payload, profile, [])
 
-  // Ollama API: https://github.com/jmorganca/ollama/blob/main/docs/api.md
   const response = await fetchChatResponse(
     process.env.NEXT_PUBLIC_OLLAMA_URL + "/api/chat",
     {
@@ -303,11 +302,7 @@ export const processResponse = async (
         try {
           contentToAdd = isHosted
             ? chunk
-            : // Ollama's streaming endpoint returns new-line separated JSON
-              // objects. A chunk may have more than one of these objects, so we
-              // need to split the chunk by new-lines and handle each one
-              // separately.
-              chunk
+            : chunk
                 .trimEnd()
                 .split("\n")
                 .reduce(
@@ -377,7 +372,7 @@ export const handleCreateChat = async (
   await createChatFiles(
     newMessageFiles.map(file => ({
       user_id: profile.user_id,
-      chat_id: createdChat.id,
+      chat_id: createdChat?.id,
       file_id: file.id
     }))
   )
@@ -404,7 +399,7 @@ export const handleCreateMessages = async (
 ) => {
   const finalUserMessage: any = {
     chat_id: currentChat.id,
-    assistant_id: null,
+    assistant_id: selectedAssistant?.id || null,
     user_id: profile.user_id,
     content: messageContent,
     model: modelData.modelId,
@@ -445,7 +440,6 @@ export const handleCreateMessages = async (
       finalAssistantMessage
     ])
 
-    // Upload each image (stored in newMessageImages) for the user message to message_images bucket
     const uploadPromises = newMessageImages
       .filter(obj => obj.file !== null)
       .map(obj => {
@@ -467,7 +461,7 @@ export const handleCreateMessages = async (
       ...prevImages,
       ...newMessageImages.map((obj, index) => ({
         ...obj,
-        messageId: createdMessages[0].id,
+        messageId: createdMessages?.[0]?.id,
         path: paths[index]
       }))
     ])
@@ -481,7 +475,7 @@ export const handleCreateMessages = async (
       retrievedFileItems.map(fileItem => {
         return {
           user_id: profile.user_id,
-          message_id: createdMessages[1].id,
+          message_id: createdMessages?.[1]?.id,
           file_item_id: fileItem.id
         }
       })
@@ -494,7 +488,7 @@ export const handleCreateMessages = async (
         fileItems: []
       },
       {
-        message: createdMessages[1],
+        message: createdMessages?.[1],
         fileItems: retrievedFileItems.map(fileItem => fileItem.id)
       }
     ]
