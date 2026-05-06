@@ -121,7 +121,7 @@ export const FilePicker: FC<FilePickerProps> = ({
                   className="hover:bg-accent focus:bg-accent flex cursor-pointer items-center rounded p-2 focus:outline-none"
                   onClick={() => {
                     if ("type" in item) {
-                      handleSelectFile(item as Tables<"files">)
+                      handleSelectFile(item as any)
                     } else {
                       handleSelectCollection(item)
                     }
