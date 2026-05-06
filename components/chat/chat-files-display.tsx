@@ -63,7 +63,7 @@ export const ChatFilesDisplay: FC<ChatFilesDisplayProps> = ({}) => {
   const combinedMessageFiles = [...messageImages, ...combinedChatFiles]
 
   const getLinkAndView = async (file: ChatFile) => {
-    const fileRecord = files.find(f => f.id === file.id)
+    const fileRecord = files.find((f: any) => f.id === file.id)
 
     if (!fileRecord) return
 
