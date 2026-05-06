@@ -399,7 +399,7 @@ export const handleCreateMessages = async (
   retrievedFileItems: any[],
   setChatMessages: React.Dispatch<React.SetStateAction<ChatMessage[]>>,
   setChatFileItems: React.Dispatch<
-    React.SetStateAction<Tables<any[]>
+    React.SetStateAction<any[]>
   >,
   setChatImages: React.Dispatch<React.SetStateAction<MessageImage[]>>,
   selectedAssistant: any | null
