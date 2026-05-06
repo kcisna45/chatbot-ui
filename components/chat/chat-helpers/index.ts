@@ -450,7 +450,7 @@ export const handleCreateMessages = async (
       .filter(obj => obj.file !== null)
       .map(obj => {
         let filePath = `${profile.user_id}/${currentChat.id}/${
-          createdMessages[0].id
+          createdMessages?.[0]?.id
         }/${uuidv4()}`
 
         return uploadMessageImage(filePath, obj.file as File).catch(error => {
@@ -472,8 +472,8 @@ export const handleCreateMessages = async (
       }))
     ])
 
-    const updatedMessage = await updateMessage(createdMessages[0].id, {
-      ...createdMessages[0],
+    const updatedMessage = await updateMessage(createdMessages?.[0]?.id, {
+      ...createdMessages?.[0],
       image_paths: paths
     })
 
