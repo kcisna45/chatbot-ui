@@ -73,7 +73,7 @@ export const handleRetrieval = async (
   }
 
   const { results } = (await response.json()) as {
-    results: Tables<"file_items">[]
+    results: any[]
   }
 
   return results
@@ -399,7 +399,7 @@ export const handleCreateMessages = async (
   retrievedFileItems: any[],
   setChatMessages: React.Dispatch<React.SetStateAction<ChatMessage[]>>,
   setChatFileItems: React.Dispatch<
-    React.SetStateAction<Tables<"file_items">[]>
+    React.SetStateAction<Tables<any[]>
   >,
   setChatImages: React.Dispatch<React.SetStateAction<MessageImage[]>>,
   selectedAssistant: any | null
