@@ -33,7 +33,7 @@ export const ToolPicker: FC<ToolPickerProps> = ({}) => {
     setIsToolPickerOpen(isOpen)
   }
 
-  const callSelectTool = (tool: Tables<"tools">) => {
+  const callSelectTool = (tool: any) => {
     handleSelectTool(tool)
     handleOpenChange(false)
   }

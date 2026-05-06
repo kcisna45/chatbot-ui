@@ -52,12 +52,12 @@ export const FilePicker: FC<FilePickerProps> = ({
     onOpenChange(isOpen)
   }
 
-  const handleSelectFile = (file: Tables<"files">) => {
+  const handleSelectFile = (file: any) => {
     onSelectFile(file)
     handleOpenChange(false)
   }
 
-  const handleSelectCollection = (collection: Tables<"collections">) => {
+  const handleSelectCollection = (collection: any) => {
     onSelectCollection(collection)
     handleOpenChange(false)
   }

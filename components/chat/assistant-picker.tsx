@@ -35,7 +35,7 @@ export const AssistantPicker: FC<AssistantPickerProps> = ({}) => {
     setIsAssistantPickerOpen(isOpen)
   }
 
-  const callSelectAssistant = (assistant: Tables<"assistants">) => {
+  const callSelectAssistant = (assistant: any) => {
     handleSelectAssistant(assistant)
     handleOpenChange(false)
   }
