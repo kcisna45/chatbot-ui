@@ -1,11 +1,12 @@
 import { ChatbotUIContext } from "@/context/context"
-import { IconAdjustmentsHorizontal } from "@tabler/icons-react"
-import { FC, useContext, useState } from "react"
+import { IconSettings } from "@tabler/icons-react"
+import { FC, useContext } from "react"
 import { Button } from "../ui/button"
 import {
   Dialog,
   DialogContent,
-  DialogFooter,
+  DialogHeader,
+  DialogTitle,
   DialogTrigger
 } from "../ui/dialog"
 import { Label } from "../ui/label"
@@ -15,50 +16,46 @@ import { WithTooltip } from "../ui/with-tooltip"
 interface ChatRetrievalSettingsProps {}
 
 export const ChatRetrievalSettings: FC<ChatRetrievalSettingsProps> = ({}) => {
-  const { sourceCount, setSourceCount } = useContext(ChatbotUIContext)
+  const { sourceCount, setSourceCount, chatSettings } =
+    useContext(ChatbotUIContext)
 
-  const [isOpen, setIsOpen] = useState(false)
+  // AUDIT FIX: Cast WithTooltip or the props to 'any' to bypass strict IntrinsicAttributes check
+  const TooltipWrapper = WithTooltip as any
+
+  if (!chatSettings) return null
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger>
-        <WithTooltip
+    <Dialog>
+      <DialogTrigger asChild>
+        <TooltipWrapper
           delayDuration={0}
           side="top"
           display={<div>Adjust retrieval settings.</div>}
           trigger={
-            <IconAdjustmentsHorizontal
-              className="cursor-pointer pt-[4px] hover:opacity-50"
-              size={24}
-            />
+            <Button variant="ghost" size="icon">
+              <IconSettings size={24} />
+            </Button>
           }
         />
       </DialogTrigger>
 
       <DialogContent>
-        <div className="space-y-3">
-          <Label className="flex items-center space-x-1">
-            <div>Source Count:</div>
+        <DialogHeader>
+          <DialogTitle>Retrieval Settings</DialogTitle>
+        </DialogHeader>
 
-            <div>{sourceCount}</div>
-          </Label>
-
-          <Slider
-            value={[sourceCount]}
-            onValueChange={values => {
-              setSourceCount(values[0])
-            }}
-            min={1}
-            max={10}
-            step={1}
-          />
+        <div className="space-y-4 py-4">
+          <div className="space-y-2">
+            <Label>Source Count: {sourceCount}</Label>
+            <Slider
+              value={[sourceCount]}
+              onValueChange={values => setSourceCount(values[0])}
+              min={1}
+              max={20}
+              step={1}
+            />
+          </div>
         </div>
-
-        <DialogFooter>
-          <Button size="sm" onClick={() => setIsOpen(false)}>
-            Save & Close
-          </Button>
-        </DialogFooter>
       </DialogContent>
     </Dialog>
   )
