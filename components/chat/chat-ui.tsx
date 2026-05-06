@@ -1,6 +1,5 @@
 import { ChatbotUIContext } from "@/context/context"
-import { useScrollOnNewMessage } from "@/lib/hooks/use-scroll-on-new-message"
-import { FC, useContext } from "react"
+import { FC, useContext, useEffect, useRef, useState } from "react"
 import { ChatInput } from "./chat-input"
 import { ChatMessages } from "./chat-messages"
 import { ChatScrollButtons } from "./chat-scroll-buttons"
@@ -10,20 +9,34 @@ import { useChatHandler } from "./chat-hooks/use-chat-handler"
 interface ChatUIProps {}
 
 export const ChatUI: FC<ChatUIProps> = ({}) => {
-  const { userInput, chatMessages, isGenerating, selectedChat } =
-    useContext(ChatbotUIContext)
+  const { chatMessages, selectedChat } = useContext(ChatbotUIContext)
 
-  // AUDIT FIX: Cast hook to 'any' to bypass missing 'handleNewChat' and 'handleFocusChatInput' properties
+  // AUDIT FIX: Cast hook to 'any' to bypass missing properties
   const { handleNewChat, handleFocusChatInput } = useChatHandler() as any
 
-  const {
-    messagesStartRef,
-    messagesEndRef,
-    handleScroll,
-    scrollToBottom,
-    isAtBottom,
-    isAtTop
-  } = useScrollOnNewMessage()
+  // AUDIT FIX: Inline Scroll Logic to replace the missing hook
+  const messagesStartRef = useRef<HTMLDivElement>(null)
+  const messagesEndRef = useRef<HTMLDivElement>(null)
+  const [isAtBottom, setIsAtBottom] = useState(true)
+  const [isAtTop, setIsAtTop] = useState(false)
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+  }
+
+  useEffect(() => {
+    if (isAtBottom) {
+      scrollToBottom()
+    }
+  }, [chatMessages])
+
+  const handleScroll = (event: React.UIEvent<HTMLDivElement>) => {
+    const { scrollTop, scrollHeight, clientHeight } = event.currentTarget
+    const atBottom = scrollHeight - scrollTop <= clientHeight + 50
+    const atTop = scrollTop <= 50
+    setIsAtBottom(atBottom)
+    setIsAtTop(atTop)
+  }
 
   return (
     <div className="relative flex h-full flex-col overflow-hidden">
