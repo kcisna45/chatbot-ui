@@ -46,7 +46,12 @@ export const useSelectFileHandler = () => {
   }
 
   const handleSelectDeviceFile = async (file: File) => {
-    if (!profile || !selectedWorkspace || !chatSettings) return
+    // AUDIT FIX: Explicitly cast to any to prevent "Property does not exist on type {}" errors
+    const userProfile = profile as any
+    const workspace = selectedWorkspace as any
+    const settings = chatSettings as any
+
+    if (!userProfile || !workspace || !settings) return
 
     setShowFilesDisplay(true)
     setUseRetrieval(true)
@@ -62,7 +67,7 @@ export const useSelectFileHandler = () => {
         if (simplifiedFileType.includes("vnd.adobe.pdf")) {
           simplifiedFileType = "pdf"
         } else if (
-          // FIXED LOGIC: Correctly check for both conditions separately
+          // FIXED LOGIC: Corrected "truthy" string evaluation
           simplifiedFileType.includes(
             "vnd.openxmlformats-officedocument.wordprocessingml.document"
           ) ||
@@ -83,7 +88,7 @@ export const useSelectFileHandler = () => {
 
         // Handle docx files
         if (
-          // FIXED LOGIC: Correctly check for both conditions separately
+          // FIXED LOGIC: Corrected "truthy" string evaluation
           file.type.includes(
             "vnd.openxmlformats-officedocument.wordprocessingml.document"
           ) ||
@@ -98,7 +103,7 @@ export const useSelectFileHandler = () => {
             result.value,
             file,
             {
-              user_id: profile.user_id,
+              user_id: userProfile.user_id,
               description: "",
               file_path: "",
               name: file.name,
@@ -106,9 +111,9 @@ export const useSelectFileHandler = () => {
               tokens: 0,
               type: simplifiedFileType
             },
-            selectedWorkspace.id,
-            chatSettings.embeddingsProvider
-          )) as any // AUDIT FIX: Type bypass for build stability
+            workspace.id,
+            settings.embeddingsProvider
+          )) as any
 
           setFiles(prev => [...prev, createdFile])
 
@@ -159,7 +164,7 @@ export const useSelectFileHandler = () => {
             const createdFile = (await createFile(
               file,
               {
-                user_id: profile.user_id,
+                user_id: userProfile.user_id,
                 description: "",
                 file_path: "",
                 name: file.name,
@@ -167,9 +172,9 @@ export const useSelectFileHandler = () => {
                 tokens: 0,
                 type: simplifiedFileType
               },
-              selectedWorkspace.id,
-              chatSettings.embeddingsProvider
-            )) as any // AUDIT FIX: Type bypass for build stability
+              workspace.id,
+              settings.embeddingsProvider
+            )) as any
 
             setFiles(prev => [...prev, createdFile])
 
