@@ -1,11 +1,10 @@
-import { Tables } from "@/supabase/types"
 import { FC } from "react"
-import { ImageWithFallback } from "../ui/image-with-fallback"
+import Image from "next/image"
 
 interface QuickSettingOptionProps {
   contentType: "presets" | "assistants"
   isSelected: boolean
-  // AUDIT FIX: Use any to bypass missing or mismatched Table constraints
+  // AUDIT FIX: Use any to bypass Table constraint errors
   item: any
   onSelect: () => void
   image: string
@@ -25,13 +24,23 @@ export const QuickSettingOption: FC<QuickSettingOptionProps> = ({
       }`}
       onClick={onSelect}
     >
-      <ImageWithFallback
-        src={image}
-        fallback={contentType === "presets" ? "P" : "A"}
-        width={32}
-        height={32}
-        className="rounded"
-      />
+      <div className="relative h-8 w-8 flex-shrink-0 overflow-hidden rounded bg-secondary">
+        {image ? (
+          <Image
+            src={image}
+            alt={item.name}
+            fill
+            className="object-cover"
+            sizes="32px"
+            // Use unoptimized if using external URLs that aren't configured in next.config.js
+            unoptimized
+          />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center text-xs font-bold text-muted-foreground">
+            {contentType === "presets" ? "P" : "A"}
+          </div>
+        )}
+      </div>
 
       <div className="flex-1 truncate">
         <div className="truncate text-sm font-semibold">{item.name}</div>
