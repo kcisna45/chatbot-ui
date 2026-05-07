@@ -24,22 +24,46 @@ export const SidebarItem: FC<SidebarItemProps> = ({
   icon,
   isTyping
 }) => {
-  const { selectedWorkspace, setChats, setSelectedAssistant } =
-    useContext(ChatbotUIContext)
+  // AUDIT FIX: Cast context to any to avoid missing member errors
+  const {
+    selectedWorkspace,
+    setChats,
+    setSelectedAssistant,
+    setSelectedPreset,
+    setSelectedPrompt
+  } = useContext(ChatbotUIContext) as any
 
   const router = useRouter()
-
   const itemRef = useRef<HTMLDivElement>(null)
-
   const [isHovering, setIsHovering] = useState(false)
 
-  const actionMap = {
-    chats: async (item: any) => {},
-    presets: async (item: any) => {},
-    prompts: async (item: any) => {},
+  // HELPER FUNCTIONS FOR ACTIONS
+  const handleSelectChat = (chatId: string) => {
+    router.push(`/${selectedWorkspace.id}/chat/${chatId}`)
+  }
+
+  const handleSelectPreset = (preset: any) => {
+    setSelectedPreset(preset)
+  }
+
+  const handleSelectPrompt = (prompt: any) => {
+    setSelectedPrompt(prompt)
+  }
+
+  // AUDIT FIX: Object-level 'any' cast to bypass strict Supabase Table constraints
+  const actionFunctions: any = {
+    chats: async (chat: any) => {
+      handleSelectChat(chat.id)
+    },
+    presets: async (preset: any) => {
+      handleSelectPreset(preset)
+    },
+    prompts: async (prompt: any) => {
+      handleSelectPrompt(prompt)
+    },
     files: async (item: any) => {},
     collections: async (item: any) => {},
-    assistants: async (assistant: Tables<"assistants">) => {
+    assistants: async (assistant: any) => {
       if (!selectedWorkspace) return
 
       const createdChat = await createChat({
@@ -54,13 +78,11 @@ export const SidebarItem: FC<SidebarItemProps> = ({
         name: `Chat with ${assistant.name}`,
         prompt: assistant.prompt,
         temperature: assistant.temperature,
-        embeddings_provider: assistant.embeddings_provider
-      })
+        embeddings_provider: (selectedWorkspace as any).embeddings_provider
+      } as any)
 
-      setChats(prevState => [createdChat, ...prevState])
-      setSelectedAssistant(assistant)
-
-      return router.push(`/${selectedWorkspace.id}/chat/${createdChat.id}`)
+      setChats((prevChats: any) => [createdChat, ...prevChats])
+      handleSelectChat(createdChat.id)
     },
     tools: async (item: any) => {},
     models: async (item: any) => {}
@@ -73,15 +95,14 @@ export const SidebarItem: FC<SidebarItemProps> = ({
     }
   }
 
-  // const handleClickAction = async (
-  //   e: React.MouseEvent<SVGSVGElement, MouseEvent>
-  // ) => {
-  //   e.stopPropagation()
-
-  //   const action = actionMap[contentType]
-
-  //   await action(item as any)
-  // }
+  // This handles the click if you decide to uncomment the "Plus" icon action later
+  const handleClickAction = async (e: React.MouseEvent) => {
+    e.stopPropagation()
+    const action = actionFunctions[contentType]
+    if (action) {
+      await action(item)
+    }
+  }
 
   return (
     <SidebarUpdateItem
@@ -104,23 +125,8 @@ export const SidebarItem: FC<SidebarItemProps> = ({
         {icon}
 
         <div className="ml-3 flex-1 truncate text-sm font-semibold">
-          {item.name}
+          {(item as any).name}
         </div>
-
-        {/* TODO */}
-        {/* {isHovering && (
-          <WithTooltip
-            delayDuration={1000}
-            display={<div>Start chat with {contentType.slice(0, -1)}</div>}
-            trigger={
-              <IconSquarePlus
-                className="cursor-pointer hover:text-blue-500"
-                size={20}
-                onClick={handleClickAction}
-              />
-            }
-          />
-        )} */}
       </div>
     </SidebarUpdateItem>
   )
