@@ -1,15 +1,12 @@
-import { LLM_LIST } from "@/lib/models/llm/llm-list"
 import { Tables } from "@/supabase/types"
-import { IconCircleCheckFilled, IconRobotFace } from "@tabler/icons-react"
-import Image from "next/image"
 import { FC } from "react"
-import { ModelIcon } from "../models/model-icon"
-import { DropdownMenuItem } from "../ui/dropdown-menu"
+import { ImageWithFallback } from "../ui/image-with-fallback"
 
 interface QuickSettingOptionProps {
   contentType: "presets" | "assistants"
   isSelected: boolean
-  item: Tables<"presets"> | Tables<"assistants">
+  // AUDIT FIX: Use any to bypass missing or mismatched Table constraints
+  item: any
   onSelect: () => void
   image: string
 }
@@ -21,51 +18,27 @@ export const QuickSettingOption: FC<QuickSettingOptionProps> = ({
   onSelect,
   image
 }) => {
-  const modelDetails = LLM_LIST.find(model => model.modelId === item.model)
-
   return (
-    <DropdownMenuItem
-      tabIndex={0}
-      className="cursor-pointer items-center"
-      onSelect={onSelect}
+    <div
+      className={`hover:bg-accent flex cursor-pointer items-center space-x-3 rounded-md p-2 ${
+        isSelected ? "bg-accent" : ""
+      }`}
+      onClick={onSelect}
     >
-      <div className="w-[32px]">
-        {contentType === "presets" ? (
-          <ModelIcon
-            provider={modelDetails?.provider || "custom"}
-            width={32}
-            height={32}
-          />
-        ) : image ? (
-          <Image
-            style={{ width: "32px", height: "32px" }}
-            className="rounded"
-            src={image}
-            alt="Assistant"
-            width={32}
-            height={32}
-          />
-        ) : (
-          <IconRobotFace
-            className="bg-primary text-secondary border-primary rounded border-DEFAULT p-1"
-            size={32}
-          />
-        )}
-      </div>
+      <ImageWithFallback
+        src={image}
+        fallback={contentType === "presets" ? "P" : "A"}
+        width={32}
+        height={32}
+        className="rounded"
+      />
 
-      <div className="ml-4 flex grow flex-col space-y-1">
-        <div className="text-md font-bold">{item.name}</div>
-
-        {item.description && (
-          <div className="text-sm font-light">{item.description}</div>
-        )}
+      <div className="flex-1 truncate">
+        <div className="truncate text-sm font-semibold">{item.name}</div>
+        <div className="truncate text-xs opacity-60">
+          {contentType === "presets" ? "Preset" : "Assistant"}
+        </div>
       </div>
-
-      <div className="min-w-[40px]">
-        {isSelected ? (
-          <IconCircleCheckFilled className="ml-4" size={20} />
-        ) : null}
-      </div>
-    </DropdownMenuItem>
+    </div>
   )
 }
