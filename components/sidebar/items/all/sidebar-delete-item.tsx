@@ -120,7 +120,7 @@ export const SidebarDeleteItem: FC<SidebarDeleteItemProps> = ({
           <DialogTitle>Delete {contentType.slice(0, -1)}</DialogTitle>
 
           <DialogDescription>
-            Are you sure you want to delete {item.name}?
+            Are you sure you want to delete {(item as any).name}?
           </DialogDescription>
         </DialogHeader>
 
