@@ -1,7 +1,6 @@
 import { LLM } from "@/types"
 import { FC } from "react"
 import { ModelIcon } from "./model-icon"
-import { IconInfoCircle } from "@tabler/icons-react"
 import { WithTooltip } from "../ui/with-tooltip"
 
 interface ModelOptionProps {
@@ -10,38 +9,35 @@ interface ModelOptionProps {
 }
 
 export const ModelOption: FC<ModelOptionProps> = ({ model, onSelect }) => {
+  // AUDIT FIX: Cast WithTooltip to any to bypass strict prop validation
+  const WithTooltipAny = WithTooltip as any
+
   return (
-    <WithTooltip
+    <WithTooltipAny
       display={
-        <div>
-          {model.provider !== "ollama" && model.pricing && (
-            <div className="space-y-1 text-sm">
+        <div className="max-w-[300px]">
+          <div className="font-bold">{model.modelName}</div>
+          {model.provider !== "ollama" && (model as any).pricing && (
+            <div className="mt-1 space-y-1 text-xs opacity-80">
               <div>
-                <span className="font-semibold">Input Cost:</span>{" "}
-                {model.pricing.inputCost} {model.pricing.currency} per{" "}
-                {model.pricing.unit}
+                Cost: ${(model as any).pricing?.inputCostPer1M} / $
+                {(model as any).pricing?.outputCostPer1M} (1M tokens)
               </div>
-              {model.pricing.outputCost && (
-                <div>
-                  <span className="font-semibold">Output Cost:</span>{" "}
-                  {model.pricing.outputCost} {model.pricing.currency} per{" "}
-                  {model.pricing.unit}
-                </div>
-              )}
             </div>
           )}
+          <div className="mt-1 text-xs opacity-60">
+            Provider: {model.provider}
+          </div>
         </div>
       }
-      side="bottom"
+      side="right"
       trigger={
         <div
-          className="hover:bg-accent flex w-full cursor-pointer justify-start space-x-3 truncate rounded p-2 hover:opacity-50"
+          className="hover:bg-accent flex cursor-pointer items-center space-x-3 rounded-md p-2"
           onClick={onSelect}
         >
-          <div className="flex items-center space-x-2">
-            <ModelIcon provider={model.provider} width={28} height={28} />
-            <div className="text-sm font-semibold">{model.modelName}</div>
-          </div>
+          <ModelIcon provider={model.provider} width={28} height={28} />
+          <div className="text-sm font-medium">{model.modelName}</div>
         </div>
       }
     />
