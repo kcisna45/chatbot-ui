@@ -63,7 +63,7 @@ export const Message: FC<MessageProps> = ({
     models
   } = useContext(ChatbotUIContext) as any
 
-  const { handleSendMessage } = useChatHandler()
+  const { handleSendMessage } = useChatHandler() as any
 
   const editInputRef = useRef<HTMLTextAreaElement>(null)
 
