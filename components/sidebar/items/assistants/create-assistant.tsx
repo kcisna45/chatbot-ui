@@ -140,7 +140,7 @@ export const CreateAssistant: FC<CreateAssistantProps> = ({}) => {
             />
           </div>
 
-          <div className="space-y-1">
+          <<div className="space-y-1">
             <Label>Tools</Label>
             <AssistantToolSelect
               selectedAssistantTools={renderState.selectedAssistantTools}
@@ -151,3 +151,6 @@ export const CreateAssistant: FC<CreateAssistantProps> = ({}) => {
           </div>
         </>
       )}
+    />
+  )
+}
