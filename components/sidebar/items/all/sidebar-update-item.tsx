@@ -310,7 +310,7 @@ export const SidebarUpdateItem: FC<SidebarUpdateItemProps> = ({
         sf => !startingCollectionFiles.some(st => st.id === sf.id)
       )) {
         await createCollectionFile({
-          user_id: item.user_id,
+          user_id: (item as any).user_id,
           collection_id: id,
           file_id: file.id
         })
