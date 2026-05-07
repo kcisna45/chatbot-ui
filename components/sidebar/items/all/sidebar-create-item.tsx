@@ -78,7 +78,7 @@ export const SidebarCreateItem: FC<SidebarCreateItemProps> = ({
         file,
         rest,
         workspaceId,
-        selectedWorkspace.embeddings_provider as "openai" | "local"
+        (selectedWorkspace as any).embeddings_provider as "openai" | "local"
       )
 
       return createdFile
