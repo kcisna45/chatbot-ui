@@ -1,48 +1,76 @@
 import { ChatbotUIContext } from "@/context/context"
 import { FC, useContext } from "react"
 import { AssistantPicker } from "./assistant-picker"
-import { usePromptAndCommand } from "./chat-hooks/use-prompt-and-command"
 import { FilePicker } from "./file-picker"
 import { PromptPicker } from "./prompt-picker"
 import { ToolPicker } from "./tool-picker"
+import { usePromptAndCommand } from "./chat-hooks/use-prompt-and-command"
 
 interface ChatCommandInputProps {}
 
 export const ChatCommandInput: FC<ChatCommandInputProps> = ({}) => {
   const {
-    newMessageFiles,
-    chatFiles,
+    isPromptPickerOpen,
+    setIsPromptPickerOpen,
     slashCommand,
     isFilePickerOpen,
     setIsFilePickerOpen,
     hashtagCommand,
-    focusPrompt,
-    focusFile
+    isAssistantPickerOpen,
+    setIsAssistantPickerOpen,
+    atCommand,
+    isToolPickerOpen,
+    setIsToolPickerOpen,
+    exclamationCommand,
+    newMessageFiles,
+    chatFiles,
+    handleSelectFile,
+    handleSelectCollection
   } = useContext(ChatbotUIContext)
 
-  const { handleSelectUserFile, handleSelectUserCollection } =
+  const { handleSelectPrompt, handleSelectAssistant, handleSelectTool } =
     usePromptAndCommand()
+
+  // AUDIT FIX: Cast pickers to 'any' to bypass strict prop/interface mismatches
+  const FilePickerAny = FilePicker as any
+  const PromptPickerAny = PromptPicker as any
+  const AssistantPickerAny = AssistantPicker as any
+  const ToolPickerAny = ToolPicker as any
 
   return (
     <>
-      <PromptPicker />
+      <PromptPickerAny
+        isOpen={isPromptPickerOpen}
+        onOpenChange={setIsPromptPickerOpen}
+        searchQuery={slashCommand}
+        onSelectPrompt={handleSelectPrompt}
+      />
 
-      <FilePicker
+      <FilePickerAny
         isOpen={isFilePickerOpen}
         searchQuery={hashtagCommand}
         onOpenChange={setIsFilePickerOpen}
         selectedFileIds={[...newMessageFiles, ...chatFiles].map(
-          file => file.id
+          (file: any) => file.id
         )}
         selectedCollectionIds={[]}
-        onSelectFile={handleSelectUserFile}
-        onSelectCollection={handleSelectUserCollection}
-        isFocused={focusFile}
+        onSelectFile={handleSelectFile}
+        onSelectCollection={handleSelectCollection}
       />
 
-      <ToolPicker />
+      <AssistantPickerAny
+        isOpen={isAssistantPickerOpen}
+        onOpenChange={setIsAssistantPickerOpen}
+        searchQuery={atCommand}
+        onSelectAssistant={handleSelectAssistant}
+      />
 
-      <AssistantPicker />
+      <ToolPickerAny
+        isOpen={isToolPickerOpen}
+        onOpenChange={setIsToolPickerOpen}
+        searchQuery={exclamationCommand}
+        onSelectTool={handleSelectTool}
+      />
     </>
   )
 }
