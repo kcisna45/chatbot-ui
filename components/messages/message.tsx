@@ -320,7 +320,7 @@ export const Message: FC<MessageProps> = ({
                   <IconCaretDownFilled className="ml-1" />
                 </div>
                 <div className="mt-3 space-y-4">
-                  {Object.values(fileSummary).map((file, index) => (
+                  {Object.values(fileSummary).map((file: any, index) => (
                     <div key={index}>
                       <div className="flex items-center space-x-2">
                         <FileIcon type={file.type} />
