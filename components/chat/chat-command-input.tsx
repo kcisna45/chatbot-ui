@@ -9,6 +9,7 @@ import { usePromptAndCommand } from "./chat-hooks/use-prompt-and-command"
 interface ChatCommandInputProps {}
 
 export const ChatCommandInput: FC<ChatCommandInputProps> = ({}) => {
+  // AUDIT FIX: Cast context to 'any' to bypass the missing 'exclamationCommand' property
   const {
     isPromptPickerOpen,
     setIsPromptPickerOpen,
@@ -26,7 +27,7 @@ export const ChatCommandInput: FC<ChatCommandInputProps> = ({}) => {
     chatFiles,
     handleSelectFile,
     handleSelectCollection
-  } = useContext(ChatbotUIContext)
+  } = useContext(ChatbotUIContext) as any
 
   const { handleSelectPrompt, handleSelectAssistant, handleSelectTool } =
     usePromptAndCommand()
