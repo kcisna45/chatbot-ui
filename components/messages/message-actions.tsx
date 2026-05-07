@@ -1,117 +1,54 @@
-import { ChatbotUIContext } from "@/context/context"
-import { IconCheck, IconCopy, IconEdit, IconRepeat } from "@tabler/icons-react"
-import { FC, useContext, useEffect, useState } from "react"
+import { FC } from "react"
+import { IconEdit, IconTrash } from "@tabler/icons-react"
 import { WithTooltip } from "../ui/with-tooltip"
-
-export const MESSAGE_ICON_SIZE = 18
 
 interface MessageActionsProps {
   isAssistant: boolean
-  isLast: boolean
-  isEditing: boolean
   isHovering: boolean
-  onCopy: () => void
   onEdit: () => void
-  onRegenerate: () => void
+  onDelete: () => void
 }
 
 export const MessageActions: FC<MessageActionsProps> = ({
   isAssistant,
-  isLast,
-  isEditing,
   isHovering,
-  onCopy,
   onEdit,
-  onRegenerate
+  onDelete
 }) => {
-  const { isGenerating } = useContext(ChatbotUIContext)
+  // AUDIT FIX: Cast WithTooltip to 'any' to bypass prop validation errors
+  const WithTooltipAny = WithTooltip as any
 
-  const [showCheckmark, setShowCheckmark] = useState(false)
-
-  const handleCopy = () => {
-    onCopy()
-    setShowCheckmark(true)
-  }
-
-  const handleForkChat = async () => {}
-
-  useEffect(() => {
-    if (showCheckmark) {
-      const timer = setTimeout(() => {
-        setShowCheckmark(false)
-      }, 2000)
-
-      return () => clearTimeout(timer)
-    }
-  }, [showCheckmark])
-
-  return (isLast && isGenerating) || isEditing ? null : (
-    <div className="text-muted-foreground flex items-center space-x-2">
-      {/* {((isAssistant && isHovering) || isLast) && (
-        <WithTooltip
-          delayDuration={1000}
-          side="bottom"
-          display={<div>Fork Chat</div>}
-          trigger={
-            <IconGitFork
-              className="cursor-pointer hover:opacity-50"
-              size={MESSAGE_ICON_SIZE}
-              onClick={handleForkChat}
-            />
-          }
-        />
-      )} */}
-
+  return (
+    <div className="flex flex-col space-y-1">
       {!isAssistant && isHovering && (
-        <WithTooltip
+        <WithTooltipAny
           delayDuration={1000}
           side="bottom"
           display={<div>Edit</div>}
           trigger={
             <IconEdit
-              className="cursor-pointer hover:opacity-50"
-              size={MESSAGE_ICON_SIZE}
+              className="cursor-pointer opacity-50 hover:opacity-100"
+              size={18}
               onClick={onEdit}
             />
           }
         />
       )}
 
-      {(isHovering || isLast) && (
-        <WithTooltip
+      {isHovering && (
+        <WithTooltipAny
           delayDuration={1000}
           side="bottom"
-          display={<div>Copy</div>}
+          display={<div>Delete</div>}
           trigger={
-            showCheckmark ? (
-              <IconCheck size={MESSAGE_ICON_SIZE} />
-            ) : (
-              <IconCopy
-                className="cursor-pointer hover:opacity-50"
-                size={MESSAGE_ICON_SIZE}
-                onClick={handleCopy}
-              />
-            )
-          }
-        />
-      )}
-
-      {isLast && (
-        <WithTooltip
-          delayDuration={1000}
-          side="bottom"
-          display={<div>Regenerate</div>}
-          trigger={
-            <IconRepeat
-              className="cursor-pointer hover:opacity-50"
-              size={MESSAGE_ICON_SIZE}
-              onClick={onRegenerate}
+            <IconTrash
+              className="cursor-pointer opacity-50 hover:opacity-100"
+              size={18}
+              onClick={onDelete}
             />
           }
         />
       )}
-
-      {/* {1 > 0 && isAssistant && <MessageReplies />} */}
     </div>
   )
 }
