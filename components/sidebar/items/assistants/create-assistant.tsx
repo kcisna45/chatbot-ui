@@ -73,10 +73,20 @@ export const CreateAssistant: FC<CreateAssistantProps> = ({}) => {
         temperature: assistantChatSettings.temperature
       }}
       renderInputs={(renderState: {
+        startingAssistantFiles: any[]
+        setStartingAssistantFiles: React.Dispatch<React.SetStateAction<any[]>>
         selectedAssistantFiles: any[]
         setSelectedAssistantFiles: React.Dispatch<React.SetStateAction<any[]>>
+        startingAssistantCollections: any[]
+        setStartingAssistantCollections: React.Dispatch<
+          React.SetStateAction<any[]>
+        >
         selectedAssistantCollections: any[]
-        setSelectedAssistantCollections: React.Dispatch<React.SetStateAction<any[]>>
+        setSelectedAssistantCollections: React.Dispatch<
+          React.SetStateAction<any[]>
+        >
+        startingAssistantTools: any[]
+        setStartingAssistantTools: React.Dispatch<React.SetStateAction<any[]>>
         selectedAssistantTools: any[]
         setSelectedAssistantTools: React.Dispatch<React.SetStateAction<any[]>>
       }) => (
@@ -140,7 +150,7 @@ export const CreateAssistant: FC<CreateAssistantProps> = ({}) => {
             />
           </div>
 
-          <<div className="space-y-1">
+          <div className="space-y-1">
             <Label>Tools</Label>
             <AssistantToolSelect
               selectedAssistantTools={renderState.selectedAssistantTools}
