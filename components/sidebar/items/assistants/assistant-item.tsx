@@ -218,7 +218,7 @@ export const AssistantItem: FC<AssistantItemProps> = ({ assistant }) => {
                       )
                     ]
               }
-              onAssistantRetrievalItemsSelect={item =>
+              onAssistantRetrievalItemsSelect={(item: any) =>
                 "type" in item
                   ? handleFileSelect(
                       item,
