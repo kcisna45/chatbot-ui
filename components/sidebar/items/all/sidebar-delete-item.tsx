@@ -94,7 +94,7 @@ export const SidebarDeleteItem: FC<SidebarDeleteItemProps> = ({
     await deleteFunction(item as any)
 
     setStateFunction((prevItems: any) =>
-      prevItems.filter((prevItem: any) => prevItem.id !== item.id)
+      prevItems.filter((prevItem: any) => prevItem.id !== (item as any).id)
     )
 
     setShowDialog(false)
