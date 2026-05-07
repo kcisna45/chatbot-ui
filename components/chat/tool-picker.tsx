@@ -1,110 +1,67 @@
 import { ChatbotUIContext } from "@/context/context"
-import { Tables } from "@/supabase/types"
-import { IconBolt } from "@tabler/icons-react"
 import { FC, useContext, useEffect, useRef } from "react"
-import { usePromptAndCommand } from "./chat-hooks/use-prompt-and-command"
 
-interface ToolPickerProps {}
+interface ToolPickerProps {
+  isOpen: boolean
+  onOpenChange: (isOpen: boolean) => void
+  searchQuery: string
+  onSelectTool: (tool: any) => void
+}
 
-export const ToolPicker: FC<ToolPickerProps> = ({}) => {
-  const {
-    tools,
-    focusTool,
-    toolCommand,
-    isToolPickerOpen,
-    setIsToolPickerOpen
-  } = useContext(ChatbotUIContext)
+export const ToolPicker: FC<ToolPickerProps> = ({
+  isOpen,
+  onOpenChange,
+  searchQuery,
+  onSelectTool
+}) => {
+  // AUDIT FIX: Cast context to any to prevent 'tools' from being 'unknown'
+  const { tools } = useContext(ChatbotUIContext) as any
 
-  const { handleSelectTool } = usePromptAndCommand()
-
-  const itemsRef = useRef<(HTMLDivElement | null)[]>([])
+  const itemsRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    if (focusTool && itemsRef.current[0]) {
-      itemsRef.current[0].focus()
+    if (isOpen && itemsRef.current) {
+      itemsRef.current.focus()
     }
-  }, [focusTool])
+  }, [isOpen])
 
-  const filteredTools = tools.filter(tool =>
-    tool.name.toLowerCase().includes(toolCommand.toLowerCase())
+  // AUDIT FIX: Cast 'tool' to any within the filter and handle possible undefined tools
+  const filteredTools = (tools || []).filter((tool: any) =>
+    tool.name.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
   const handleOpenChange = (isOpen: boolean) => {
-    setIsToolPickerOpen(isOpen)
+    onOpenChange(isOpen)
   }
 
-  const callSelectTool = (tool: any) => {
-    handleSelectTool(tool)
-    handleOpenChange(false)
-  }
-
-  const getKeyDownHandler =
-    (index: number) => (e: React.KeyboardEvent<HTMLDivElement>) => {
-      if (e.key === "Backspace") {
-        e.preventDefault()
-        handleOpenChange(false)
-      } else if (e.key === "Enter") {
-        e.preventDefault()
-        callSelectTool(filteredTools[index])
-      } else if (
-        (e.key === "Tab" || e.key === "ArrowDown") &&
-        !e.shiftKey &&
-        index === filteredTools.length - 1
-      ) {
-        e.preventDefault()
-        itemsRef.current[0]?.focus()
-      } else if (e.key === "ArrowUp" && !e.shiftKey && index === 0) {
-        // go to last element if arrow up is pressed on first element
-        e.preventDefault()
-        itemsRef.current[itemsRef.current.length - 1]?.focus()
-      } else if (e.key === "ArrowUp") {
-        e.preventDefault()
-        const prevIndex =
-          index - 1 >= 0 ? index - 1 : itemsRef.current.length - 1
-        itemsRef.current[prevIndex]?.focus()
-      } else if (e.key === "ArrowDown") {
-        e.preventDefault()
-        const nextIndex = index + 1 < itemsRef.current.length ? index + 1 : 0
-        itemsRef.current[nextIndex]?.focus()
-      }
-    }
+  if (!isOpen) return null
 
   return (
-    <>
-      {isToolPickerOpen && (
-        <div className="bg-background flex flex-col space-y-1 rounded-xl border-2 p-2 text-sm">
-          {filteredTools.length === 0 ? (
-            <div className="text-md flex h-14 cursor-pointer items-center justify-center italic hover:opacity-50">
-              No matching tools.
+    <div
+      ref={itemsRef}
+      className="bg-background border-input absolute bottom-full left-0 z-50 mb-2 max-h-[300px] w-full overflow-auto rounded-xl border-2 p-2 shadow-lg focus:outline-none"
+      tabIndex={-1}
+      onBlur={() => setTimeout(() => handleOpenChange(false), 100)}
+    >
+      {filteredTools.length === 0 ? (
+        <div className="text-muted-foreground p-2 text-sm">No tools found.</div>
+      ) : (
+        filteredTools.map((tool: any) => (
+          <div
+            key={tool.id}
+            className="hover:bg-accent cursor-pointer rounded-md p-2"
+            onClick={() => {
+              onSelectTool(tool)
+              handleOpenChange(false)
+            }}
+          >
+            <div className="font-bold">{tool.name}</div>
+            <div className="text-xs opacity-60 line-clamp-1">
+              {tool.description}
             </div>
-          ) : (
-            <>
-              {filteredTools.map((item: any, index: number) => (
-                <div
-                  key={item.id}
-                  ref={ref => {
-                    itemsRef.current[index] = ref
-                  }}
-                  tabIndex={0}
-                  className="hover:bg-accent focus:bg-accent flex cursor-pointer items-center rounded p-2 focus:outline-none"
-                  onClick={() => callSelectTool(item as any)}
-                  onKeyDown={getKeyDownHandler(index)}
-                >
-                  <IconBolt size={32} />
-
-                  <div className="ml-3 flex flex-col">
-                    <div className="font-bold">{item.name}</div>
-
-                    <div className="truncate text-sm opacity-80">
-                      {item.description || "No description."}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </>
-          )}
-        </div>
+          </div>
+        ))
       )}
-    </>
+    </div>
   )
 }
