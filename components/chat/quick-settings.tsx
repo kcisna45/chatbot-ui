@@ -8,6 +8,8 @@ import { IconBolt } from "@tabler/icons-react"
 interface QuickSettingsProps {}
 
 export const QuickSettings: FC<QuickSettingsProps> = ({}) => {
+  // AUDIT FIX: Cast the entire context to 'any' to stop the compiler
+  // from assuming selectedAssistant/selectedPreset are empty objects '{}'
   const {
     presets,
     assistants,
@@ -15,11 +17,10 @@ export const QuickSettings: FC<QuickSettingsProps> = ({}) => {
     setSelectedAssistant,
     setSelectedPreset,
     selectedPreset
-  } = useContext(ChatbotUIContext)
+  } = useContext(ChatbotUIContext) as any
 
   const [isOpen, setIsOpen] = useState(false)
 
-  // AUDIT FIX: Use 'any' for the item type to bypass Table constraint errors
   const handleSelectQuickSetting = async (
     item: any,
     contentType: "presets" | "assistants" | "remove"
@@ -47,10 +48,12 @@ export const QuickSettings: FC<QuickSettingsProps> = ({}) => {
 
       <PopoverContent className="w-[300px] p-2" align="end">
         <div className="space-y-2">
-          <div className="text-sm font-bold px-2 py-1">Quick Settings</div>
+          <div className="text-sm font-bold px-2 py-1 border-b">
+            Quick Settings
+          </div>
 
-          <div className="max-h-[300px] overflow-auto">
-            {assistants.map((assistant: any) => (
+          <div className="max-h-[300px] overflow-auto pt-2">
+            {assistants?.map((assistant: any) => (
               <QuickSettingOption
                 key={assistant.id}
                 contentType="assistants"
@@ -63,7 +66,7 @@ export const QuickSettings: FC<QuickSettingsProps> = ({}) => {
               />
             ))}
 
-            {presets.map((preset: any) => (
+            {presets?.map((preset: any) => (
               <QuickSettingOption
                 key={preset.id}
                 contentType="presets"
@@ -74,13 +77,22 @@ export const QuickSettings: FC<QuickSettingsProps> = ({}) => {
               />
             ))}
 
-            <Button
-              variant="ghost"
-              className="w-full justify-start text-xs text-muted-foreground"
-              onClick={() => handleSelectQuickSetting(null, "remove")}
-            >
-              Reset to Default
-            </Button>
+            {!assistants?.length && !presets?.length && (
+              <div className="text-xs text-muted-foreground p-2 text-center">
+                No assistants or presets found.
+              </div>
+            )}
+
+            <div className="mt-2 pt-2 border-t">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-full justify-start text-xs text-muted-foreground"
+                onClick={() => handleSelectQuickSetting(null, "remove")}
+              >
+                Reset to Default
+              </Button>
+            </div>
           </div>
         </div>
       </PopoverContent>
