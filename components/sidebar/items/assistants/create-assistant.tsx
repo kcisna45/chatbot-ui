@@ -4,23 +4,17 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { ChatbotUIContext } from "@/context/context"
 import { ASSISTANT_DESCRIPTION_MAX, ASSISTANT_NAME_MAX } from "@/db/limits"
-import { Tables } from "@/supabase/types"
 import { FC, useContext, useState } from "react"
 import { SidebarCreateItem } from "../all/sidebar-create-item"
 import { AssistantRetrievalSelect } from "./assistant-retrieval-select"
 import { AssistantToolSelect } from "./assistant-tool-select"
 
-interface CreateAssistantProps {}
-
-export const CreateAssistant: FC<CreateAssistantProps> = ({}) => {
-  // AUDIT FIX: Cast context to any to avoid property errors on empty workspace objects
+export const CreateAssistant: FC = () => {
   const { selectedWorkspace, profile } = useContext(ChatbotUIContext) as any
 
   const [name, setName] = useState("")
-  const [isTyping, setIsTyping] = useState(false)
   const [description, setDescription] = useState("")
   const [assistantChatSettings, setAssistantChatSettings] = useState({
-    // AUDIT FIX: Using optional chaining with any-casting to prevent build failure
     model: selectedWorkspace?.default_model,
     prompt: selectedWorkspace?.default_prompt,
     temperature: selectedWorkspace?.default_temperature,
@@ -29,28 +23,43 @@ export const CreateAssistant: FC<CreateAssistantProps> = ({}) => {
     includeWorkspaceInstructions:
       selectedWorkspace?.include_workspace_instructions
   })
+
   const [selectedImage, setSelectedImage] = useState<File | null>(null)
   const [imageLink, setImageLink] = useState("")
 
-  const handleFileSelect = (
-    file: any,
-    setSelectedAssistantFiles: React.Dispatch<React.SetStateAction<any[]>>
-  ) => {
-    setSelectedAssistantFiles(prevState => [...prevState, file])
+  // AUDIT FIX: Manage retrieval state locally since SidebarCreateItem
+  // expects renderInputs to take 0 arguments.
+  const [selectedAssistantFiles, setSelectedAssistantFiles] = useState<any[]>(
+    []
+  )
+  const [selectedAssistantCollections, setSelectedAssistantCollections] =
+    useState<any[]>([])
+  const [selectedAssistantTools, setSelectedAssistantTools] = useState<any[]>(
+    []
+  )
+
+  const handleFileSelect = (file: any) => {
+    setSelectedAssistantFiles(prev =>
+      prev.find(f => f.id === file.id)
+        ? prev.filter(f => f.id !== file.id)
+        : [...prev, file]
+    )
   }
 
-  const handleCollectionSelect = (
-    collection: any,
-    setSelectedAssistantCollections: React.Dispatch<React.SetStateAction<any[]>>
-  ) => {
-    setSelectedAssistantCollections(prevState => [...prevState, collection])
+  const handleCollectionSelect = (collection: any) => {
+    setSelectedAssistantCollections(prev =>
+      prev.find(c => c.id === collection.id)
+        ? prev.filter(c => c.id !== collection.id)
+        : [...prev, collection]
+    )
   }
 
-  const handleToolSelect = (
-    tool: any,
-    setSelectedAssistantTools: React.Dispatch<React.SetStateAction<any[]>>
-  ) => {
-    setSelectedAssistantTools(prevState => [...prevState, tool])
+  const handleToolSelect = (tool: any) => {
+    setSelectedAssistantTools(prev =>
+      prev.find(t => t.id === tool.id)
+        ? prev.filter(t => t.id !== tool.id)
+        : [...prev, tool]
+    )
   }
 
   if (!profile) return null
@@ -70,26 +79,14 @@ export const CreateAssistant: FC<CreateAssistantProps> = ({}) => {
         model: assistantChatSettings.model,
         image_path: "",
         prompt: assistantChatSettings.prompt,
-        temperature: assistantChatSettings.temperature
+        temperature: assistantChatSettings.temperature,
+        // Manually adding these to the createState
+        selectedAssistantFiles,
+        selectedAssistantCollections,
+        selectedAssistantTools
       }}
-      renderInputs={(renderState: {
-        startingAssistantFiles: any[]
-        setStartingAssistantFiles: React.Dispatch<React.SetStateAction<any[]>>
-        selectedAssistantFiles: any[]
-        setSelectedAssistantFiles: React.Dispatch<React.SetStateAction<any[]>>
-        startingAssistantCollections: any[]
-        setStartingAssistantCollections: React.Dispatch<
-          React.SetStateAction<any[]>
-        >
-        selectedAssistantCollections: any[]
-        setSelectedAssistantCollections: React.Dispatch<
-          React.SetStateAction<any[]>
-        >
-        startingAssistantTools: any[]
-        setStartingAssistantTools: React.Dispatch<React.SetStateAction<any[]>>
-        selectedAssistantTools: any[]
-        setSelectedAssistantTools: React.Dispatch<React.SetStateAction<any[]>>
-      }) => (
+      renderInputs={() => (
+        // AUDIT FIX: Now taking 0 arguments to match Target Signature
         <>
           <div className="space-y-1">
             <Label>Name</Label>
@@ -133,19 +130,13 @@ export const CreateAssistant: FC<CreateAssistantProps> = ({}) => {
             <Label>Files & Collections</Label>
             <AssistantRetrievalSelect
               selectedAssistantRetrievalItems={[
-                ...renderState.selectedAssistantFiles,
-                ...renderState.selectedAssistantCollections
+                ...selectedAssistantFiles,
+                ...selectedAssistantCollections
               ]}
               onAssistantRetrievalItemsSelect={(item: any) =>
                 "type" in item
-                  ? handleFileSelect(
-                      item,
-                      renderState.setSelectedAssistantFiles
-                    )
-                  : handleCollectionSelect(
-                      item,
-                      renderState.setSelectedAssistantCollections
-                    )
+                  ? handleFileSelect(item)
+                  : handleCollectionSelect(item)
               }
             />
           </div>
@@ -153,10 +144,8 @@ export const CreateAssistant: FC<CreateAssistantProps> = ({}) => {
           <div className="space-y-1">
             <Label>Tools</Label>
             <AssistantToolSelect
-              selectedAssistantTools={renderState.selectedAssistantTools}
-              onAssistantToolsSelect={(tool: any) =>
-                handleToolSelect(tool, renderState.setSelectedAssistantTools)
-              }
+              selectedAssistantTools={selectedAssistantTools}
+              onAssistantToolsSelect={(tool: any) => handleToolSelect(tool)}
             />
           </div>
         </>
