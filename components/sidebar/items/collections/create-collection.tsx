@@ -4,8 +4,11 @@ import { SidebarCreateItem } from "../all/sidebar-create-item"
 import { CollectionFileSelect } from "./collection-file-select"
 
 export const CreateCollection: FC = () => {
-  // AUDIT FIX: Cast context to any
   const { profile, selectedWorkspace } = useContext(ChatbotUIContext) as any
+
+  // MANDATORY PROPS FOR SIDEBARCREATEITEM
+  const [isOpen, setIsOpen] = useState(false)
+  const [isTyping, setIsTyping] = useState(false)
 
   const [name, setName] = useState("")
   const [description, setDescription] = useState("")
@@ -16,15 +19,18 @@ export const CreateCollection: FC = () => {
   return (
     <SidebarCreateItem
       contentType="collections"
+      isOpen={isOpen}
+      onOpenChange={setIsOpen}
+      isTyping={isTyping}
       createState={{
         collection: {
-          user_id: (profile as any)?.user_id, // AUDIT FIX: Explicitly cast profile to any
+          user_id: (profile as any)?.user_id,
           workspace_id: selectedWorkspace?.id,
           name,
           description
         },
         collectionFiles: selectedCollectionFiles.map((file: any) => ({
-          user_id: (profile as any)?.user_id, // AUDIT FIX: Cast here as well
+          user_id: (profile as any)?.user_id,
           collection_id: "",
           file_id: file.id
         }))
@@ -36,7 +42,11 @@ export const CreateCollection: FC = () => {
             <input
               className="bg-background border-input border-2 p-2 w-full rounded"
               value={name}
-              onChange={e => setName(e.target.value)}
+              onChange={e => {
+                setName(e.target.value)
+                setIsTyping(true)
+              }}
+              onBlur={() => setIsTyping(false)}
             />
           </div>
 
@@ -45,7 +55,11 @@ export const CreateCollection: FC = () => {
             <textarea
               className="bg-background border-input border-2 p-2 w-full rounded"
               value={description}
-              onChange={e => setDescription(e.target.value)}
+              onChange={e => {
+                setDescription(e.target.value)
+                setIsTyping(true)
+              }}
+              onBlur={() => setIsTyping(false)}
             />
           </div>
 
