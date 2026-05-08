@@ -1,155 +1,62 @@
-import { Button } from "@/components/ui/button"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuTrigger
-} from "@/components/ui/dropdown-menu"
-import { FileIcon } from "@/components/ui/file-icon"
 import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { ChatbotUIContext } from "@/context/context"
-import { CollectionFile } from "@/types"
-import { IconChevronDown, IconCircleCheckFilled } from "@tabler/icons-react"
-import { FC, useContext, useEffect, useRef, useState } from "react"
+import { FC, useContext, useState } from "react"
 
 interface CollectionFileSelectProps {
-  selectedCollectionFiles: CollectionFile[]
-  onCollectionFileSelect: (file: CollectionFile) => void
+  selectedCollectionFiles: any[]
+  onCollectionFileSelect: (file: any) => void
 }
 
 export const CollectionFileSelect: FC<CollectionFileSelectProps> = ({
   selectedCollectionFiles,
   onCollectionFileSelect
 }) => {
-  const { files } = useContext(ChatbotUIContext)
-
-  const inputRef = useRef<HTMLInputElement>(null)
-  const triggerRef = useRef<HTMLButtonElement>(null)
-
-  const [isOpen, setIsOpen] = useState(false)
+  const { files } = useContext(ChatbotUIContext) as any
   const [search, setSearch] = useState("")
 
-  useEffect(() => {
-    if (isOpen) {
-      setTimeout(() => {
-        inputRef.current?.focus()
-      }, 100) // FIX: hacky
-    }
-  }, [isOpen])
-
-  const handleFileSelect = (file: CollectionFile) => {
-    onCollectionFileSelect(file)
-  }
-
-  if (!files) return null
-
-  return (
-    <DropdownMenu
-      open={isOpen}
-      onOpenChange={isOpen => {
-        setIsOpen(isOpen)
-        setSearch("")
-      }}
-    >
-      <DropdownMenuTrigger
-        className="bg-background w-full justify-start border-2 px-3 py-5"
-        asChild
-      >
-        <Button
-          ref={triggerRef}
-          className="flex items-center justify-between"
-          variant="ghost"
-        >
-          <div className="flex items-center">
-            <div className="ml-2 flex items-center">
-              {selectedCollectionFiles.length} files selected
-            </div>
-          </div>
-
-          <IconChevronDown />
-        </Button>
-      </DropdownMenuTrigger>
-
-      <DropdownMenuContent
-        style={{ width: triggerRef.current?.offsetWidth }}
-        className="space-y-2 overflow-auto p-2"
-        align="start"
-      >
-        <Input
-          ref={inputRef}
-          placeholder="Search files..."
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          onKeyDown={e => e.stopPropagation()}
-        />
-
-        {selectedCollectionFiles
-          .filter(file =>
-            file.name.toLowerCase().includes(search.toLowerCase())
-          )
-          .map(file => (
-            <CollectionFileItem
-              key={file.id}
-              file={file}
-              selected={selectedCollectionFiles.some(
-                selectedCollectionFile => selectedCollectionFile.id === file.id
-              )}
-              onSelect={handleFileSelect}
-            />
-          ))}
-
-        {files
-          .filter(
-            file =>
-              !selectedCollectionFiles.some(
-                selectedCollectionFile => selectedCollectionFile.id === file.id
-              ) && file.name.toLowerCase().includes(search.toLowerCase())
-          )
-          .map(file => (
-            <CollectionFileItem
-              key={file.id}
-              file={file}
-              selected={selectedCollectionFiles.some(
-                selectedCollectionFile => selectedCollectionFile.id === file.id
-              )}
-              onSelect={handleFileSelect}
-            />
-          ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
+  // Filter files based on search text
+  const filteredFiles = files.filter((file: any) =>
+    file.name.toLowerCase().includes(search.toLowerCase())
   )
-}
-
-interface CollectionFileItemProps {
-  file: CollectionFile
-  selected: boolean
-  onSelect: (file: CollectionFile) => void
-}
-
-const CollectionFileItem: FC<CollectionFileItemProps> = ({
-  file,
-  selected,
-  onSelect
-}) => {
-  const handleSelect = () => {
-    onSelect(file)
-  }
 
   return (
-    <div
-      className="flex cursor-pointer items-center justify-between py-0.5 hover:opacity-50"
-      onClick={handleSelect}
-    >
-      <div className="flex grow items-center truncate">
-        <div className="mr-2 min-w-[24px]">
-          <FileIcon type={file.type} size={24} />
-        </div>
+    <div className="space-y-2">
+      <Label>Files</Label>
 
-        <div className="truncate">{file.name}</div>
+      <Input
+        placeholder="Search files..."
+        value={search}
+        onChange={e => setSearch(e.target.value)}
+      />
+
+      <div className="flex flex-col gap-2 max-h-[200px] overflow-y-auto border rounded-md p-2">
+        {filteredFiles.map((file: any) => {
+          const isSelected = selectedCollectionFiles.some(
+            (selectedFile: any) => selectedFile.id === file.id
+          )
+
+          return (
+            <div
+              key={file.id}
+              className={`flex items-center justify-between p-2 cursor-pointer rounded hover:bg-accent ${
+                isSelected ? "bg-accent" : ""
+              }`}
+              onClick={() => onCollectionFileSelect(file)}
+            >
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={isSelected}
+                  readOnly
+                  className="cursor-pointer"
+                />
+                <div className="text-sm truncate w-[200px]">{file.name}</div>
+              </div>
+            </div>
+          )
+        })}
       </div>
-
-      {selected && (
-        <IconCircleCheckFilled size={20} className="min-w-[30px] flex-none" />
-      )}
     </div>
   )
 }
