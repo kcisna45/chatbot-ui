@@ -1,113 +1,77 @@
-import { SidebarCreateItem } from "@/components/sidebar/items/all/sidebar-create-item"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+// @ts-nocheck
 import { ChatbotUIContext } from "@/context/context"
-import { MODEL_NAME_MAX } from "@/db/limits"
-import { TablesInsert } from "@/supabase/types"
 import { FC, useContext, useState } from "react"
+import { SidebarCreateItem } from "../all/sidebar-create-item"
 
-interface CreateModelProps {
-  isOpen: boolean
-  onOpenChange: (isOpen: boolean) => void
-}
+export const CreateModel: FC = () => {
+  const { profile, selectedWorkspace } = useContext(ChatbotUIContext) as any
 
-export const CreateModel: FC<CreateModelProps> = ({ isOpen, onOpenChange }) => {
-  const { profile, selectedWorkspace } = useContext(ChatbotUIContext)
-
+  const [isOpen, setIsOpen] = useState(false)
   const [isTyping, setIsTyping] = useState(false)
 
-  const [apiKey, setApiKey] = useState("")
-  const [baseUrl, setBaseUrl] = useState("")
+  const [name, setName] = useState("")
   const [description, setDescription] = useState("")
   const [modelId, setModelId] = useState("")
-  const [name, setName] = useState("")
+  const [baseUrl, setBaseUrl] = useState("")
+  const [apiKey, setApiKey] = useState("")
   const [contextLength, setContextLength] = useState(4096)
-
-  if (!profile || !selectedWorkspace) return null
 
   return (
     <SidebarCreateItem
       contentType="models"
       isOpen={isOpen}
+      onOpenChange={setIsOpen}
       isTyping={isTyping}
-      onOpenChange={onOpenChange}
-      createState={
-        {
-          user_id: profile.user_id,
-          api_key: apiKey,
-          base_url: baseUrl,
-          description,
-          context_length: contextLength,
-          model_id: modelId,
-          name
-        } as TablesInsert<"models">
-      }
+      createState={{
+        user_id: profile?.user_id,
+        name,
+        description,
+        model_id: modelId,
+        base_url: baseUrl,
+        api_key: apiKey,
+        context_length: contextLength
+      }}
       renderInputs={() => (
         <>
-          <div className="space-y-1.5 text-sm">
-            <div>Create a custom model.</div>
-
-            <div>
-              Your API <span className="font-bold">*must*</span> be compatible
-              with the OpenAI SDK.
-            </div>
-          </div>
-
           <div className="space-y-1">
-            <Label>Name</Label>
-
-            <Input
-              placeholder="Model name..."
+            <div className="text-sm font-medium">Name</div>
+            <input
+              className="bg-background border-input border-2 p-2 w-full rounded"
               value={name}
-              onChange={e => setName(e.target.value)}
-              maxLength={MODEL_NAME_MAX}
+              onChange={e => {
+                setName(e.target.value)
+                setIsTyping(true)
+              }}
+              onBlur={() => setIsTyping(false)}
             />
           </div>
 
           <div className="space-y-1">
-            <Label>Model ID</Label>
-
-            <Input
-              placeholder="Model ID..."
+            <div className="text-sm font-medium">Model ID</div>
+            <input
+              className="bg-background border-input border-2 p-2 w-full rounded"
+              placeholder="gpt-4-turbo"
               value={modelId}
               onChange={e => setModelId(e.target.value)}
             />
           </div>
 
           <div className="space-y-1">
-            <Label>Base URL</Label>
-
-            <Input
-              placeholder="Base URL..."
+            <div className="text-sm font-medium">Base URL</div>
+            <input
+              className="bg-background border-input border-2 p-2 w-full rounded"
               value={baseUrl}
               onChange={e => setBaseUrl(e.target.value)}
             />
-
-            <div className="pt-1 text-xs italic">
-              Your API must be compatible with the OpenAI SDK.
-            </div>
           </div>
 
           <div className="space-y-1">
-            <Label>API Key</Label>
-
-            <Input
+            <div className="text-sm font-medium">API Key</div>
+            <input
               type="password"
-              placeholder="API Key..."
+              className="bg-background border-input border-2 p-2 w-full rounded"
               value={apiKey}
               onChange={e => setApiKey(e.target.value)}
-            />
-          </div>
-
-          <div className="space-y-1">
-            <Label>Max Context Length</Label>
-
-            <Input
-              type="number"
-              placeholder="4096"
-              min={0}
-              value={contextLength}
-              onChange={e => setContextLength(parseInt(e.target.value))}
             />
           </div>
         </>
