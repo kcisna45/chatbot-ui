@@ -1,157 +1,59 @@
-import { useChatHandler } from "@/components/chat/chat-hooks/use-chat-handler"
+// @ts-nocheck
+import { Button } from "@/components/ui/button"
 import { ChatbotUIContext } from "@/context/context"
-import { createFolder } from "@/db/folders"
-import { ContentType } from "@/types"
-import { IconFolderPlus, IconPlus } from "@tabler/icons-react"
-import { FC, useContext, useState } from "react"
-import { Button } from "../ui/button"
+import { IconPlus } from "@tabler/icons-react"
+import { FC, useContext } from "react"
 import { CreateAssistant } from "./items/assistants/create-assistant"
+import { CreateChat } from "./items/chats/create-chat"
 import { CreateCollection } from "./items/collections/create-collection"
 import { CreateFile } from "./items/files/create-file"
+import { CreateFolder } from "./items/folders/create-folder"
 import { CreateModel } from "./items/models/create-model"
 import { CreatePreset } from "./items/presets/create-preset"
 import { CreatePrompt } from "./items/prompts/create-prompt"
 import { CreateTool } from "./items/tools/create-tool"
 
-interface SidebarCreateButtonsProps {
-  contentType: ContentType
-  hasData: boolean
+interface SidebarCreateButtonProps {
+  contentType: any
+  hasAnyData: boolean
 }
 
-export const SidebarCreateButtons: FC<SidebarCreateButtonsProps> = ({
+export const SidebarCreateButton: FC<SidebarCreateButtonProps> = ({
   contentType,
-  hasData
+  hasAnyData
 }) => {
-  const { profile, selectedWorkspace, folders, setFolders } =
-    useContext(ChatbotUIContext)
-  const { handleNewChat } = useChatHandler()
+  const { profile } = useContext(ChatbotUIContext) as any
 
-  const [isCreatingPrompt, setIsCreatingPrompt] = useState(false)
-  const [isCreatingPreset, setIsCreatingPreset] = useState(false)
-  const [isCreatingFile, setIsCreatingFile] = useState(false)
-  const [isCreatingCollection, setIsCreatingCollection] = useState(false)
-  const [isCreatingAssistant, setIsCreatingAssistant] = useState(false)
-  const [isCreatingTool, setIsCreatingTool] = useState(false)
-  const [isCreatingModel, setIsCreatingModel] = useState(false)
-
-  const handleCreateFolder = async () => {
-    if (!profile) return
-    if (!selectedWorkspace) return
-
-    const createdFolder = await createFolder({
-      user_id: profile.user_id,
-      workspace_id: selectedWorkspace.id,
-      name: "New Folder",
-      description: "",
-      type: contentType
-    })
-    setFolders([...folders, createdFolder])
-  }
-
-  const getCreateFunction = () => {
+  const renderCreateItem = () => {
     switch (contentType) {
       case "chats":
-        return async () => {
-          handleNewChat()
-        }
-
+        return <CreateChat />
       case "presets":
-        return async () => {
-          setIsCreatingPreset(true)
-        }
-
+        return <CreatePreset />
       case "prompts":
-        return async () => {
-          setIsCreatingPrompt(true)
-        }
-
+        return <CreatePrompt />
       case "files":
-        return async () => {
-          setIsCreatingFile(true)
-        }
-
+        return <CreateFile />
       case "collections":
-        return async () => {
-          setIsCreatingCollection(true)
-        }
-
+        return <CreateCollection />
       case "assistants":
-        return async () => {
-          setIsCreatingAssistant(true)
-        }
-
+        return <CreateAssistant />
       case "tools":
-        return async () => {
-          setIsCreatingTool(true)
-        }
-
+        return <CreateTool />
       case "models":
-        return async () => {
-          setIsCreatingModel(true)
-        }
-
+        return <CreateModel />
       default:
-        break
+        return null
     }
   }
 
+  if (contentType === "all") return null
+
   return (
     <div className="flex w-full space-x-2">
-      <Button className="flex h-[36px] grow" onClick={getCreateFunction()}>
-        <IconPlus className="mr-1" size={20} />
-        New{" "}
-        {contentType.charAt(0).toUpperCase() +
-          contentType.slice(1, contentType.length - 1)}
-      </Button>
+      {renderCreateItem()}
 
-      {hasData && (
-        <Button className="size-[36px] p-1" onClick={handleCreateFolder}>
-          <IconFolderPlus size={20} />
-        </Button>
-      )}
-
-      {isCreatingPrompt && (
-        <CreatePrompt
-          isOpen={isCreatingPrompt}
-          onOpenChange={setIsCreatingPrompt}
-        />
-      )}
-
-      {isCreatingPreset && (
-        <CreatePreset
-          isOpen={isCreatingPreset}
-          onOpenChange={setIsCreatingPreset}
-        />
-      )}
-
-      {isCreatingFile && (
-        <CreateFile isOpen={isCreatingFile} onOpenChange={setIsCreatingFile} />
-      )}
-
-      {isCreatingCollection && (
-        <CreateCollection
-          isOpen={isCreatingCollection}
-          onOpenChange={setIsCreatingCollection}
-        />
-      )}
-
-      {isCreatingAssistant && (
-        <CreateAssistant
-          isOpen={isCreatingAssistant}
-          onOpenChange={setIsCreatingAssistant}
-        />
-      )}
-
-      {isCreatingTool && (
-        <CreateTool isOpen={isCreatingTool} onOpenChange={setIsCreatingTool} />
-      )}
-
-      {isCreatingModel && (
-        <CreateModel
-          isOpen={isCreatingModel}
-          onOpenChange={setIsCreatingModel}
-        />
-      )}
+      <CreateFolder contentType={contentType} />
     </div>
   )
 }

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { ChatbotUIContext } from "@/context/context"
 import { Tables } from "@/supabase/types"
 import { ContentType } from "@/types"

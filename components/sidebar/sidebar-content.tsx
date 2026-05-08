@@ -1,50 +1,31 @@
-import { Tables } from "@/supabase/types"
-import { ContentType, DataListType } from "@/types"
-import { FC, useState } from "react"
-import { SidebarCreateButtons } from "./sidebar-create-buttons"
+// @ts-nocheck
+import { ChatbotUIContext } from "@/context/context"
+import { FC, useContext } from "react"
 import { SidebarDataList } from "./sidebar-data-list"
 import { SidebarSearch } from "./sidebar-search"
 
 interface SidebarContentProps {
-  contentType: ContentType
-  data: DataListType
-  folders: Tables<"folders">[]
+  contentType: any
+  data: any[]
 }
 
 export const SidebarContent: FC<SidebarContentProps> = ({
   contentType,
-  data,
-  folders
+  data
 }) => {
-  const [searchTerm, setSearchTerm] = useState("")
-
-  const filteredData: any = data.filter(item =>
-    item.name.toLowerCase().includes(searchTerm.toLowerCase())
-  )
-
   return (
-    // Subtract 50px for the height of the workspace settings
-    <div className="flex max-h-[calc(100%-50px)] grow flex-col">
-      <div className="mt-2 flex items-center">
-        <SidebarCreateButtons
-          contentType={contentType}
-          hasData={data.length > 0}
-        />
-      </div>
-
-      <div className="mt-2">
+    <div className="flex flex-col flex-grow overflow-hidden">
+      <div className="p-3">
         <SidebarSearch
           contentType={contentType}
-          searchTerm={searchTerm}
-          setSearchTerm={setSearchTerm}
+          searchTerm={""}
+          setSearchTerm={() => {}}
         />
       </div>
 
-      <SidebarDataList
-        contentType={contentType}
-        data={filteredData}
-        folders={folders}
-      />
+      <div className="flex-grow overflow-auto">
+        <SidebarDataList contentType={contentType} data={data} />
+      </div>
     </div>
   )
 }

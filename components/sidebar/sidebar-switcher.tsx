@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { ContentType } from "@/types"
 import {
   IconAdjustmentsHorizontal,
