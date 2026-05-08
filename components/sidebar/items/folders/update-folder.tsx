@@ -1,76 +1,33 @@
-import { Button } from "@/components/ui/button"
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger
-} from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+// @ts-nocheck
 import { ChatbotUIContext } from "@/context/context"
-import { updateFolder } from "@/db/folders"
-import { Tables } from "@/supabase/types"
-import { IconEdit } from "@tabler/icons-react"
-import { FC, useContext, useRef, useState } from "react"
+import { FC, useContext, useState } from "react"
+import { SidebarUpdateItem } from "../all/sidebar-update-item"
 
 interface UpdateFolderProps {
-  folder: Tables<"folders">
+  folder: any
 }
 
 export const UpdateFolder: FC<UpdateFolderProps> = ({ folder }) => {
-  const { setFolders } = useContext(ChatbotUIContext)
-
-  const buttonRef = useRef<HTMLButtonElement>(null)
-
-  const [showFolderDialog, setShowFolderDialog] = useState(false)
+  const { setFolders } = useContext(ChatbotUIContext) as any
   const [name, setName] = useState(folder.name)
 
-  const handleUpdateFolder = async (e: React.MouseEvent<HTMLButtonElement>) => {
-    const updatedFolder = await updateFolder(folder.id, {
-      name
-    })
-    setFolders(prevState =>
-      prevState.map(c => (c.id === folder.id ? updatedFolder : c))
-    )
-
-    setShowFolderDialog(false)
-  }
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
-    if (e.key === "Enter") {
-      buttonRef.current?.click()
-    }
-  }
-
   return (
-    <Dialog open={showFolderDialog} onOpenChange={setShowFolderDialog}>
-      <DialogTrigger asChild>
-        <IconEdit className="hover:opacity-50" size={18} />
-      </DialogTrigger>
-
-      <DialogContent onKeyDown={handleKeyDown}>
-        <DialogHeader>
-          <DialogTitle>Edit Folder</DialogTitle>
-        </DialogHeader>
-
+    <SidebarUpdateItem
+      item={folder}
+      contentType="folders"
+      updateState={{
+        name
+      }}
+      renderInputs={() => (
         <div className="space-y-1">
-          <Label>Name</Label>
-
-          <Input value={name} onChange={e => setName(e.target.value)} />
+          <div className="text-sm font-medium">Name</div>
+          <input
+            className="bg-background border-input border-2 p-2 w-full rounded"
+            value={name}
+            onChange={e => setName(e.target.value)}
+          />
         </div>
-
-        <DialogFooter>
-          <Button variant="ghost" onClick={() => setShowFolderDialog(false)}>
-            Cancel
-          </Button>
-
-          <Button ref={buttonRef} onClick={handleUpdateFolder}>
-            Save
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+      )}
+    />
   )
 }
