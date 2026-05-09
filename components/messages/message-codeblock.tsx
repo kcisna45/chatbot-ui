@@ -47,13 +47,13 @@ export const MessageCodeBlock: FC<MessageCodeBlockProps> = ({
 
   return (
     <div className="codeblock relative font-sans text-[16px]">
-      <div className="flex items-center justify-between px-4 py-1.5 bg-zinc-800 text-zinc-100 rounded-t-lg">
+      <div className="flex items-center justify-between rounded-t-lg bg-zinc-800 px-4 py-1.5 text-zinc-100">
         <span className="text-xs lowercase">{language}</span>
         <div className="flex items-center space-x-2">
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8 text-zinc-100 hover:bg-zinc-700"
+            className="size-8 text-zinc-100 hover:bg-zinc-700"
             onClick={copyToClipboard}
           >
             {isCopied ? <IconCheck size={16} /> : <IconCopy size={16} />}
@@ -61,14 +61,14 @@ export const MessageCodeBlock: FC<MessageCodeBlockProps> = ({
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8 text-zinc-100 hover:bg-zinc-700"
+            className="size-8 text-zinc-100 hover:bg-zinc-700"
             onClick={downloadAsFile}
           >
             <IconDownload size={16} />
           </Button>
         </div>
       </div>
-      <div className="overflow-x-auto bg-zinc-950 p-4 rounded-b-lg">
+      <div className="overflow-x-auto rounded-b-lg bg-zinc-950 p-4">
         <pre className="text-white">
           <code>{value}</code>
         </pre>

@@ -56,7 +56,7 @@ export const ToolPicker: FC<ToolPickerProps> = ({
             }}
           >
             <div className="font-bold">{tool.name}</div>
-            <div className="text-xs opacity-60 line-clamp-1">
+            <div className="line-clamp-1 text-xs opacity-60">
               {tool.description}
             </div>
           </div>

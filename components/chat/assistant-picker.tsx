@@ -89,9 +89,7 @@ export const AssistantPicker: FC<AssistantPickerProps> = ({}) => {
                   }}
                   tabIndex={0}
                   className="hover:bg-accent focus:bg-accent flex cursor-pointer items-center rounded p-2 focus:outline-none"
-                  onClick={() =>
-                    callSelectAssistant(item as any)
-                  }
+                  onClick={() => callSelectAssistant(item as any)}
                   onKeyDown={getKeyDownHandler(index)}
                 >
                   {item.image_path ? (

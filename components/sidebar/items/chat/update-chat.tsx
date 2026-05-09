@@ -27,7 +27,7 @@ export const UpdateChat: FC<UpdateChatProps> = ({ chat }) => {
           <div className="space-y-1">
             {/* Standard name edit field for chats */}
             <input
-              className="bg-background border-input border-2 p-2 w-full rounded"
+              className="bg-background border-input w-full rounded border-2 p-2"
               value={name}
               onChange={e => {
                 setName(e.target.value)
@@ -40,7 +40,7 @@ export const UpdateChat: FC<UpdateChatProps> = ({ chat }) => {
       )}
     >
       {/* MANDATORY: SidebarUpdateItem requires children to act as the trigger */}
-      <IconEdit className="hover:opacity-50 cursor-pointer" size={18} />
+      <IconEdit className="cursor-pointer hover:opacity-50" size={18} />
     </SidebarUpdateItem>
   )
 }

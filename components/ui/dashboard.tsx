@@ -33,7 +33,7 @@ export const Dashboard: FC<DashboardProps> = ({ children }) => {
 
       <Sidebar contentType={contentType} showSidebar={true} />
 
-      <div className="flex flex-col flex-grow overflow-hidden">{children}</div>
+      <div className="flex grow flex-col overflow-hidden">{children}</div>
     </div>
   )
 }

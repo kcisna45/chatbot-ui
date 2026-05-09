@@ -14,7 +14,7 @@ export const SidebarContent: FC<SidebarContentProps> = ({
   data
 }) => {
   return (
-    <div className="flex flex-col flex-grow overflow-hidden">
+    <div className="flex grow flex-col overflow-hidden">
       <div className="p-3">
         <SidebarSearch
           contentType={contentType}
@@ -23,7 +23,7 @@ export const SidebarContent: FC<SidebarContentProps> = ({
         />
       </div>
 
-      <div className="flex-grow overflow-auto">
+      <div className="grow overflow-auto">
         <SidebarDataList contentType={contentType} data={data} />
       </div>
     </div>

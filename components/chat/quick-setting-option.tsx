@@ -24,7 +24,7 @@ export const QuickSettingOption: FC<QuickSettingOptionProps> = ({
       }`}
       onClick={onSelect}
     >
-      <div className="relative h-8 w-8 flex-shrink-0 overflow-hidden rounded bg-secondary">
+      <div className="bg-secondary relative size-8 shrink-0 overflow-hidden rounded">
         {image ? (
           <Image
             src={image}
@@ -36,7 +36,7 @@ export const QuickSettingOption: FC<QuickSettingOptionProps> = ({
             unoptimized
           />
         ) : (
-          <div className="flex h-full w-full items-center justify-center text-xs font-bold text-muted-foreground">
+          <div className="text-muted-foreground flex size-full items-center justify-center text-xs font-bold">
             {contentType === "presets" ? "P" : "A"}
           </div>
         )}

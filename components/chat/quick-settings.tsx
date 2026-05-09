@@ -48,7 +48,7 @@ export const QuickSettings: FC<QuickSettingsProps> = ({}) => {
 
       <PopoverContent className="w-[300px] p-2" align="end">
         <div className="space-y-2">
-          <div className="text-sm font-bold px-2 py-1 border-b">
+          <div className="border-b px-2 py-1 text-sm font-bold">
             Quick Settings
           </div>
 
@@ -78,16 +78,16 @@ export const QuickSettings: FC<QuickSettingsProps> = ({}) => {
             ))}
 
             {!assistants?.length && !presets?.length && (
-              <div className="text-xs text-muted-foreground p-2 text-center">
+              <div className="text-muted-foreground p-2 text-center text-xs">
                 No assistants or presets found.
               </div>
             )}
 
-            <div className="mt-2 pt-2 border-t">
+            <div className="mt-2 border-t pt-2">
               <Button
                 variant="ghost"
                 size="sm"
-                className="w-full justify-start text-xs text-muted-foreground"
+                className="text-muted-foreground w-full justify-start text-xs"
                 onClick={() => handleSelectQuickSetting(null, "remove")}
               >
                 Reset to Default

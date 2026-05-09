@@ -43,7 +43,7 @@ export const CreateFile: FC = () => {
           <div className="space-y-1">
             <div className="text-sm font-medium">Name</div>
             <input
-              className="bg-background border-input border-2 p-2 w-full rounded"
+              className="bg-background border-input w-full rounded border-2 p-2"
               value={name}
               onChange={e => {
                 setName(e.target.value)
@@ -56,7 +56,7 @@ export const CreateFile: FC = () => {
           <div className="space-y-1">
             <div className="text-sm font-medium">Description</div>
             <textarea
-              className="bg-background border-input border-2 p-2 w-full rounded"
+              className="bg-background border-input w-full rounded border-2 p-2"
               value={description}
               onChange={e => {
                 setDescription(e.target.value)

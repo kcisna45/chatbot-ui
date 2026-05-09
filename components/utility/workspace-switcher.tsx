@@ -26,7 +26,7 @@ export const WorkspaceSwitcher: FC = () => {
   return (
     <div className="flex items-center space-x-2 p-2">
       <select
-        className="bg-background border-input border-2 p-1 rounded text-sm w-full"
+        className="bg-background border-input w-full rounded border-2 p-1 text-sm"
         value={selectedWorkspace?.id}
         onChange={e => handleWorkspaceChange(e.target.value)}
       >

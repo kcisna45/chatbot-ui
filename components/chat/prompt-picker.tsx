@@ -58,7 +58,7 @@ export const PromptPicker: FC<PromptPickerProps> = ({
             }}
           >
             <div className="font-bold">{prompt.name}</div>
-            <div className="text-xs opacity-60 line-clamp-1">
+            <div className="line-clamp-1 text-xs opacity-60">
               {prompt.content}
             </div>
           </div>

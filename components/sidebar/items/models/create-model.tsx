@@ -36,7 +36,7 @@ export const CreateModel: FC = () => {
           <div className="space-y-1">
             <div className="text-sm font-medium">Name</div>
             <input
-              className="bg-background border-input border-2 p-2 w-full rounded"
+              className="bg-background border-input w-full rounded border-2 p-2"
               value={name}
               onChange={e => {
                 setName(e.target.value)
@@ -49,7 +49,7 @@ export const CreateModel: FC = () => {
           <div className="space-y-1">
             <div className="text-sm font-medium">Model ID</div>
             <input
-              className="bg-background border-input border-2 p-2 w-full rounded"
+              className="bg-background border-input w-full rounded border-2 p-2"
               placeholder="gpt-4-turbo"
               value={modelId}
               onChange={e => setModelId(e.target.value)}
@@ -59,7 +59,7 @@ export const CreateModel: FC = () => {
           <div className="space-y-1">
             <div className="text-sm font-medium">Base URL</div>
             <input
-              className="bg-background border-input border-2 p-2 w-full rounded"
+              className="bg-background border-input w-full rounded border-2 p-2"
               value={baseUrl}
               onChange={e => setBaseUrl(e.target.value)}
             />
@@ -69,7 +69,7 @@ export const CreateModel: FC = () => {
             <div className="text-sm font-medium">API Key</div>
             <input
               type="password"
-              className="bg-background border-input border-2 p-2 w-full rounded"
+              className="bg-background border-input w-full rounded border-2 p-2"
               value={apiKey}
               onChange={e => setApiKey(e.target.value)}
             />

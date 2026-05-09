@@ -62,7 +62,7 @@ export const ChatSettings: FC<ChatSettingsProps> = ({}) => {
             />
           </div>
 
-          <div className="p-4 border border-dashed rounded-md text-sm text-muted-foreground italic">
+          <div className="text-muted-foreground rounded-md border border-dashed p-4 text-sm italic">
             Note: Chat settings form currently hidden for build stability.
           </div>
         </div>

@@ -30,7 +30,7 @@ export const CollectionFileSelect: FC<CollectionFileSelectProps> = ({
         onChange={e => setSearch(e.target.value)}
       />
 
-      <div className="flex flex-col gap-2 max-h-[200px] overflow-y-auto border rounded-md p-2">
+      <div className="flex max-h-[200px] flex-col gap-2 overflow-y-auto rounded-md border p-2">
         {filteredFiles.map((file: any) => {
           const isSelected = selectedCollectionFiles.some(
             (selectedFile: any) => selectedFile.id === file.id
@@ -39,7 +39,7 @@ export const CollectionFileSelect: FC<CollectionFileSelectProps> = ({
           return (
             <div
               key={file.id}
-              className={`flex items-center justify-between p-2 cursor-pointer rounded hover:bg-accent ${
+              className={`hover:bg-accent flex cursor-pointer items-center justify-between rounded p-2 ${
                 isSelected ? "bg-accent" : ""
               }`}
               onClick={() => onCollectionFileSelect(file)}
@@ -51,7 +51,7 @@ export const CollectionFileSelect: FC<CollectionFileSelectProps> = ({
                   readOnly
                   className="cursor-pointer"
                 />
-                <div className="text-sm truncate w-[200px]">{file.name}</div>
+                <div className="w-[200px] truncate text-sm">{file.name}</div>
               </div>
             </div>
           )

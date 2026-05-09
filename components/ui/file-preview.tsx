@@ -20,7 +20,7 @@ export const FilePreview: FC<FilePreviewProps> = ({
 }) => {
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[800px] p-0 overflow-hidden">
+      <DialogContent className="overflow-hidden p-0 sm:max-w-[800px]">
         <div className="flex flex-col items-center justify-center">
           {type === "image" ? (
             <img
@@ -31,7 +31,7 @@ export const FilePreview: FC<FilePreviewProps> = ({
           ) : (
             <div className="p-8 text-center">
               <p className="text-lg font-bold">{item.name}</p>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-muted-foreground text-sm">
                 Preview not available for this file type.
               </p>
             </div>

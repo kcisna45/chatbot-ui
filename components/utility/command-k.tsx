@@ -31,27 +31,27 @@ export const CommandK: FC = () => {
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogContent
         onKeyDown={handleKeyDown}
-        className="p-0 border-none bg-transparent"
+        className="border-none bg-transparent p-0"
       >
-        <div className="bg-background border-input border-2 flex flex-col w-full rounded-lg overflow-hidden shadow-lg">
+        <div className="bg-background border-input flex w-full flex-col overflow-hidden rounded-lg border-2 shadow-lg">
           <input
-            className="p-4 bg-transparent outline-none border-b"
+            className="border-b bg-transparent p-4 outline-none"
             placeholder="Search or type a command..."
             autoFocus
           />
 
-          <div className="p-2 max-h-[300px] overflow-auto">
+          <div className="max-h-[300px] overflow-auto p-2">
             {profile?.openai_api_key ? (
-              <div className="p-2 text-xs text-muted-foreground uppercase font-bold">
+              <div className="text-muted-foreground p-2 text-xs font-bold uppercase">
                 AI Search Enabled
               </div>
             ) : (
-              <div className="p-2 text-xs text-muted-foreground uppercase font-bold">
+              <div className="text-muted-foreground p-2 text-xs font-bold uppercase">
                 Standard Search
               </div>
             )}
             {/* Search results would map here */}
-            <div className="p-2 hover:bg-accent cursor-pointer rounded">
+            <div className="hover:bg-accent cursor-pointer rounded p-2">
               Search Chats...
             </div>
           </div>
