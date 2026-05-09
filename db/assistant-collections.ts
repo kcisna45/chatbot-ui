@@ -35,3 +35,17 @@ export const deleteAssistantCollection = async (
 
   return true
 }
+export const getAssistantCollectionsByAssistantId = async (
+  assistantId: string
+) => {
+  const { data, error } = await supabase
+    .from("assistant_collections")
+    .select("*")
+    .eq("assistant_id", assistantId)
+
+  if (error) {
+    throw new Error(error.message)
+  }
+
+  return data
+}
