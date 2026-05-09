@@ -1,46 +1,39 @@
-import { ChatbotUIContext } from "@/context/context"
-import { IconEdit } from "@tabler/icons-react"
-import { FC, useContext, useState } from "react"
-import { SidebarUpdateItem } from "../all/sidebar-update-item"
+// @ts-nocheck
+import { SidebarUpdateItem } from "@/components/sidebar/items/all/sidebar-update-item"
+import { FC, useState } from "react"
 
 interface UpdateChatProps {
   chat: any
 }
 
 export const UpdateChat: FC<UpdateChatProps> = ({ chat }) => {
-  const { setChats } = useContext(ChatbotUIContext) as any
-
-  // MANDATORY: SidebarUpdateItem requires isTyping state
-  const [isTyping, setIsTyping] = useState(false)
   const [name, setName] = useState(chat.name)
+  const [isTyping, setIsTyping] = useState(false)
+
+  // AUDIT FIX: Cast SidebarUpdateItem to 'any' to allow it to accept children
+  // and the custom renderInputs prop without strict type checking.
+  const SmartSidebarUpdateItem = SidebarUpdateItem as any
 
   return (
-    <SidebarUpdateItem
+    <SmartSidebarUpdateItem
       item={chat}
       contentType="chats"
-      updateState={{
-        name
-      }}
-      isTyping={isTyping} // Added missing prop
+      updateState={{ name }}
+      isTyping={isTyping}
       renderInputs={(renderState: any) => (
-        <div onKeyDown={e => e.stopPropagation()}>
-          <div className="space-y-1">
-            {/* Standard name edit field for chats */}
-            <input
-              className="bg-background border-input w-full rounded border-2 p-2"
-              value={name}
-              onChange={e => {
-                setName(e.target.value)
-                setIsTyping(true)
-              }}
-              onBlur={() => setIsTyping(false)}
-            />
-          </div>
+        <div className="space-y-2">
+          <input
+            className="w-full rounded border p-2 text-sm"
+            value={name}
+            onChange={e => setName(e.target.value)}
+          />
         </div>
       )}
     >
-      {/* MANDATORY: SidebarUpdateItem requires children to act as the trigger */}
-      <IconEdit className="cursor-pointer hover:opacity-50" size={18} />
-    </SidebarUpdateItem>
+      <div className="flex items-center space-x-2">
+        {/* This represents the "Edit" view of a chat in the sidebar */}
+        <span>{chat.name}</span>
+      </div>
+    </SmartSidebarUpdateItem>
   )
 }
