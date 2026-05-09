@@ -37,6 +37,11 @@ interface ChatbotUIContext {
   selectedAssistant: any | null
   setSelectedAssistant: Dispatch<SetStateAction<any | null>>
 
+  // ... inside the interface
+  chatMessages: any[]
+  setChatMessages: Dispatch<SetStateAction<any[]>>
+  // ...
+
   // Note: If there are other states in your specific file,
   // ensure they also use 'any' for their types.
 }
