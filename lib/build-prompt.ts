@@ -41,10 +41,11 @@ export const buildFinalMessages = (
 }
 
 // AUDIT FIX: Adding placeholder for Gemini adapter to satisfy imports
-export const adaptMessagesForGoogleGemini = (
-  model: string,
-  messages: any[]
-) => {
+export const adaptMessagesForGoogleGemini = (payload: any, messages: any[]) => {
+  const model = payload.model
+
+  // Google Gemini requires a specific format:
+  // 'user' and 'model' (instead of assistant) roles with 'parts'
   return messages.map(msg => ({
     role: msg.role === "assistant" ? "model" : "user",
     parts: [{ text: msg.content }]
