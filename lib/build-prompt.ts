@@ -5,28 +5,48 @@ export const buildPrompt = (
   instruction: string,
   profileContext: string,
   workspaceInstructions: string,
-  // AUDIT FIX: Neutralized strict table constraint to bypass 'messages' only error
   assistant: any | null
 ) => {
   let fullPrompt = ""
-
-  // Add workspace instructions if they exist
-  if (workspaceInstructions) {
+  if (workspaceInstructions)
     fullPrompt += `Workspace Instructions:\n${workspaceInstructions}\n\n`
-  }
-
-  // Add assistant-specific instructions if available
-  if (assistant && assistant.prompt) {
+  if (assistant && assistant.prompt)
     fullPrompt += `Assistant Instructions:\n${assistant.prompt}\n\n`
-  }
-
-  // Add user profile context
-  if (profileContext) {
-    fullPrompt += `User Context:\n${profileContext}\n\n`
-  }
-
-  // Add the core instruction/system message
+  if (profileContext) fullPrompt += `User Context:\n${profileContext}\n\n`
   fullPrompt += `System Instructions:\n${instruction}`
-
   return fullPrompt
+}
+
+// AUDIT FIX: Adding the missing exported member 'buildFinalMessages'
+export const buildFinalMessages = (
+  payload: any,
+  profile: any,
+  chatMessages: any[]
+) => {
+  // This logic ensures the system prompt and history are formatted for the LLM
+  const systemPrompt = buildPrompt(
+    payload.prompt,
+    profile?.context || "",
+    payload.workspaceInstructions || "",
+    payload.assistant
+  )
+
+  return [
+    { role: "system", content: systemPrompt },
+    ...chatMessages.map(msg => ({
+      role: msg.role,
+      content: msg.content
+    }))
+  ]
+}
+
+// AUDIT FIX: Adding placeholder for Gemini adapter to satisfy imports
+export const adaptMessagesForGoogleGemini = (
+  model: string,
+  messages: any[]
+) => {
+  return messages.map(msg => ({
+    role: msg.role === "assistant" ? "model" : "user",
+    parts: [{ text: msg.content }]
+  }))
 }
