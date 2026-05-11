@@ -2,10 +2,10 @@ import { LLM } from "@/types"
 
 const OPENAI_PLATORM_LINK = "https://platform.openai.com/docs/overview"
 
-// OpenAI Models (UPDATED 1/25/24) -----------------------------
-// @ts-nocheck
+// OpenAI Models (UPDATED 2026) -----------------------------
+
 const GPT4o: LLM = {
-  modelId: "gpt-4o", // This is the newest, smartest, and cheapest high-end model
+  modelId: "gpt-4o",
   modelName: "SourceField Omni (GPT-4o)",
   provider: "openai",
   hostedId: "gpt-4o",
@@ -19,7 +19,7 @@ const GPT4o: LLM = {
   }
 }
 
-// GPT-4 Turbo (UPDATED 1/25/24)
+// GPT-4 Turbo
 const GPT4Turbo: LLM = {
   modelId: "gpt-4-turbo-preview",
   modelName: "GPT-4 Turbo",
@@ -35,22 +35,23 @@ const GPT4Turbo: LLM = {
   }
 }
 
-// GPT-4 Vision (UPDATED 12/18/23)
+// GPT-4 Vision (Redirected to Omni to fix 404)
 const GPT4Vision: LLM = {
-  modelId: "gpt-4-vision-preview",
-  modelName: "GPT-4 Vision",
+  modelId: "gpt-4o",
+  modelName: "SourceField Vision (Omni)",
   provider: "openai",
-  hostedId: "gpt-4-vision-preview",
-  platformLink: OPENAI_PLATORM_LINK,
+  hostedId: "gpt-4o",
+  platformLink: "https://platform.openai.com/docs/models/gpt-4o",
   imageInput: true,
   pricing: {
     currency: "USD",
     unit: "1M tokens",
-    inputCost: 10
+    inputCost: 5,
+    outputCost: 15
   }
 }
 
-// GPT-4 (UPDATED 1/29/24)
+// GPT-4
 const GPT4: LLM = {
   modelId: "gpt-4",
   modelName: "GPT-4",
@@ -66,7 +67,7 @@ const GPT4: LLM = {
   }
 }
 
-// GPT-3.5 Turbo (UPDATED 1/25/24)
+// GPT-3.5 Turbo
 const GPT3_5Turbo: LLM = {
   modelId: "gpt-3.5-turbo",
   modelName: "GPT-3.5 Turbo",

@@ -76,9 +76,11 @@ class SourceFieldV11:
     # ============================================================
 
     def coherence(self, S, Psi):
-        return np.real(np.vdot(S, Psi)) / (
-            np.linalg.norm(S) * np.linalg.norm(Psi) + self.epsilon
-        )
+        norm_S = np.linalg.norm(S)
+        norm_Psi = np.linalg.norm(Psi)
+        if norm_S < self.epsilon or norm_Psi < self.epsilon:
+            return 0.0
+        return np.real(np.vdot(S, Psi)) / (norm_S * norm_Psi + self.epsilon)
 
     def phase_divergence(self, S, Psi):
         cos_sim = np.clip(self.coherence(S, Psi), -1.0, 1.0)
@@ -250,6 +252,9 @@ class SourceFieldV11:
                 H = self.hessian(Psi_bio, local_coherence)
 
                 S_new = S + 0.01 * H * (grad_internal + grad_bio + interaction)
+
+                # Clip S_new to prevent overflow
+                S_new = np.clip(S_new, -1e10, 1e10)
 
                 # --- STORE ---
                 self.C_hist[i].append(C_t)
