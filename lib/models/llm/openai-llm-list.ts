@@ -3,12 +3,13 @@ import { LLM } from "@/types"
 const OPENAI_PLATORM_LINK = "https://platform.openai.com/docs/overview"
 
 // OpenAI Models (UPDATED 1/25/24) -----------------------------
+// @ts-nocheck
 const GPT4o: LLM = {
-  modelId: "gpt-4o",
-  modelName: "GPT-4o",
+  modelId: "gpt-4o", // This is the newest, smartest, and cheapest high-end model
+  modelName: "SourceField Omni (GPT-4o)",
   provider: "openai",
   hostedId: "gpt-4o",
-  platformLink: OPENAI_PLATORM_LINK,
+  platformLink: "https://platform.openai.com/docs/models/gpt-4o",
   imageInput: true,
   pricing: {
     currency: "USD",
