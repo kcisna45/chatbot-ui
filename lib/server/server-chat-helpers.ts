@@ -1,8 +1,9 @@
 // @ts-nocheck
-import { Tables } from "@/supabase/types"
+import { cookies } from "next/headers"
+import { createServerClient } from "@supabase/ssr"
 
-// AUDIT FIX: Hardcoding the key map to remove the broken '@/types/valid-env-keys' dependency.
-// This ensures the build can resolve the API key mapping logic.
+// ... keep the VALID_ENV_KEYS and addApiKeysToProfile we added earlier ...
+
 const VALID_ENV_KEYS = {
   OPENAI_API_KEY: "OPENAI_API_KEY",
   ANTHROPIC_API_KEY: "ANTHROPIC_API_KEY",
@@ -11,6 +12,35 @@ const VALID_ENV_KEYS = {
   GROQ_API_KEY: "GROQ_API_KEY",
   PERPLEXITY_API_KEY: "PERPLEXITY_API_KEY",
   OPENROUTER_API_KEY: "OPENROUTER_API_KEY"
+}
+
+// AUDIT FIX: Added missing getServerProfile function
+export async function getServerProfile() {
+  const cookieStore = cookies()
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return cookieStore.get(name)?.value
+        }
+      }
+    }
+  )
+
+  const {
+    data: { user }
+  } = await supabase.auth.getUser()
+  if (!user) return null
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("user_id", user.id)
+    .single()
+
+  return profile
 }
 
 export function addApiKeysToProfile(profile: any) {
