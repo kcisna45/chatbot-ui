@@ -1,9 +1,18 @@
 // @ts-nocheck
 import { Tables } from "@/supabase/types"
-import { VALID_ENV_KEYS } from "@/types/valid-env-keys"
 
-// AUDIT FIX: Using 'any' to bypass the strict table constraint
-// so API keys can be mapped from the profile safely on the server.
+// AUDIT FIX: Hardcoding the key map to remove the broken '@/types/valid-env-keys' dependency.
+// This ensures the build can resolve the API key mapping logic.
+const VALID_ENV_KEYS = {
+  OPENAI_API_KEY: "OPENAI_API_KEY",
+  ANTHROPIC_API_KEY: "ANTHROPIC_API_KEY",
+  GOOGLE_GEMINI_API_KEY: "GOOGLE_GEMINI_API_KEY",
+  MISTRAL_API_KEY: "MISTRAL_API_KEY",
+  GROQ_API_KEY: "GROQ_API_KEY",
+  PERPLEXITY_API_KEY: "PERPLEXITY_API_KEY",
+  OPENROUTER_API_KEY: "OPENROUTER_API_KEY"
+}
+
 export function addApiKeysToProfile(profile: any) {
   const apiKeys = {
     [VALID_ENV_KEYS.OPENAI_API_KEY]: "openai_api_key",
