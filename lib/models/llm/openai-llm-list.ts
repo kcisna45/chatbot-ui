@@ -24,7 +24,7 @@ const GPT4Turbo: LLM = {
   modelName: "GPT-4 Turbo",
   provider: "openai",
   hostedId: "gpt-4-turbo-preview",
-  platformLink: OPENAI_PLATORM_LINK,
+  platformLink: "https://platform.openai.com/docs/models/gpt-4-and-gpt-4-turbo",
   imageInput: true,
   pricing: {
     currency: "USD",
