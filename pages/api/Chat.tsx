@@ -18,7 +18,7 @@ export default function Chat() {
   }, [messages])
 
   async function sendMessage() {
-    if (!input.trim()) return
+    if (!input.trim() || loading) return
 
     const userMessage: Message = { role: "user", content: input }
     setMessages(prev => [...prev, userMessage])
@@ -26,22 +26,34 @@ export default function Chat() {
     setLoading(true)
 
     try {
+      // Note: Ensure your API route is at /api/chat and handles this specific JSON body
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: [...messages, userMessage] })
+        body: JSON.stringify({
+          messages: [...messages, userMessage],
+          // Adding default settings in case the API expects them from previous fixes
+          chatSettings: { model: "gpt-3.5-turbo", temperature: 0.7 }
+        })
       })
 
       if (!res.ok) throw new Error("API error")
 
       const data = await res.json()
-      const botMessage: Message = { role: "assistant", content: data.response }
+
+      // If your API returns data.response, this stays.
+      // If it returns data.message, change data.response to data.message.
+      const botMessage: Message = {
+        role: "assistant",
+        content: data.response || data.message || "No response received."
+      }
       setMessages(prev => [...prev, botMessage])
     } catch (err) {
       console.error(err)
       const errorMsg: Message = {
         role: "assistant",
-        content: "⚠️ Error: Unable to get a response."
+        content:
+          "⚠️ Error: Unable to get a response. Check console for details."
       }
       setMessages(prev => [...prev, errorMsg])
     } finally {
@@ -50,32 +62,41 @@ export default function Chat() {
   }
 
   return (
-    /* AUDIT FIX: Replaced 'styles.xxx' with plain strings to prevent "Cannot find name 'styles'" */
     <div
-      className="chat-container-main"
+      className="chat-wrapper"
       style={{
-        padding: "20px",
-        height: "100vh",
         display: "flex",
-        flexDirection: "column"
+        flexDirection: "column",
+        height: "100vh",
+        width: "100%",
+        backgroundColor: "#ffffff",
+        color: "#000000"
       }}
     >
+      {/* Messages Window */}
       <div
         className="messages-window"
-        style={{ flex: 1, overflowY: "auto", marginBottom: "20px" }}
+        style={{
+          flex: 1,
+          overflowY: "auto",
+          padding: "20px",
+          display: "flex",
+          flexDirection: "column",
+          gap: "10px"
+        }}
       >
         {messages.map((m, i) => (
           <div
             key={i}
-            className={m.role === "user" ? "user-msg-bubble" : "bot-msg-bubble"}
             style={{
-              textAlign: m.role === "user" ? "right" : "left",
-              margin: "10px 0",
-              padding: "10px",
-              backgroundColor: m.role === "user" ? "#007bff" : "#f1f1f1",
+              alignSelf: m.role === "user" ? "flex-end" : "flex-start",
+              backgroundColor: m.role === "user" ? "#007bff" : "#e9e9eb",
               color: m.role === "user" ? "white" : "black",
-              borderRadius: "10px",
-              alignSelf: m.role === "user" ? "flex-end" : "flex-start"
+              padding: "12px 16px",
+              borderRadius: "18px",
+              maxWidth: "80%",
+              wordBreak: "break-word",
+              boxShadow: "0 1px 2px rgba(0,0,0,0.1)"
             }}
           >
             {m.content}
@@ -84,13 +105,26 @@ export default function Chat() {
         <div ref={messagesEndRef} />
       </div>
 
-      <div className="input-area" style={{ display: "flex", gap: "10px" }}>
+      {/* Input Area - Visible and High Contrast */}
+      <div
+        className="input-container"
+        style={{
+          padding: "20px",
+          borderTop: "1px solid #ddd",
+          display: "flex",
+          gap: "10px",
+          backgroundColor: "#f8f9fa"
+        }}
+      >
         <input
           style={{
             flex: 1,
-            padding: "10px",
-            borderRadius: "5px",
-            border: "1px solid #ccc"
+            padding: "12px 15px",
+            borderRadius: "8px",
+            border: "2px solid #007bff",
+            fontSize: "16px",
+            color: "black",
+            backgroundColor: "white"
           }}
           type="text"
           value={input}
@@ -101,8 +135,18 @@ export default function Chat() {
         />
         <button
           onClick={sendMessage}
-          disabled={loading}
-          style={{ padding: "10px 20px", cursor: "pointer" }}
+          disabled={loading || !input.trim()}
+          style={{
+            padding: "0 25px",
+            backgroundColor: loading || !input.trim() ? "#ccc" : "#007bff",
+            color: "white",
+            border: "none",
+            borderRadius: "8px",
+            cursor: loading ? "not-allowed" : "pointer",
+            fontWeight: "bold",
+            fontSize: "16px",
+            minWidth: "100px"
+          }}
         >
           {loading ? "..." : "Send"}
         </button>
