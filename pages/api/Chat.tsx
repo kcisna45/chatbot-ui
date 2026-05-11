@@ -12,12 +12,13 @@ export default function Chat() {
   const [loading, setLoading] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
+  // Auto-scroll to bottom
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [messages])
 
+  // Key Logic: Enter to send, Shift + Enter for new line
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    // Logic: Enter sends, Shift+Enter creates a new line
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault()
       sendMessage()
@@ -36,24 +37,25 @@ export default function Chat() {
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          messages: [...messages, userMessage],
-          chatSettings: { model: "gpt-4", temperature: 0.7 }
-        })
+        body: JSON.stringify({ messages: [...messages, userMessage] })
       })
+
+      if (!res.ok) throw new Error("API error")
 
       const data = await res.json()
       const botMessage: Message = {
         role: "assistant",
         content:
-          data.response || data.message || "I'm sorry, I couldn't process that."
+          data.response ||
+          data.message ||
+          "I received your message but have no response text."
       }
       setMessages(prev => [...prev, botMessage])
     } catch (err) {
       console.error(err)
       setMessages(prev => [
         ...prev,
-        { role: "assistant", content: "⚠️ Connection Error." }
+        { role: "assistant", content: "⚠️ Error: Connection failed." }
       ])
     } finally {
       setLoading(false)
@@ -65,14 +67,14 @@ export default function Chat() {
       style={{
         display: "flex",
         flexDirection: "column",
-        height: "90vh", // Shorter height to ensure it's not hidden behind a taskbar
+        height: "100vh",
         width: "100%",
-        backgroundColor: "#000000", // Black Background
-        color: "#FFFFFF", // White Text
+        backgroundColor: "#000000", // Full black background
+        color: "#FFFFFF", // White text base
         fontFamily: "sans-serif"
       }}
     >
-      {/* Messages */}
+      {/* Messages Window */}
       <div
         style={{
           flex: 1,
@@ -80,7 +82,7 @@ export default function Chat() {
           padding: "20px",
           display: "flex",
           flexDirection: "column",
-          gap: "12px"
+          gap: "15px"
         }}
       >
         {messages.map((m, i) => (
@@ -88,11 +90,12 @@ export default function Chat() {
             key={i}
             style={{
               alignSelf: m.role === "user" ? "flex-end" : "flex-start",
-              backgroundColor: m.role === "user" ? "#2563eb" : "#262626", // Blue for user, Dark Gray for bot
+              backgroundColor: m.role === "user" ? "#2563eb" : "#262626", // Blue for user, Grey for Bot
               color: "white",
-              padding: "10px 15px",
-              borderRadius: "12px",
-              maxWidth: "80%"
+              padding: "12px 16px",
+              borderRadius: "15px",
+              maxWidth: "80%",
+              whiteSpace: "pre-wrap" // Crucial: shows the new lines from Shift+Enter
             }}
           >
             {m.content}
@@ -101,55 +104,72 @@ export default function Chat() {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Control Area */}
+      {/* Input Dock */}
       <div
         style={{
           padding: "20px",
           borderTop: "1px solid #333",
-          backgroundColor: "#000",
-          display: "flex",
-          flexDirection: "column",
-          gap: "10px"
+          backgroundColor: "#000000"
         }}
       >
-        <div style={{ display: "flex", gap: "10px" }}>
+        <div
+          style={{
+            display: "flex",
+            gap: "10px",
+            maxWidth: "900px",
+            margin: "0 auto",
+            backgroundColor: "#171717", // Slightly lighter black for the input box
+            borderRadius: "10px",
+            padding: "8px",
+            border: "1px solid #444"
+          }}
+        >
           <textarea
             style={{
               flex: 1,
-              padding: "12px",
-              borderRadius: "8px",
-              border: "1px solid #444",
-              backgroundColor: "#171717", // Slightly lighter black
-              color: "white",
+              backgroundColor: "transparent",
+              color: "#FFFFFF", // Typing text is white
+              border: "none",
+              outline: "none",
+              padding: "10px",
               fontSize: "16px",
               resize: "none",
-              minHeight: "44px"
+              minHeight: "40px"
             }}
             rows={1}
             value={input}
             onChange={e => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Write a message..."
+            placeholder="Type a message..."
+            disabled={loading}
           />
           <button
             onClick={sendMessage}
             disabled={loading || !input.trim()}
             style={{
-              padding: "0 20px",
-              backgroundColor: "#2563eb",
+              backgroundColor: loading || !input.trim() ? "#333" : "#2563eb",
               color: "white",
               border: "none",
               borderRadius: "8px",
+              padding: "0 20px",
               cursor: "pointer",
-              fontWeight: "bold"
+              fontWeight: "bold",
+              transition: "background 0.2s"
             }}
           >
             {loading ? "..." : "SEND"}
           </button>
         </div>
-        <span style={{ fontSize: "10px", color: "#666", textAlign: "center" }}>
-          Press Enter to send, Shift + Enter for new line
-        </span>
+        <p
+          style={{
+            textAlign: "center",
+            fontSize: "10px",
+            color: "#666",
+            marginTop: "10px"
+          }}
+        >
+          Enter to send | Shift + Enter for new line
+        </p>
       </div>
     </div>
   )
