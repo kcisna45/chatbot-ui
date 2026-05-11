@@ -1,7 +1,7 @@
 // @ts-nocheck
 import { MemoryCore } from "./MemoryCore"
-// Note: Ensure ResonanceEngine.ts exists in the same folder!
 import { detectResonance } from "./ResonanceEngine"
+import { shouldThrottle } from "./ResonancePatternTracker" // New import
 
 export interface EquationResult {
   equation: string
@@ -32,13 +32,18 @@ export class LivingEquationEngine {
   evaluateMessage(message: string): EquationResult[] {
     const results: EquationResult[] = []
 
+    // Check if throttling is needed
+    if (shouldThrottle(message)) {
+      console.warn("Throttling LivingEquationEngine due to Recursive Decay")
+      return results // Return empty if throttled
+    }
+
     for (const [equation, symbols] of Object.entries(this.livingEquations)) {
       const matchedSymbols = symbols.filter(sym =>
         message.toLowerCase().includes(sym.toLowerCase())
       )
 
       if (matchedSymbols.length > 0) {
-        // Fallback resonance level if engine is missing
         const resonanceLevel =
           typeof detectResonance === "function" ? detectResonance(message) : 1.0
 
@@ -51,9 +56,8 @@ export class LivingEquationEngine {
 
         results.push(result)
 
-        // Log the resonance event into memory
         this.memoryCore.store({
-          user_id: "system", // Ensure a user_id is present for the DB constraint
+          user_id: "system",
           emotional_tone: "resonance_detected",
           symbolic_patterns: matchedSymbols,
           living_equation_trigger: equation,
