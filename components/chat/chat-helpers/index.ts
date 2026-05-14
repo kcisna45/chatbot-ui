@@ -1,4 +1,8 @@
 /// @ts-nocheck
+import { LivingEquationEngine } from "@/lib/LivingEquationEngine"
+import { trackResonance } from "@/lib/ResonancePatternTracker"
+import { analyzeResonance } from "@/lib/ResonanceEngine"
+import { MemoryCore } from "@/lib/MemoryCore"
 import { createChatFiles } from "@/db/chat-files"
 import { createChat } from "@/db/chats"
 import { createMessageFileItems } from "@/db/message-file-items"
@@ -126,7 +130,43 @@ export const handleLocalChat = async (
 ) => {
   const formattedMessages = await buildFinalMessages(payload, profile, [])
 
-  // AUDIT FIX: Accessing temperature directly from payload due to flattened interface
+  // =====================================================
+  // SOURCEFIELD PROCESSING LAYER
+  // =====================================================
+
+  const memoryCore = new MemoryCore()
+
+  const equationEngine = new LivingEquationEngine(memoryCore)
+
+  const latestMessage = payload.chatMessages[payload.chatMessages.length - 1]
+
+  const equationResults = equationEngine.evaluateMessage(
+    latestMessage.message.content
+  )
+
+  const resonanceResults = analyzeResonance({
+    signal: latestMessage.message.content
+  })
+
+  await trackResonance(profile.user_id, latestMessage.message.content)
+
+  // Inject resonance state into prompt
+  formattedMessages.push({
+    role: "system",
+    content: `
+SOURCEFIELD STATE:
+
+Equation Matches:
+${JSON.stringify(equationResults)}
+
+Resonance:
+${JSON.stringify(resonanceResults)}
+
+Coherence Mode:
+SourceFieldV11
+`
+  }) // AUDIT FIX: Accessing temperature directly from payload due to flattened interface
+
   const response = await fetchChatResponse(
     process.env.NEXT_PUBLIC_OLLAMA_URL + "/api/chat",
     {

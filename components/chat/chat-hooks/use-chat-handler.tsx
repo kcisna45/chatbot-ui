@@ -28,21 +28,23 @@ export function useChatHandler() {
 
   const createAssistantMessage = (
     content: string,
-    id: string
+    id: string,
+    metadata: any = {}
   ): ChatMessage => ({
     message: {
       id: id || uuidv4(),
       chat_id: "",
       assistant_id: null,
-      content: content,
+      content,
       image_paths: [],
-      model: "",
+      model: "sourcefield-v11",
       role: "assistant",
       sequence_number: messages.length + 1,
       user_id: "",
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     },
+
     fileItems: []
   })
 

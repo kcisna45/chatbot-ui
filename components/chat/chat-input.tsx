@@ -28,7 +28,7 @@ export const ChatInput: FC = () => {
 
   return (
     <div className="relative flex flex-col items-center">
-      <div className="bg-background border-input relative flex w-full flex-col overflow-hidden rounded-xl border-2 px-4 pb-2 pt-3 shadow-sm transition-colors focus-within:border-primary/50">
+      <div className="bg-background border-input focus-within:border-primary/50 relative flex w-full flex-col overflow-hidden rounded-xl border-2 px-4 pb-2 pt-3 shadow-sm transition-colors">
         <textarea
           ref={textAreaRef}
           className="min-h-[60px] w-full resize-none bg-transparent text-sm focus:outline-none"

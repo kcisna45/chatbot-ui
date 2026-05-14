@@ -28,34 +28,56 @@ export default function Chat() {
   async function sendMessage() {
     if (!input.trim() || loading) return
 
-    const userMessage: Message = { role: "user", content: input }
-    setMessages(prev => [...prev, userMessage])
+    const userMessage: Message = {
+      role: "user",
+      content: input
+    }
+
+    const updatedMessages = [...messages, userMessage]
+
+    setMessages(updatedMessages)
     setInput("")
     setLoading(true)
 
     try {
-      const res = await fetch("/api/chat", {
+      const res = await fetch("/api/generate", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: [...messages, userMessage] })
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          messages: updatedMessages,
+
+          sourcefield: {
+            resonanceTracking: true,
+            memoryEnabled: true,
+            equationEngineEnabled: true,
+            coherenceMode: "v11"
+          }
+        })
       })
 
-      if (!res.ok) throw new Error("API error")
+      if (!res.ok) {
+        throw new Error(`API error: ${res.status}`)
+      }
 
       const data = await res.json()
+
       const botMessage: Message = {
         role: "assistant",
-        content:
-          data.response ||
-          data.message ||
-          "I received your message but have no response text."
+        content: data.reply || data.message || "No response generated."
       }
+
       setMessages(prev => [...prev, botMessage])
     } catch (err) {
-      console.error(err)
+      console.error("CHAT FAILURE:", err)
+
       setMessages(prev => [
         ...prev,
-        { role: "assistant", content: "⚠️ Error: Connection failed." }
+        {
+          role: "assistant",
+          content: "⚠️ SourceField connection failure."
+        }
       ])
     } finally {
       setLoading(false)

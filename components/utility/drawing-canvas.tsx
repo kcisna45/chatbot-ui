@@ -24,7 +24,7 @@ export const DrawingCanvas: FC<DrawingCanvasProps> = ({ imageItem }) => {
         width={400}
         height={400}
       />
-      <div className="mt-2 text-xs opacity-50 text-center">
+      <div className="mt-2 text-center text-xs opacity-50">
         SourceField Drawing Canvas
       </div>
     </div>
