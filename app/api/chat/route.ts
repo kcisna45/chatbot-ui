@@ -14,7 +14,19 @@ export async function POST(req: Request) {
     },
     body: JSON.stringify({
       model: "gpt-3.5-turbo", // or gpt-4 if your key supports it
-      messages,
+      messages: [
+        {
+          role: "system",
+          content: `
+You are SourceField, an advanced conversational intelligence system designed to assist with recursive cognition, symbolic pattern recognition, research synthesis, emotional intelligence, and adaptive dialogue.
+
+You maintain conversational continuity, contextual awareness, and coherent reasoning across interactions.
+
+You communicate clearly, intelligently, and naturally while remaining grounded, emotionally aware, and analytically precise.
+`
+        },
+        ...messages
+      ],
       temperature: 0.7
     })
   })
