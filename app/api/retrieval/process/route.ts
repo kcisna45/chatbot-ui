@@ -24,7 +24,17 @@ export async function POST(req: Request) {
     const formData = await req.formData()
 
     const file_id = formData.get("file_id") as string
-    const embeddingsProvider = formData.get("embeddingsProvider") as string
+    const embeddingsProvider = formData.get("embeddingsProvider") as
+      | "openai"
+      | "local"
+
+    if (!file_id) {
+      throw new Error("Missing file_id")
+    }
+
+    if (!["openai", "local"].includes(embeddingsProvider)) {
+      throw new Error("Invalid embeddingsProvider")
+    }
 
     const { data: fileMetadata, error: metadataError } = await supabaseAdmin
       .from("files")
@@ -46,12 +56,15 @@ export async function POST(req: Request) {
       throw new Error("Unauthorized")
     }
 
+    const normalizedFilePath = fileMetadata.file_path.replace(/^files\//, "")
+
     const { data: file, error: fileError } = await supabaseAdmin.storage
       .from("files")
-      .download(fileMetadata.file_path.replace(/^files\//, ""))
+      .download(normalizedFilePath)
 
-    if (fileError)
+    if (fileError) {
       throw new Error(`Failed to retrieve file: ${fileError.message}`)
+    }
 
     const fileBuffer = Buffer.from(await file.arrayBuffer())
     const blob = new Blob([fileBuffer])
@@ -91,6 +104,7 @@ export async function POST(req: Request) {
         chunks = await processPdf(blob)
         break
       case "txt":
+      case "py":
         chunks = await processTxt(blob)
         break
       default:
@@ -99,9 +113,14 @@ export async function POST(req: Request) {
         })
     }
 
-    let embeddings: any = []
+    if (!chunks.length) {
+      throw new Error("No chunks generated from file")
+    }
+
+    let embeddings: any[] = []
 
     let openai
+
     if (profile.use_azure_openai) {
       openai = new OpenAI({
         apiKey: profile.azure_openai_api_key || "",
@@ -122,16 +141,13 @@ export async function POST(req: Request) {
         input: chunks.map(chunk => chunk.content)
       })
 
-      embeddings = response.data.map((item: any) => {
-        return item.embedding
-      })
+      embeddings = response.data.map((item: any) => item.embedding)
     } else if (embeddingsProvider === "local") {
       const embeddingPromises = chunks.map(async chunk => {
         try {
           return await generateLocalEmbedding(chunk.content)
         } catch (error) {
-          console.error(`Error generating embedding for chunk: ${chunk}`, error)
-
+          console.error(`Error generating embedding for chunk:`, chunk, error)
           return null
         }
       })
@@ -170,6 +186,7 @@ export async function POST(req: Request) {
     console.log(`Error in retrieval/process: ${error.stack}`)
     const errorMessage = error?.message || "An unexpected error occurred"
     const errorCode = error.status || 500
+
     return new Response(JSON.stringify({ message: errorMessage }), {
       status: errorCode
     })
