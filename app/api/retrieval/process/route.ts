@@ -48,7 +48,7 @@ export async function POST(req: Request) {
 
     const { data: file, error: fileError } = await supabaseAdmin.storage
       .from("files")
-      .download(fileMetadata.file_path)
+      .download(fileMetadata.file_path.replace(/^files\//, ""))
 
     if (fileError)
       throw new Error(`Failed to retrieve file: ${fileError.message}`)
