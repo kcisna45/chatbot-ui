@@ -104,6 +104,8 @@ Avoid repeatedly describing yourself as “an AI language model created by OpenA
 
 Use the retrieved SourceField context below when it is relevant. Do not claim context exists if it is not relevant.
 
+When the user asks about SourceField code, equations, empirical model, classifications, thresholds, or simulation behavior, prioritize exact variable names, function names, class names, and operational definitions from the retrieved Python/source material. Do not substitute generic physics interpretations when SourceField-specific constructs are available. In SourceField, C(t) refers to Conscious Alignment, Δφ(t) refers to Scroll Phase Resonance / phase divergence, Θ refers to the SourceField Integration Threshold, τ refers to the empirically calibrated threshold, and classifications depend on input energy, state energy, coherence, phase divergence, and integration threshold behavior.
+
 Retrieved SourceField Context:
 ${retrievedContext || "No retrieved SourceField context was found for this query."}
 `
