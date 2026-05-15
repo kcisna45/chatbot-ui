@@ -2,29 +2,60 @@
 "use client"
 
 import { ChatbotUIContext } from "@/context/context"
-import { FC, useContext, useEffect, useRef } from "react"
+import { useChatHandler } from "@/components/chat/chat-hooks/use-chat-handler"
+import { FC, useContext, useEffect, useRef, useState } from "react"
 
 export const ChatInput: FC = () => {
-  // AUDIT FIX: Cast context to any to bypass the 'isAssistantPickerOpen' error
-  const {
-    isAssistantPickerOpen,
-    focusAssistant,
-    setFocusAssistant,
-    userInput,
-    setUserInput,
-    chatSettings,
-    isGenerating,
-    selectedChat
-  } = useContext(ChatbotUIContext) as any
+  const context = useContext(ChatbotUIContext) as any
 
+  const {
+    userInput = "",
+    setUserInput,
+    chatMessages = [],
+    isGenerating = false
+  } = context
+
+  const { handleSendMessage } = useChatHandler()
+
+  const [localInput, setLocalInput] = useState("")
   const textAreaRef = useRef<HTMLTextAreaElement>(null)
+
+  const inputValue =
+    typeof setUserInput === "function" ? userInput || "" : localInput
+
+  const updateInput = (value: string) => {
+    if (typeof setUserInput === "function") {
+      setUserInput(value)
+    } else {
+      setLocalInput(value)
+    }
+  }
+
+  const handleSubmit = async () => {
+    const trimmedInput = inputValue.trim()
+
+    if (!trimmedInput || isGenerating) return
+
+    await handleSendMessage(trimmedInput, chatMessages, false)
+
+    updateInput("")
+  }
+
+  const handleKeyDown = async (
+    event: React.KeyboardEvent<HTMLTextAreaElement>
+  ) => {
+    if (event.key === "Enter" && !event.shiftKey) {
+      event.preventDefault()
+      await handleSubmit()
+    }
+  }
 
   useEffect(() => {
     if (textAreaRef.current) {
       textAreaRef.current.style.height = "auto"
       textAreaRef.current.style.height = `${textAreaRef.current.scrollHeight}px`
     }
-  }, [userInput])
+  }, [inputValue])
 
   return (
     <div className="relative flex flex-col items-center">
@@ -33,16 +64,25 @@ export const ChatInput: FC = () => {
           ref={textAreaRef}
           className="min-h-[60px] w-full resize-none bg-transparent text-sm focus:outline-none"
           placeholder="Send a message..."
-          value={userInput}
-          onChange={e => setUserInput(e.target.value)}
+          value={inputValue}
+          onChange={event => updateInput(event.target.value)}
+          onKeyDown={handleKeyDown}
           disabled={isGenerating}
         />
 
-        <div className="flex justify-between py-2">
-          {/* Icons and status indicators would go here */}
+        <div className="flex items-center justify-between py-2">
           <div className="text-xs opacity-50">
             {isGenerating ? "SourceField is thinking..." : "Ready"}
           </div>
+
+          <button
+            type="button"
+            onClick={handleSubmit}
+            disabled={isGenerating || !inputValue.trim()}
+            className="bg-primary text-secondary rounded-md px-4 py-2 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Send
+          </button>
         </div>
       </div>
     </div>
