@@ -73,10 +73,10 @@ export function useChatHandler() {
 
       const data = await response.json()
 
-      console.log("🛰 API RESPONSE:", data)
+      console.log("🛰 API RESPONSE:", JSON.stringify(data, null, 2))
 
       const assistantMessage = createAssistantMessage(
-        data.result || "No response returned.",
+        data.result || data.message || data.reply || "No response returned.",
         uuidv4()
       )
 
