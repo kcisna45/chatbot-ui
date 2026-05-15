@@ -62,7 +62,10 @@ export async function POST(req: Request) {
         if (profile.use_azure_openai) {
           checkApiKey(profile.azure_openai_api_key, "Azure OpenAI")
         } else {
-          checkApiKey(profile.openai_api_key, "OpenAI")
+          checkApiKey(
+            profile.openai_api_key || process.env.OPENAI_API_KEY,
+            "OpenAI"
+          )
         }
       } catch (error: any) {
         error.message =
@@ -108,7 +111,7 @@ export async function POST(req: Request) {
       })
     } else {
       openai = new OpenAI({
-        apiKey: profile.openai_api_key || "",
+        apiKey: profile.openai_api_key || process.env.OPENAI_API_KEY || "",
         organization: profile.openai_organization_id
       })
     }
