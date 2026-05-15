@@ -1,24 +1,32 @@
-import { useState } from "react"
-import type { ChatMessage } from "@/types/chatmessage" // Updated import to use your main types
+import { ChatbotUIContext } from "@/context/context"
+import type { ChatMessage } from "@/types/chatmessage"
+import { useContext, useState } from "react"
 import { v4 as uuidv4 } from "uuid"
 
 export function useChatHandler() {
-  const [messages, setMessages] = useState<ChatMessage[]>([])
+  const context = useContext(ChatbotUIContext) as any
 
-  const addMessage = (message: ChatMessage) => {
-    setMessages(prev => [...prev, message])
-  }
+  const [localMessages, setLocalMessages] = useState<ChatMessage[]>([])
+
+  const chatMessages = Array.isArray(context?.chatMessages)
+    ? context.chatMessages
+    : localMessages
+
+  const setChatMessages =
+    typeof context?.setChatMessages === "function"
+      ? context.setChatMessages
+      : setLocalMessages
 
   const createUserMessage = (content: string, id: string): ChatMessage => ({
     message: {
       id: id || uuidv4(),
       chat_id: "",
       assistant_id: null,
-      content: content,
+      content,
       image_paths: [],
       model: "",
       role: "user",
-      sequence_number: messages.length,
+      sequence_number: chatMessages.length,
       user_id: "",
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
@@ -28,8 +36,7 @@ export function useChatHandler() {
 
   const createAssistantMessage = (
     content: string,
-    id: string,
-    metadata: any = {}
+    id: string
   ): ChatMessage => ({
     message: {
       id: id || uuidv4(),
@@ -39,12 +46,11 @@ export function useChatHandler() {
       image_paths: [],
       model: "sourcefield-v11",
       role: "assistant",
-      sequence_number: messages.length + 1,
+      sequence_number: chatMessages.length + 1,
       user_id: "",
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     },
-
     fileItems: []
   })
 
@@ -52,22 +58,23 @@ export function useChatHandler() {
     console.log("🚀 Sending message:", content)
 
     const userMessage = createUserMessage(content, uuidv4())
+    const updatedMessages = [...chatMessages, userMessage]
 
-    setMessages(prev => [...prev, userMessage])
+    setChatMessages(updatedMessages)
 
     try {
+      const apiMessages = updatedMessages.map((chatMessage: any) => ({
+        role: chatMessage.message?.role || chatMessage.role,
+        content: chatMessage.message?.content || chatMessage.content
+      }))
+
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          messages: [
-            {
-              role: "user",
-              content
-            }
-          ]
+          messages: apiMessages
         })
       })
 
@@ -80,7 +87,7 @@ export function useChatHandler() {
         uuidv4()
       )
 
-      setMessages(prev => [...prev, assistantMessage])
+      setChatMessages([...updatedMessages, assistantMessage])
     } catch (error) {
       console.error("❌ Chat API Error:", error)
 
@@ -89,16 +96,18 @@ export function useChatHandler() {
         uuidv4()
       )
 
-      setMessages(prev => [...prev, errorMessage])
+      setChatMessages([...updatedMessages, errorMessage])
     }
   }
 
+  const handleSendEdit = async () => {}
+
   return {
-    messages,
-    setMessages,
-    addMessage,
+    messages: chatMessages,
+    setMessages: setChatMessages,
     createUserMessage,
     createAssistantMessage,
-    handleSendMessage
+    handleSendMessage,
+    handleSendEdit
   }
 }
