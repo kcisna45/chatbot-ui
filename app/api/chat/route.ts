@@ -1,7 +1,11 @@
 import { createClient } from "@supabase/supabase-js"
 import { NextResponse } from "next/server"
 
-const SOURCEFIELD_FILE_IDS = ["56a789ff-9b19-4bdb-b371-015a44564874"]
+const SOURCEFIELD_FILE_IDS = [
+  "7bc60315-4b21-4630-8cdc-8cdee4d56cc4", // SourceField manifesto
+  "f0f253a9-9004-4098-8348-f86b707f4c40", // sourcefield.py
+  "56a789ff-9b19-4bdb-b371-015a44564874" // SourceField Oct Dialogue
+]
 
 export async function POST(req: Request) {
   try {
