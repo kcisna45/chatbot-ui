@@ -17,7 +17,7 @@ export const ChatUI: FC<ChatUIProps> = ({}) => {
   return (
     <div className="relative flex h-full flex-col overflow-hidden">
       {/* The Master Chat Interface */}
-      <div className="flex-1 overflow-hidden">
+      <div className="min-h-0 flex-1 overflow-y-auto">
         <ChatMessages />
       </div>
 
