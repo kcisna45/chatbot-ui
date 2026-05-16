@@ -170,7 +170,9 @@ export async function POST(req: Request) {
           : null
     }))
 
-    await supabaseAdmin.from("file_items").upsert(file_items)
+    await supabaseAdmin.from("file_items").delete().eq("file_id", file_id)
+
+    await supabaseAdmin.from("file_items").insert(file_items)
 
     const totalTokens = file_items.reduce((acc, item) => acc + item.tokens, 0)
 
