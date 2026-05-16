@@ -8,7 +8,10 @@ const SOURCEFIELD_FILE_IDS = [
   "4c154a2b-b627-480d-8bfc-ea6f7f2635f2", // sweep log #4
   "056a3e56-802e-4791-9c0d-01387c7b9d73", // sweep log #3
   "056a3e56-802e-4791-9c0d-01387c7b9d73", // sweep log #2
-  "be66197c-c204-4bfc-bc5c-99d97aa3b491" // sweep log #1
+  "be66197c-c204-4bfc-bc5c-99d97aa3b491", // sweep log #1
+  "6139c472-9885-4342-8307-b5521f3a4f8c", // sweep log #7
+  "4dbaaaed-77d5-4d7c-9496-95cc273756b3", // sweep log #6
+  "020d670d-2900-49d1-9eaa-d34dea9cbed3" // sweep log #5
 ]
 
 export async function POST(req: Request) {
