@@ -1,0 +1,330 @@
+
+PS C:\Users\kcisn\chatbot-ui> python C:\Users\kcisn\chatbot-ui\python-backend\backend\sourcefield.py
+Session Hash: b304846d20d842b4cb4b928d1ffe4221535e6a45e965eea6cb64738ef386c0eb
+Tau Input: 198.0
+Tau State: 81764.55504077666
+Final Classifications: ['Dissociation', 'Dissociation', 'Dissociation']
+Agent 0 Final Classification: Dissociation
+Agent 0 Final C(t): -0.014513541682596068
+Agent 0 Final Δφ(t): 1.5853103780548625
+Agent 0 Final ρ(t): 4.978394407670088e-10
+Agent 0 Final χ(t): 170.83791219462776
+Agent 0 Final Ξ(t): 170.83791219462776
+Agent 1 Final Classification: Dissociation
+Agent 1 Final C(t): -0.014563881776439545
+Agent 1 Final Δφ(t): 1.585360723469852
+Agent 1 Final ρ(t): 9.60164281191801e-10
+Agent 1 Final χ(t): 171.4248757922122
+Agent 1 Final Ξ(t): 171.4248757922122
+Agent 2 Final Classification: Dissociation
+Agent 2 Final C(t): -0.014338868078071618
+Agent 2 Final Δφ(t): 1.5851356862711459
+Agent 2 Final ρ(t): -1.3645673882175326e-09
+Agent 2 Final χ(t): 168.8009250489741
+Agent 2 Final Ξ(t): -168.8009250489741
+
+RUNNING PARAMETER SWEEP...
+
+
+==============================
+SOURCEFIELD PARAMETER SWEEP
+==============================
+
+--------------------------------
+gamma = 0.04
+kappa = 0.003
+step_size = 0.0002
+avg_C = -0.023137278658240418
+avg_delta_phi = 1.5939428684596895
+avg_rho = -4.683488677351172e-09
+max_abs_chi = 792.6637599762829
+final_classes = ['Dissociation', 'Dissociation', 'Dissociation']
+--------------------------------
+
+--------------------------------
+gamma = 0.04
+kappa = 0.003
+step_size = 0.0005
+avg_C = 0.04464760312704086
+avg_delta_phi = 1.5261318605576877
+avg_rho = 7.531499432539702e-09
+max_abs_chi = 1920.0816443623091
+final_classes = ['Dissociation', 'Dissociation', 'Dissociation']
+--------------------------------
+
+--------------------------------
+gamma = 0.04
+kappa = 0.003
+step_size = 0.0008
+avg_C = -0.00047988807092500554
+avg_delta_phi = 1.571276379781623
+avg_rho = 2.0859400701804023e-10
+max_abs_chi = 541.1439190066133
+final_classes = ['Dissociation', 'Dissociation', 'Dissociation']
+--------------------------------
+
+--------------------------------
+gamma = 0.04
+kappa = 0.005
+step_size = 0.0002
+avg_C = -0.07931559625678967
+avg_delta_phi = 1.650216364198032
+avg_rho = -1.2305555708373985e-08
+max_abs_chi = 19955.719821356914
+final_classes = ['Dissociation', 'Dissociation', 'Dissociation']
+--------------------------------
+
+--------------------------------
+gamma = 0.04
+kappa = 0.005
+step_size = 0.0005
+avg_C = 0.01163544914149609
+avg_delta_phi = 1.5591606044971629
+avg_rho = 4.4454103863518407e-10
+max_abs_chi = 804.2016680500102
+final_classes = ['Dissociation', 'Dissociation', 'Full Incoherence']
+--------------------------------
+
+--------------------------------
+gamma = 0.04
+kappa = 0.005
+step_size = 0.0008
+avg_C = -0.07828232112249746
+avg_delta_phi = 1.6491631066073806
+avg_rho = -1.0955476042678395e-09
+max_abs_chi = 299.4119280143426
+final_classes = ['Dissociation', 'Dissociation', 'Dissociation']
+--------------------------------
+
+--------------------------------
+gamma = 0.04
+kappa = 0.007
+step_size = 0.0002
+avg_C = -0.07145518283826102
+avg_delta_phi = 1.6423154228307812
+avg_rho = -2.4869763433782154e-09
+max_abs_chi = 351.021898446129
+final_classes = ['Dissociation', 'Dissociation', 'Full Incoherence']
+--------------------------------
+
+--------------------------------
+gamma = 0.04
+kappa = 0.007
+step_size = 0.0005
+avg_C = -0.045046325056108234
+avg_delta_phi = 1.6158579117188208
+avg_rho = -2.122066095313953e-10
+max_abs_chi = 340.85286524638394
+final_classes = ['Dissociation', 'Dissociation', 'Dissociation']
+--------------------------------
+
+--------------------------------
+gamma = 0.04
+kappa = 0.007
+step_size = 0.0008
+avg_C = -0.0368152023511998
+avg_delta_phi = 1.6076198629014524
+avg_rho = -3.755246586370697e-11
+max_abs_chi = 332.84247323328987
+final_classes = ['Dissociation', 'Dissociation', 'Dissociation']
+--------------------------------
+
+--------------------------------
+gamma = 0.05
+kappa = 0.003
+step_size = 0.0002
+avg_C = 0.020442803034961675
+avg_delta_phi = 1.5503515923494977
+avg_rho = 4.100321218365384e-09
+max_abs_chi = 677.9319602984465
+final_classes = ['Dissociation', 'Dissociation', 'Dissociation']
+--------------------------------
+
+--------------------------------
+gamma = 0.05
+kappa = 0.003
+step_size = 0.0005
+avg_C = -0.031076602847495347
+avg_delta_phi = 1.601883317714523
+avg_rho = -4.2538246999966035e-09
+max_abs_chi = 297.5476792134342
+final_classes = ['Dissociation', 'Dissociation', 'Dissociation']
+--------------------------------
+
+--------------------------------
+gamma = 0.05
+kappa = 0.003
+step_size = 0.0008
+avg_C = -0.05018232775948885
+avg_delta_phi = 1.6210041203856356
+avg_rho = -5.24222121955761e-09
+max_abs_chi = 1212.7813420395264
+final_classes = ['Dissociation', 'Dissociation', 'Dissociation']
+--------------------------------
+
+--------------------------------
+gamma = 0.05
+kappa = 0.005
+step_size = 0.0002
+avg_C = 0.0765161101941705
+avg_delta_phi = 1.4941459638768546
+avg_rho = 8.655836020218182e-09
+max_abs_chi = 512.0600370458669
+final_classes = ['Dissociation', 'Dissociation', 'Full Incoherence']
+--------------------------------
+
+--------------------------------
+gamma = 0.05
+kappa = 0.005
+step_size = 0.0005
+avg_C = 0.023880552319271903
+avg_delta_phi = 1.5469123423579443
+avg_rho = 5.203708028666228e-10
+max_abs_chi = 423.15663566005395
+final_classes = ['Dissociation', 'Dissociation', 'Full Incoherence']
+--------------------------------
+
+--------------------------------
+gamma = 0.05
+kappa = 0.005
+step_size = 0.0008
+avg_C = -0.12817872748729367
+avg_delta_phi = 1.6993299367874364
+avg_rho = -1.5246048475807723e-09
+max_abs_chi = 356.0936764416241
+final_classes = ['Dissociation', 'Dissociation', 'Dissociation']
+--------------------------------
+
+--------------------------------
+gamma = 0.05
+kappa = 0.007
+step_size = 0.0002
+avg_C = -0.06596589963460399
+avg_delta_phi = 1.6368155839533287
+avg_rho = -2.94838914463856e-09
+max_abs_chi = 309.83073599021753
+final_classes = ['Dissociation', 'Dissociation', 'Dissociation']
+--------------------------------
+
+--------------------------------
+gamma = 0.05
+kappa = 0.007
+step_size = 0.0005
+avg_C = -0.05752471564876003
+avg_delta_phi = 1.6283529583717449
+avg_rho = -4.3192817030954075e-10
+max_abs_chi = 759.7376147766709
+final_classes = ['Dissociation', 'Dissociation', 'Dissociation']
+--------------------------------
+
+--------------------------------
+gamma = 0.05
+kappa = 0.007
+step_size = 0.0008
+avg_C = 0.03089378894253927
+avg_delta_phi = 1.5398975766020577
+avg_rho = 9.100268396777158e-11
+max_abs_chi = 93.73154016577695
+final_classes = ['Dissociation', 'Dissociation', 'Dissociation']
+--------------------------------
+
+--------------------------------
+gamma = 0.06
+kappa = 0.003
+step_size = 0.0002
+avg_C = -0.04925050668571931
+avg_delta_phi = 1.6200726203687201
+avg_rho = -9.314534995523203e-09
+max_abs_chi = 2763.944190571595
+final_classes = ['Dissociation', 'Dissociation', 'Dissociation']
+--------------------------------
+
+--------------------------------
+gamma = 0.06
+kappa = 0.003
+step_size = 0.0005
+avg_C = -0.017375464671752536
+avg_delta_phi = 1.5881780732267448
+avg_rho = -2.3380472740584213e-09
+max_abs_chi = 2502.8407444381937
+final_classes = ['Dissociation', 'Dissociation', 'Dissociation']
+--------------------------------
+
+--------------------------------
+gamma = 0.06
+kappa = 0.003
+step_size = 0.0008
+avg_C = 0.06876943431314404
+avg_delta_phi = 1.5019715966485154
+avg_rho = 9.360523965424346e-09
+max_abs_chi = 495.40722346870524
+final_classes = ['Dissociation', 'Dissociation', 'Dissociation']
+--------------------------------
+
+--------------------------------
+gamma = 0.06
+kappa = 0.005
+step_size = 0.0002
+avg_C = -0.049544955862134886
+avg_delta_phi = 1.6203621148599725
+avg_rho = -6.064678591356822e-09
+max_abs_chi = 502.26876893391966
+final_classes = ['Dissociation', 'Dissociation', 'Dissociation']
+--------------------------------
+
+--------------------------------
+gamma = 0.06
+kappa = 0.005
+step_size = 0.0005
+avg_C = 0.03437309563323967
+avg_delta_phi = 1.536415496391774
+avg_rho = 1.500493899274363e-09
+max_abs_chi = 572.7566366069416
+final_classes = ['Dissociation', 'Dissociation', 'Dissociation']
+--------------------------------
+
+--------------------------------
+gamma = 0.06
+kappa = 0.005
+step_size = 0.0008
+avg_C = -0.006052987184715956
+avg_delta_phi = 1.576849380863459
+avg_rho = -4.445711708751091e-11
+max_abs_chi = 57.641031121970656
+final_classes = ['Dissociation', 'Dissociation', 'Dissociation']
+--------------------------------
+
+--------------------------------
+gamma = 0.06
+kappa = 0.007
+step_size = 0.0002
+avg_C = -0.07098119885276867
+avg_delta_phi = 1.6418385276695207
+avg_rho = -5.692166546895685e-09
+max_abs_chi = 12745.186759201997
+final_classes = ['Dissociation', 'Dissociation', 'Dissociation']
+--------------------------------
+
+--------------------------------
+gamma = 0.06
+kappa = 0.007
+step_size = 0.0005
+avg_C = 0.10245267150288566
+avg_delta_phi = 1.4681635678419653
+avg_rho = 6.286428144977367e-10
+max_abs_chi = 693.197504341835
+final_classes = ['Dissociation', 'Full Incoherence', 'Dissociation']
+--------------------------------
+
+--------------------------------
+gamma = 0.06
+kappa = 0.007
+step_size = 0.0008
+avg_C = -0.0792303746286111
+avg_delta_phi = 1.650109940982525
+avg_rho = -1.2415776691511596e-10
+max_abs_chi = 688.6644117660333
+final_classes = ['Dissociation', 'Dissociation', 'Dissociation']
+--------------------------------
+
+PS C:\Users\kcisn\chatbot-ui> 

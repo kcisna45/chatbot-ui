@@ -12,9 +12,9 @@ class SourceFieldV11:
         self.state_size = state_size
         self.timesteps = timesteps
 
-        self.gamma = 0.05
-        self.kappa = 0.01
-        self.step_size = 0.001
+        self.gamma = 0.06
+        self.kappa = 0.07
+        self.step_size = 0.0005
         self.epsilon = 1e-8
         self.beta = 1.0073
 
@@ -106,7 +106,7 @@ class SourceFieldV11:
                 S = S + 0.01 * H * Psi
 
         self.tau_input = np.percentile(input_samples, 95)
-        self.tau_state = np.percentile(state_samples, 95)
+        self.tau_state = np.percentile(state_samples, 75)
 
     def initialize_genesis(self, Psi0):
         S0 = self.agents[0]
@@ -309,9 +309,9 @@ class SourceFieldV11:
 
 def run_parameter_sweep():
 
-    gamma_values = [0.02, 0.05, 0.08]
-    kappa_values = [0.005, 0.01, 0.02]
-    step_sizes = [0.0005, 0.001, 0.002]
+    gamma_values = [0.04, 0.05, 0.06]
+    kappa_values = [0.003, 0.005, 0.007]
+    step_sizes = [0.0002, 0.0005, 0.0008]
 
     print("\n==============================")
     print("SOURCEFIELD PARAMETER SWEEP")
@@ -378,6 +378,6 @@ if __name__ == "__main__":
         print(f"Agent {i} Final ρ(t):", results["rho_hist"][i][-1])
         print(f"Agent {i} Final χ(t):", results["chi_hist"][i][-1])
         print(f"Agent {i} Final Ξ(t):", results["xi_hist"][i][-1])
-        print("\nRUNNING PARAMETER SWEEP...\n")
 
-        run_parameter_sweep()
+    print("\nRUNNING PARAMETER SWEEP...\n")
+    run_parameter_sweep()
