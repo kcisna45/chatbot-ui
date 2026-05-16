@@ -4,7 +4,11 @@ import { NextResponse } from "next/server"
 const SOURCEFIELD_FILE_IDS = [
   "7bc60315-4b21-4630-8cdc-8cdee4d56cc4", // SourceField manifesto
   "f0f253a9-9004-4098-8348-f86b707f4c40", // sourcefield.py
-  "56a789ff-9b19-4bdb-b371-015a44564874" // SourceField Oct Dialogue
+  "56a789ff-9b19-4bdb-b371-015a44564874", // SourceField Oct Dialogue
+  "4c154a2b-b627-480d-8bfc-ea6f7f2635f2", // sweep log #4
+  "056a3e56-802e-4791-9c0d-01387c7b9d73", // sweep log #3
+  "056a3e56-802e-4791-9c0d-01387c7b9d73", // sweep log #2
+  "be66197c-c204-4bfc-bc5c-99d97aa3b491" // sweep log #1
 ]
 
 export async function POST(req: Request) {
