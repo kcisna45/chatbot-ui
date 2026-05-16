@@ -35,6 +35,7 @@ class SourceFieldV11:
         self.delta_phi_hist = [[] for _ in range(n_agents)]
         self.energy_input_hist = [[] for _ in range(n_agents)]
         self.energy_state_hist = [[] for _ in range(n_agents)]
+        self.classification_hist = [[] for _ in range(n_agents)]
         self.rho_hist = [[] for _ in range(n_agents)]
         self.chi_hist = [[] for _ in range(n_agents)]
         self.xi_hist = [[] for _ in range(n_agents)]
@@ -124,7 +125,7 @@ class SourceFieldV11:
 
                 # minimal evolution
                 Psi_bio = self.compute_biofield(t)
-                H = self.hessian(Psi_bio, 0)  # No local coherence during calibration
+                H = self.hessian(Psi_bio, 0)
                 S = S + 0.01 * H * Psi
 
         self.tau_input = np.percentile(input_samples, 95)
@@ -179,17 +180,32 @@ class SourceFieldV11:
     # ============================================================
 
     def classify_state(self, input_energy, state_energy):
+        """
+        Four-state SourceField v12 classification logic.
+
+        Coherent Identity:
+            High input energy + high internal state energy.
+
+        Resonance Without Roots:
+            High input energy + low internal state energy.
+
+        Dissociation:
+            Low input energy + high internal state energy.
+
+        Full Incoherence:
+            Low input energy + low internal state energy.
+        """
         input_high = input_energy >= self.tau_input
         state_high = state_energy >= self.tau_state
 
         if input_high and state_high:
-            return "COHERENT"
+            return "Coherent Identity"
         elif input_high and not state_high:
-            return "RWR"
+            return "Resonance Without Roots"
         elif not input_high and state_high:
-            return "DISSOCIATION"
+            return "Dissociation"
         else:
-            return "INCOHERENT"
+            return "Full Incoherence"
 
     # ============================================================
     # Flags
@@ -202,10 +218,12 @@ class SourceFieldV11:
             and state_energy >= self.S0_energy - 0.1
         )
 
+        classification = self.classify_state(input_energy, state_energy)
+
         if drift_pass:
             return (
                 "COMPRESSED"
-                if self.classify_state(input_energy, state_energy) == "RWR"
+                if classification == "Resonance Without Roots"
                 else "COHERENT"
             )
         else:
@@ -216,35 +234,34 @@ class SourceFieldV11:
     # ============================================================
 
     def run(self):
-
         self.calibrate()
         Psi0 = self.root_standing_wave(0)
         self.initialize_genesis(Psi0)
 
         for t in range(self.timesteps):
-
             Psi = self.root_standing_wave(t)
             Psi_bio = self.compute_biofield(t)
 
             new_agents = []
 
             for i, S in enumerate(self.agents):
-
                 interaction = sum(
                     self.kappa * (Sj - S) for j, Sj in enumerate(self.agents) if j != i
                 )
 
-                # --- PRE-UPDATE (consistent metrics) ---
+                # --- PRE-UPDATE METRICS ---
                 C_t = self.coherence(S, Psi)
                 delta_phi_t = self.phase_divergence(S, Psi)
                 state_energy = float(np.linalg.norm(S) ** 2)
                 input_energy = float(np.sum(np.abs(Psi) ** 2))
 
+                classification = self.classify_state(input_energy, state_energy)
+
                 C_prev = self.C_hist[i][-1] if t > 0 else C_t
                 phi_prev = self.delta_phi_hist[i][-1] if t > 0 else delta_phi_t
                 S_prev_energy = self.energy_state_hist[i][-1] if t > 0 else state_energy
 
-                # --- CORRECT UPDATE RULE ---
+                # --- UPDATE RULE ---
                 grad_internal = S
                 coherence_gate = self.coherence(S, Psi_bio)
                 grad_bio = self.gamma * Psi_bio * coherence_gate
@@ -252,22 +269,20 @@ class SourceFieldV11:
                 H = self.hessian(Psi_bio, local_coherence)
 
                 S_new = S + 0.01 * H * (grad_internal + grad_bio + interaction)
-
-                # Clip S_new to prevent overflow
                 S_new = np.clip(S_new, -1e10, 1e10)
 
-                # --- STORE ---
+                # --- STORE CORE OBSERVABLES ---
                 self.C_hist[i].append(C_t)
                 self.delta_phi_hist[i].append(delta_phi_t)
                 self.energy_input_hist[i].append(input_energy)
                 self.energy_state_hist[i].append(state_energy)
+                self.classification_hist[i].append(classification)
 
-                # --- LAMBDAS ---
+                # --- RECOVERY DYNAMICS ---
                 lambda_C = C_t - C_prev
                 lambda_phi = phi_prev - delta_phi_t
                 lambda_S = state_energy - S_prev_energy
 
-                # --- WEIGHTS ---
                 delta_C = max(self.C0 - C_t, 0) / (self.C0 + self.epsilon)
                 delta_phi = max(delta_phi_t - self.delta_phi0, 0) / np.pi
                 delta_S = max(self.S0_energy - state_energy, 0) / (
@@ -294,7 +309,6 @@ class SourceFieldV11:
                 )
                 self.chi_hist[i].append(chi_t)
 
-                # Xi note: if rho_t == 0 → Xi = 0 (stalled system)
                 xi_t = chi_t * np.sign(rho_t)
                 self.xi_hist[i].append(xi_t)
 
@@ -307,14 +321,15 @@ class SourceFieldV11:
 
             self.agents = new_agents
 
-        # FINAL HASH (after milestones exist)
         self.session_hash = sha256_hash(
             str(self.current_hash)
             + str(self.genesis_hash)
             + str(self.milestone_layers)
             + str(self.C_hist)
             + str(self.delta_phi_hist)
+            + str(self.energy_input_hist)
             + str(self.energy_state_hist)
+            + str(self.classification_hist)
             + str(self.rho_hist)
             + str(self.chi_hist)
             + str(self.xi_hist)
@@ -325,10 +340,16 @@ class SourceFieldV11:
             "genesis_hash": self.genesis_hash,
             "session_hash": self.session_hash,
             "current_hash": self.current_hash,
+            "final_classifications": [
+                agent_classifications[-1] if agent_classifications else None
+                for agent_classifications in self.classification_hist
+            ],
         }
 
 
 # Example usage
-source_field = SourceFieldV11(n_agents=3, state_size=100, timesteps=800)
-results = source_field.run()
-print("Session Hash:", results["session_hash"])
+if __name__ == "__main__":
+    source_field = SourceFieldV11(n_agents=3, state_size=100, timesteps=800)
+    results = source_field.run()
+    print("Session Hash:", results["session_hash"])
+    print("Final Classifications:", results["final_classifications"])
