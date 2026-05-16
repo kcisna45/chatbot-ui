@@ -1,0 +1,435 @@
+ python C:\Users\kcisn\chatbot-ui\python-backend\backend\sourcefield.py
+Session Hash: d1363addd90f2ba6efcd523a7b105bb7901bcff743bc975da06d83b0599409be
+Tau Input: 198.0
+Tau State: 81764.55504077666
+Final Classifications: ['Dissociation', 'Dissociation', 'Dissociation']
+Agent 0 Final Classification: Dissociation
+Agent 0 Final C(t): -0.0769769212910379
+Agent 0 Final Δφ(t): 1.6478494719455465
+Agent 0 Final ρ(t): 1.4638746290118823e-08
+Agent 0 Final χ(t): 164.30695689480928
+Agent 0 Final Ξ(t): 164.30695689480928
+Agent 1 Final Classification: Dissociation
+Agent 1 Final C(t): -0.07049929696757383
+Agent 1 Final Δφ(t): 1.6413541534532197
+Agent 1 Final ρ(t): -1.800213719341098e-08
+Agent 1 Final χ(t): 151.13962049321182
+Agent 1 Final Ξ(t): -151.13962049321182
+Agent 2 Final Classification: Dissociation
+Agent 2 Final C(t): -0.07469463859052566
+Agent 2 Final Δφ(t): 1.6455605975144774
+Agent 2 Final ρ(t): 3.1233915036000414e-09
+Agent 2 Final χ(t): 159.6815217840705
+Agent 2 Final Ξ(t): 159.6815217840705
+
+RUNNING PARAMETER SWEEP...
+
+
+==============================
+SOURCEFIELD PARAMETER SWEEP
+==============================
+
+--------------------------------
+gamma = 0.04
+kappa = 0.003
+step_size = 0.0002
+avg_C = -0.02184590984028813
+avg_delta_phi = 1.5926601629042396
+avg_rho = -3.898555506003161e-09
+max_abs_chi = 326.28631652704917
+final_classes = ['Dissociation', 'Dissociation', 'Dissociation']
+trajectory_summary =
+{'agent': 0, 'start_C': np.float64(-0.08920822385180965), 'mid_C': np.float64(-0.08555722922336412), 'final_C': np.float64(-0.06862769939488404), 'start_phi': 1.6601232978262161, 'mid_phi': 1.656458281737237, 'final_phi': 1.6394780106943576, 'positive_rho_ratio': np.float64(0.58625)}
+{'agent': 1, 'start_C': np.float64(0.040566662036509465), 'mid_C': np.float64(0.03450861536658489), 'final_C': np.float64(0.013048441515558753), 'start_phi': 1.5302185300619389, 'mid_phi': 1.5362808586894297, 'final_phi': 1.557747514975719, 'positive_rho_ratio': np.float64(0.58625)}
+{'agent': 2, 'start_C': np.float64(0.0042049902636829666), 'mid_C': np.float64(0.0008298890635451602), 'final_C': np.float64(-0.009958471641539105), 'start_phi': 1.5665913241390486, 'mid_phi': 1.5699664376360918, 'final_phi': 1.5807549630426416, 'positive_rho_ratio': np.float64(0.5975)}
+--------------------------------
+
+--------------------------------
+gamma = 0.04
+kappa = 0.003
+step_size = 0.0005
+avg_C = -0.022431578093126837
+avg_delta_phi = 1.5932427090990113
+avg_rho = -2.9779141202927548e-09
+max_abs_chi = 243.88975757789123
+final_classes = ['Dissociation', 'Full Incoherence', 'Dissociation']
+trajectory_summary =
+{'agent': 0, 'start_C': np.float64(0.0896067834316845), 'mid_C': np.float64(0.07091119699514166), 'final_C': np.float64(0.01637829757062422), 'start_phi': 1.4810691935833291, 'mid_phi': 1.499825566637609, 'final_phi': 1.5544172968932168, 'positive_rho_ratio': np.float64(0.52)}
+{'agent': 1, 'start_C': np.float64(-0.005608119149093214), 'mid_C': np.float64(-0.010206371477398822), 'final_C': np.float64(-0.01961702521759681), 'start_phi': 1.576404475341232, 'mid_phi': 1.5810028754802539, 'final_phi': 1.59041461042614, 'positive_rho_ratio': np.float64(0.5175)}
+{'agent': 2, 'start_C': np.float64(-0.1207835287545537), 'mid_C': np.float64(-0.10911454341725565), 'final_C': np.float64(-0.06405600663240793), 'start_phi': 1.691875478749711, 'mid_phi': 1.6801285578716023, 'final_phi': 1.6348962199776773, 'positive_rho_ratio': np.float64(0.51375)}
+--------------------------------
+
+--------------------------------
+gamma = 0.04
+kappa = 0.003
+step_size = 0.0008
+avg_C = -0.03653754250567073
+avg_delta_phi = 1.6073446766152026
+avg_rho = -4.1425671527036006e-09
+max_abs_chi = 318.56895981913385
+final_classes = ['Dissociation', 'Dissociation', 'Dissociation']
+trajectory_summary =
+{'agent': 0, 'start_C': np.float64(0.04903985896490092), 'mid_C': np.float64(0.025487530481940388), 'final_C': np.float64(-0.019003341643898154), 'start_phi': 1.5217367904712553, 'mid_phi': 1.5453060359956363, 'final_phi': 1.589800812394645, 'positive_rho_ratio': np.float64(0.51)}
+{'agent': 1, 'start_C': np.float64(-0.06846951797310025), 'mid_C': np.float64(-0.06463659578876932), 'final_C': np.float64(-0.04766523846952769), 'start_phi': 1.6393194563172562, 'mid_phi': 1.6354780148368906, 'final_phi': 1.6184796327805826, 'positive_rho_ratio': np.float64(0.51125)}
+{'agent': 2, 'start_C': np.float64(-0.04690935029456343), 'mid_C': np.float64(-0.04890384664746952), 'final_C': np.float64(-0.04294404740358633), 'start_phi': 1.6177228980511609, 'mid_phi': 1.6197196874118054, 'final_phi': 1.6137535846703803, 'positive_rho_ratio': np.float64(0.51375)}
+--------------------------------
+
+--------------------------------
+gamma = 0.04
+kappa = 0.005
+step_size = 0.0002
+avg_C = 0.07016471619377075
+avg_delta_phi = 1.5005336236987976
+avg_rho = 6.480867326543108e-09
+max_abs_chi = 7135.569716880224
+final_classes = ['Dissociation', 'Dissociation', 'Dissociation']
+trajectory_summary =
+{'agent': 0, 'start_C': np.float64(0.00638786078123076), 'mid_C': np.float64(0.02088345526731083), 'final_C': np.float64(0.056427697387003733), 'start_phi': 1.5644084225703414, 'mid_phi': 1.549911353285366, 'final_phi': 1.5143386413221371, 'positive_rho_ratio': np.float64(0.575)}
+{'agent': 1, 'start_C': np.float64(0.15781843151828628), 'mid_C': np.float64(0.15220902209756126), 'final_C': np.float64(0.1148354790002316), 'start_phi': 1.4123153203409415, 'mid_phi': 1.417993372350923, 'final_phi': 1.455706945346105, 'positive_rho_ratio': np.float64(0.5825)}
+{'agent': 2, 'start_C': np.float64(-0.03757319887498635), 'mid_C': np.float64(-0.017477327226843076), 'final_C': np.float64(0.03923097219407695), 'start_phi': 1.608378371921919, 'mid_phi': 1.5882745439059591, 'final_phi': 1.5315552844281517, 'positive_rho_ratio': np.float64(0.59375)}
+--------------------------------
+
+--------------------------------
+gamma = 0.04
+kappa = 0.005
+step_size = 0.0005
+avg_C = -0.04412598863755213
+avg_delta_phi = 1.6149372399144948
+avg_rho = -1.6155106390971438e-09
+max_abs_chi = 890.3914935637806
+final_classes = ['Full Incoherence', 'Dissociation', 'Dissociation']
+trajectory_summary =
+{'agent': 0, 'start_C': np.float64(0.024014863737487454), 'mid_C': np.float64(-0.0018377023362768736), 'final_C': np.float64(-0.03768943334954304), 'start_phi': 1.5467791541747469, 'mid_phi': 1.572634030165541, 'final_phi': 1.608494688784802, 'positive_rho_ratio': np.float64(0.51875)}
+{'agent': 1, 'start_C': np.float64(-0.02582688211946278), 'mid_C': np.float64(-0.03708663173220663), 'final_C': np.float64(-0.044317006879912836), 'start_phi': 1.5966260809847632, 'mid_phi': 1.6078914653984229, 'final_phi': 1.6151278529227222, 'positive_rho_ratio': np.float64(0.5175)}
+{'agent': 2, 'start_C': np.float64(-0.07825742479504326), 'mid_C': np.float64(-0.07201367404368841), 'final_C': np.float64(-0.05037152568320051), 'start_phi': 1.64913385020424, 'mid_phi': 1.642872389995095, 'final_phi': 1.6211891780359609, 'positive_rho_ratio': np.float64(0.515)}
+--------------------------------
+
+--------------------------------
+gamma = 0.04
+kappa = 0.005
+step_size = 0.0008
+avg_C = 0.0366568944500864
+avg_delta_phi = 1.5341311233617663
+avg_rho = 6.653123003226856e-10
+max_abs_chi = 1247.6977314143733
+final_classes = ['Dissociation', 'Dissociation', 'Full Incoherence']
+trajectory_summary =
+{'agent': 0, 'start_C': np.float64(-0.01455644732514056), 'mid_C': np.float64(0.010633538260180498), 'final_C': np.float64(0.03427049073164169), 'start_phi': 1.5853532882303818, 'mid_phi': 1.560162588131705, 'final_phi': 1.5365191242579768, 'positive_rho_ratio': np.float64(0.5125)}
+{'agent': 1, 'start_C': np.float64(0.06369620003078416), 'mid_C': np.float64(0.05771677840445239), 'final_C': np.float64(0.039690105017728954), 'start_phi': 1.5070569765032464, 'mid_phi': 1.5130474556480662, 'final_phi': 1.5310957937167398, 'positive_rho_ratio': np.float64(0.50875)}
+{'agent': 2, 'start_C': np.float64(0.011350158155391962), 'mid_C': np.float64(0.026154371066225857), 'final_C': np.float64(0.03601008760088855), 'start_phi': 1.5594459249259596, 'mid_phi': 1.5446389729892613, 'final_phi': 1.534778452110582, 'positive_rho_ratio': np.float64(0.51125)}
+--------------------------------
+
+--------------------------------
+gamma = 0.04
+kappa = 0.007
+step_size = 0.0002
+avg_C = 0.006814580274299771
+avg_delta_phi = 1.5639813468176698
+avg_rho = 8.203418179521915e-10
+max_abs_chi = 137.17236152959316
+final_classes = ['Dissociation', 'Dissociation', 'Dissociation']
+trajectory_summary =
+{'agent': 0, 'start_C': np.float64(0.05826429789636353), 'mid_C': np.float64(0.04762945223489134), 'final_C': np.float64(0.01863865156359209), 'start_phi': 1.5124990131933624, 'mid_phi': 1.5231488477353463, 'final_phi': 1.5521565958867116, 'positive_rho_ratio': np.float64(0.5825)}
+{'agent': 1, 'start_C': np.float64(0.029228538559140784), 'mid_C': np.float64(0.025069045442850404), 'final_C': np.float64(0.01240955542110978), 'start_phi': 1.5415636249419074, 'mid_phi': 1.545724654806163, 'final_phi': 1.558386452845859, 'positive_rho_ratio': np.float64(0.5825)}
+{'agent': 2, 'start_C': np.float64(-0.07839170959372926), 'mid_C': np.float64(-0.059067233087683045), 'final_C': np.float64(-0.010604466161802557), 'start_phi': 1.6492685488089665, 'mid_phi': 1.629897960906285, 'final_phi': 1.581400991720439, 'positive_rho_ratio': np.float64(0.57875)}
+--------------------------------
+
+--------------------------------
+gamma = 0.04
+kappa = 0.007
+step_size = 0.0005
+avg_C = -0.022424179069230804
+avg_delta_phi = 1.5932224298992324
+avg_rho = -7.494966138408317e-11
+max_abs_chi = 131.54624772528
+final_classes = ['Dissociation', 'Dissociation', 'Full Incoherence']
+trajectory_summary =
+{'agent': 0, 'start_C': np.float64(-0.07067468373532597), 'mid_C': np.float64(-0.05180738334615395), 'final_C': np.float64(-0.024988220713327684), 'start_phi': 1.6415299787951076, 'mid_phi': 1.6226269133893152, 'final_phi': 1.5957871487265678, 'positive_rho_ratio': np.float64(0.51625)}
+{'agent': 1, 'start_C': np.float64(-0.007214924636343998), 'mid_C': np.float64(-0.016554447944788147), 'final_C': np.float64(-0.022117746478463752), 'start_phi': 1.578011314028356, 'mid_phi': 1.5873515309566582, 'final_phi': 1.5929158769845464, 'positive_rho_ratio': np.float64(0.5175)}
+{'agent': 2, 'start_C': np.float64(0.035721275457480446), 'mid_C': np.float64(0.007703769704437197), 'final_C': np.float64(-0.020166570015900984), 'start_phi': 1.5350674501907355, 'mid_phi': 1.5630924808877833, 'final_phi': 1.5909642639865826, 'positive_rho_ratio': np.float64(0.51875)}
+--------------------------------
+
+--------------------------------
+gamma = 0.04
+kappa = 0.007
+step_size = 0.0008
+avg_C = -0.0844813690417926
+avg_delta_phi = 1.655378783930533
+avg_rho = -6.007140568853935e-11
+max_abs_chi = 184.36613918943928
+final_classes = ['Dissociation', 'Dissociation', 'Dissociation']
+trajectory_summary =
+{'agent': 0, 'start_C': np.float64(-0.2177319265754881), 'mid_C': np.float64(-0.1540477590067678), 'final_C': np.float64(-0.08800413990819582), 'start_phi': 1.7902863673201164, 'mid_phi': 1.725459962747566, 'final_phi': 1.6589144591270049, 'positive_rho_ratio': np.float64(0.51125)}
+{'agent': 1, 'start_C': np.float64(0.058304315274524024), 'mid_C': np.float64(-0.03206693333195896), 'final_C': np.float64(-0.08229086966654306), 'start_phi': 1.5124589276708067, 'mid_phi': 1.6028687583463557, 'final_phi': 1.653180356672495, 'positive_rho_ratio': np.float64(0.50875)}
+{'agent': 2, 'start_C': np.float64(0.017153484158363454), 'mid_C': np.float64(-0.05021501743376713), 'final_C': np.float64(-0.08314909755063893), 'start_phi': 1.553642001312495, 'mid_phi': 1.621032471473061, 'final_phi': 1.654041535992099, 'positive_rho_ratio': np.float64(0.5075)}
+--------------------------------
+
+--------------------------------
+gamma = 0.05
+kappa = 0.003
+step_size = 0.0002
+avg_C = 0.06697918602068698
+avg_delta_phi = 1.50360143389223
+avg_rho = 1.3035165592597022e-08
+max_abs_chi = 6803.805291645149
+final_classes = ['Dissociation', 'Dissociation', 'Dissociation']
+trajectory_summary =
+{'agent': 0, 'start_C': np.float64(0.009464160604632529), 'mid_C': np.float64(0.018427229906606907), 'final_C': np.float64(0.04398783542865418), 'start_phi': 1.561332024899895, 'mid_phi': 1.552368053861934, 'final_phi': 1.526794293439086, 'positive_rho_ratio': np.float64(0.57375)}
+{'agent': 1, 'start_C': np.float64(0.18227281670489479), 'mid_C': np.float64(0.178316192207824), 'final_C': np.float64(0.1554457331476144), 'start_phi': 1.3874988289101728, 'mid_phi': 1.3915213751214224, 'final_phi': 1.4147176714955003, 'positive_rho_ratio': np.float64(0.58)}
+{'agent': 2, 'start_C': np.float64(-0.05470543550866466), 'mid_C': np.float64(-0.041442152590244065), 'final_C': np.float64(0.001503989485792351), 'start_phi': 1.6255290851351976, 'mid_phi': 1.6122503510472055, 'final_phi': 1.5692923367421037, 'positive_rho_ratio': np.float64(0.58125)}
+--------------------------------
+
+--------------------------------
+gamma = 0.05
+kappa = 0.003
+step_size = 0.0005
+avg_C = 0.12258392174378911
+avg_delta_phi = 1.4479011925702994
+avg_rho = 2.4545098151979086e-08
+max_abs_chi = 611.4137977955461
+final_classes = ['Dissociation', 'Dissociation', 'Dissociation']
+trajectory_summary =
+{'agent': 0, 'start_C': np.float64(0.08992001079440591), 'mid_C': np.float64(0.10754102438075777), 'final_C': np.float64(0.13062067556952553), 'start_phi': 1.4807546966322238, 'mid_phi': 1.4630469295372017, 'final_phi': 1.4398013336547753, 'positive_rho_ratio': np.float64(0.52)}
+{'agent': 1, 'start_C': np.float64(0.06251336239529175), 'mid_C': np.float64(0.08390942951881904), 'final_C': np.float64(0.11980392413622733), 'start_phi': 1.5082421764223621, 'mid_phi': 1.4867881191789456, 'final_phi': 1.4507039450861152, 'positive_rho_ratio': np.float64(0.51625)}
+{'agent': 2, 'start_C': np.float64(0.058649554044723426), 'mid_C': np.float64(0.08024132975362377), 'final_C': np.float64(0.11732716552561442), 'start_phi': 1.512113097099723, 'mid_phi': 1.4904686386711388, 'final_phi': 1.4531982989700079, 'positive_rho_ratio': np.float64(0.51875)}
+--------------------------------
+
+--------------------------------
+gamma = 0.05
+kappa = 0.003
+step_size = 0.0008
+avg_C = -0.012009605756749808
+avg_delta_phi = 1.582806738989686
+avg_rho = -1.093225846670232e-09
+max_abs_chi = 172.05723239936935
+final_classes = ['Dissociation', 'Dissociation', 'Dissociation']
+trajectory_summary =
+{'agent': 0, 'start_C': np.float64(0.05334245063123055), 'mid_C': np.float64(0.0348181932729932), 'final_C': np.float64(0.0017709904593671713), 'start_phi': 1.5174285467979123, 'mid_phi': 1.5359710946270915, 'final_phi': 1.5690253354097703, 'positive_rho_ratio': np.float64(0.50875)}
+{'agent': 1, 'start_C': np.float64(-0.050880685400797196), 'mid_C': np.float64(-0.04178628308935323), 'final_C': np.float64(-0.021893709845484298), 'start_phi': 1.6216989915048845, 'mid_phi': 1.612594779908408, 'final_phi': 1.5926917860862864, 'positive_rho_ratio': np.float64(0.51125)}
+{'agent': 2, 'start_C': np.float64(-0.0247272657879491), 'mid_C': np.float64(-0.02253426079132502), 'final_C': np.float64(-0.015906097884132296), 'start_phi': 1.5955261131400746, 'mid_phi': 1.5933324951451189, 'final_phi': 1.5867030954730015, 'positive_rho_ratio': np.float64(0.51125)}
+--------------------------------
+
+--------------------------------
+gamma = 0.05
+kappa = 0.005
+step_size = 0.0002
+avg_C = 0.020271880079230028
+avg_delta_phi = 1.5505219162888988
+avg_rho = 2.6292321661319798e-09
+max_abs_chi = 472.0030880247505
+final_classes = ['Full Incoherence', 'Dissociation', 'Full Incoherence']trajectory_summary =
+{'agent': 0, 'start_C': np.float64(-0.02647107275398394), 'mid_C': np.float64(-0.018699725759019757), 'final_C': np.float64(0.0046545633564277905), 'start_phi': 1.5972704919822658, 'mid_phi': 1.5894971425446593, 'final_phi': 1.5661417466314835, 'positive_rho_ratio': np.float64(0.57625)}
+{'agent': 1, 'start_C': np.float64(0.0390004503041107), 'mid_C': np.float64(0.03815194383073253), 'final_C': np.float64(0.03068836409792228), 'start_phi': 1.531785982874987, 'mid_phi': 1.5326351214204905, 'final_phi': 1.5401031437285366, 'positive_rho_ratio': np.float64(0.5925)}
+{'agent': 2, 'start_C': np.float64(0.024196456333187375), 'mid_C': np.float64(0.025620980577949547), 'final_C': np.float64(0.02547271278334001), 'start_phi': 1.546597508795621, 'mid_phi': 1.5451725423053866, 'final_phi': 1.5453208585066764, 'positive_rho_ratio': np.float64(0.59125)}
+--------------------------------
+
+--------------------------------
+gamma = 0.05
+kappa = 0.005
+step_size = 0.0005
+avg_C = 0.011756586208105593
+avg_delta_phi = 1.5590384404831952
+avg_rho = 1.3378315601559527e-09
+max_abs_chi = 85.65603833051858
+final_classes = ['Full Incoherence', 'Dissociation', 'Dissociation']
+trajectory_summary =
+{'agent': 0, 'start_C': np.float64(0.13947378134734428), 'mid_C': np.float64(0.10160832151189671), 'final_C': np.float64(0.028510751562412107), 'start_phi': 1.4308663448062775, 'mid_phi': 1.4690123496698226, 'final_phi': 1.542281711263297, 'positive_rho_ratio': np.float64(0.52)}
+{'agent': 1, 'start_C': np.float64(-0.038285923543451915), 'mid_C': np.float64(-0.0216347420678477), 'final_C': np.float64(0.00601509509519103), 'start_phi': 1.609091609840656, 'mid_phi': 1.5924327569519996, 'final_phi': 1.5647811954267192, 'positive_rho_ratio': np.float64(0.52)}
+{'agent': 2, 'start_C': np.float64(-0.08154947837688611), 'mid_C': np.float64(-0.050870229864596966), 'final_C': np.float64(0.0007439119667136424), 'start_phi': 1.6524364650668786, 'mid_phi': 1.6216885224112645, 'final_phi': 1.570052414759569, 'positive_rho_ratio': np.float64(0.51625)}
+--------------------------------
+
+--------------------------------
+gamma = 0.05
+kappa = 0.005
+step_size = 0.0008
+avg_C = 0.036963622792052835
+avg_delta_phi = 1.5338231985387936
+avg_rho = 4.1163208315538526e-10
+max_abs_chi = 154.0156324816596
+final_classes = ['Dissociation', 'Dissociation', 'Dissociation']
+trajectory_summary =
+{'agent': 0, 'start_C': np.float64(-0.12411800994010536), 'mid_C': np.float64(-0.05099676370587672), 'final_C': np.float64(0.02711928897311969), 'start_phi': 1.6952352451998338, 'mid_phi': 1.6218152207010406, 'final_phi': 1.5436737125479263, 'positive_rho_ratio': np.float64(0.51375)}
+{'agent': 1, 'start_C': np.float64(0.034757467464054094), 'mid_C': np.float64(0.040238581303737884), 'final_C': np.float64(0.03787173357966902), 'start_phi': 1.5360318572144038, 'mid_phi': 1.5305468788993448, 'final_phi': 1.5329155343299974, 'positive_rho_ratio': np.float64(0.515)}
+{'agent': 2, 'start_C': np.float64(0.15266426526540042), 'mid_C': np.float64(0.1091739086706684), 'final_C': np.float64(0.04589984582336979), 'start_phi': 1.4175327459507516, 'mid_phi': 1.461404373680789, 'final_phi': 1.5248803487384572, 'positive_rho_ratio': np.float64(0.50875)}
+--------------------------------
+
+--------------------------------
+gamma = 0.05
+kappa = 0.007
+step_size = 0.0002
+avg_C = -0.03132848572821687
+avg_delta_phi = 1.6021355430686341
+avg_rho = -1.8916890999962544e-09
+max_abs_chi = 398.02321991190894
+final_classes = ['Full Incoherence', 'Dissociation', 'Dissociation']
+trajectory_summary =
+{'agent': 0, 'start_C': np.float64(-0.05337854942018524), 'mid_C': np.float64(-0.05226698340753358), 'final_C': np.float64(-0.03962063903928521), 'start_phi': 1.6242002570836649, 'mid_phi': 1.6230871369896671, 'final_phi': 1.6104273392107813, 'positive_rho_ratio': np.float64(0.58125)}
+{'agent': 1, 'start_C': np.float64(0.09833490688936221), 'mid_C': np.float64(0.06805053494010252), 'final_C': np.float64(-0.0036147139711208117), 'start_phi': 1.4723022472474807, 'mid_phi': 1.5026931598443667, 'final_phi': 1.5744110486378005, 'positive_rho_ratio': np.float64(0.5825)}
+{'agent': 2, 'start_C': np.float64(-0.10168138153318783), 'mid_C': np.float64(-0.09023375843222568), 'final_C': np.float64(-0.05075010417424458), 'start_phi': 1.6726537443074228, 'mid_phi': 1.6611529852451254, 'final_phi': 1.6215682413573207, 'positive_rho_ratio': np.float64(0.5825)}
+--------------------------------
+
+--------------------------------
+gamma = 0.05
+kappa = 0.007
+step_size = 0.0005
+avg_C = 0.02240899945786601
+avg_delta_phi = 1.5483853513904984
+avg_rho = 2.0764389265052057e-10
+max_abs_chi = 249.94521927144046
+final_classes = ['Dissociation', 'Dissociation', 'Dissociation']
+trajectory_summary =
+{'agent': 0, 'start_C': np.float64(0.04133908399036775), 'mid_C': np.float64(0.03629514561669079), 'final_C': np.float64(0.02380110354861784), 'start_phi': 1.529445459543813, 'mid_phi': 1.534493207623921, 'final_phi': 1.5469929754819998, 'positive_rho_ratio': np.float64(0.52)}
+{'agent': 1, 'start_C': np.float64(-0.07482408247120108), 'mid_C': np.float64(-0.03133194968578624), 'final_C': np.float64(0.01820656168195431), 'start_phi': 1.6456904046470713, 'mid_phi': 1.602133405129184, 'final_phi': 1.5525887591144039, 'positive_rho_ratio': np.float64(0.515)}
+{'agent': 2, 'start_C': np.float64(0.06890506600414856), 'mid_C': np.float64(0.05323313418790944), 'final_C': np.float64(0.025219333143025897), 'start_phi': 1.5018366181424188, 'mid_phi': 1.5175380187794905, 'final_phi': 1.5455743195750913, 'positive_rho_ratio': np.float64(0.52)}
+--------------------------------
+
+--------------------------------
+gamma = 0.05
+kappa = 0.007
+step_size = 0.0008
+avg_C = 0.0453139412104601
+avg_delta_phi = 1.5254668061301715
+avg_rho = 8.02144954882313e-11
+max_abs_chi = 191.69158365034286
+final_classes = ['Dissociation', 'Dissociation', 'Dissociation']
+trajectory_summary =
+{'agent': 0, 'start_C': np.float64(0.09148819681471322), 'mid_C': np.float64(0.0701552960599794), 'final_C': np.float64(0.04649256855949571), 'start_phi': 1.479180019448366, 'mid_phi': 1.5005833549165684, 'final_phi': 1.524286992517769, 'positive_rho_ratio': np.float64(0.51)}
+{'agent': 1, 'start_C': np.float64(-0.09577621911506805), 'mid_C': np.float64(-0.010584749308867929), 'final_C': np.float64(0.04305538575311858), 'start_phi': 1.666719580885722, 'mid_phi': 1.5813812737608448, 'final_phi': 1.5277276274959175, 'positive_rho_ratio': np.float64(0.5125)}
+{'agent': 2, 'start_C': np.float64(0.07932853381331126), 'mid_C': np.float64(0.06698253311234684), 'final_C': np.float64(0.046393869318766004), 'start_phi': 1.4913843538514822, 'mid_phi': 1.503763604311731, 'final_phi': 1.5243857983768279, 'positive_rho_ratio': np.float64(0.5075)}
+--------------------------------
+
+--------------------------------
+gamma = 0.06
+kappa = 0.003
+step_size = 0.0002
+avg_C = -0.03154361720577359
+avg_delta_phi = 1.6023930487815157
+avg_rho = -5.702533740159107e-09
+max_abs_chi = 589.0219102633712
+final_classes = ['Dissociation', 'Dissociation', 'Dissociation']
+trajectory_summary =
+{'agent': 0, 'start_C': np.float64(0.06629631037994405), 'mid_C': np.float64(0.05731647593853825), 'final_C': np.float64(0.024405023247354548), 'start_phi': 1.5044513558448047, 'mid_phi': 1.5134484218968507, 'final_phi': 1.546388880271699, 'positive_rho_ratio': np.float64(0.5975)}
+{'agent': 1, 'start_C': np.float64(-0.0036013943225655753), 'mid_C': np.float64(-0.007826093282236423), 'final_C': np.float64(-0.020468377119539798), 'start_phi': 1.5743977289025464, 'mid_phi': 1.578622499967751, 'final_phi': 1.5912661334036073, 'positive_rho_ratio': np.float64(0.58)}
+{'agent': 2, 'start_C': np.float64(-0.1263048232650728), 'mid_C': np.float64(-0.12135989445446645), 'final_C': np.float64(-0.09856749774513551), 'start_phi': 1.6974394055481163, 'mid_phi': 1.6924561157614262, 'final_phi': 1.6695241326692407, 'positive_rho_ratio': np.float64(0.58625)}
+--------------------------------
+
+--------------------------------
+gamma = 0.06
+kappa = 0.003
+step_size = 0.0005
+avg_C = 0.05062624247478348
+avg_delta_phi = 1.5201459759438787
+avg_rho = 6.099584506551843e-09
+max_abs_chi = 904.3521880765909
+final_classes = ['Dissociation', 'Dissociation', 'Dissociation']
+trajectory_summary =
+{'agent': 0, 'start_C': np.float64(0.02788074970595882), 'mid_C': np.float64(0.03642090956488319), 'final_C': np.float64(0.04952546740087798), 'start_phi': 1.5429119637054711, 'mid_phi': 1.5343673604690733, 'final_phi': 1.5212505912358085, 'positive_rho_ratio': np.float64(0.52)}
+{'agent': 1, 'start_C': np.float64(-0.0013580382849917572), 'mid_C': np.float64(0.012081960075791225), 'final_C': np.float64(0.039236015301068), 'start_phi': 1.5721543654973198, 'mid_phi': 1.5587140727582733, 'final_phi': 1.5315502374353298, 'positive_rho_ratio': np.float64(0.52625)}
+{'agent': 2, 'start_C': np.float64(0.06878515016762987), 'mid_C': np.float64(0.06994879630299845), 'final_C': np.float64(0.06311724472240444), 'start_phi': 1.5019568191726822, 'mid_phi': 1.500790363223402, 'final_phi': 1.507637099160497, 'positive_rho_ratio': np.float64(0.51375)}
+--------------------------------
+
+--------------------------------
+gamma = 0.06
+kappa = 0.003
+step_size = 0.0008
+avg_C = 0.005533868597900939
+avg_delta_phi = 1.5652595870039867
+avg_rho = -1.240365049516824e-10
+max_abs_chi = 218.6030590529291
+final_classes = ['Dissociation', 'Dissociation', 'Dissociation']
+trajectory_summary =
+{'agent': 0, 'start_C': np.float64(-0.07436152058806), 'mid_C': np.float64(-0.05691608424852208), 'final_C': np.float64(-0.014622467061919641), 'start_phi': 1.6452265504974424, 'mid_phi': 1.6277431853051427, 'final_phi': 1.58541931499452, 'positive_rho_ratio': np.float64(0.51125)}
+{'agent': 1, 'start_C': np.float64(0.13231806469329258), 'mid_C': np.float64(0.10459311109459069), 'final_C': np.float64(0.03805036648171897), 'start_phi': 1.4380890823708397, 'mid_phi': 1.4660115675278889, 'final_phi': 1.532736772579739, 'positive_rho_ratio': np.float64(0.50875)}
+{'agent': 2, 'start_C': np.float64(-0.045225590324556995), 'mid_C': np.float64(-0.03347938413736581), 'final_C': np.float64(-0.006826293626096512), 'start_phi': 1.616037348383921, 'mid_phi': 1.6042819684238747, 'final_phi': 1.5776226734377006, 'positive_rho_ratio': np.float64(0.51125)}
+--------------------------------
+
+--------------------------------
+gamma = 0.06
+kappa = 0.005
+step_size = 0.0002
+avg_C = 0.04360180752743998
+avg_delta_phi = 1.5271605496549812
+avg_rho = 5.465972757219237e-09
+max_abs_chi = 482.6326536146362
+final_classes = ['Dissociation', 'Dissociation', 'Dissociation']
+trajectory_summary =
+{'agent': 0, 'start_C': np.float64(-0.08016721277853675), 'mid_C': np.float64(-0.06016750730145884), 'final_C': np.float64(0.0022658944839419022), 'start_phi': 1.651049658400177, 'mid_phi': 1.631000195718435, 'final_phi': 1.568530430371995, 'positive_rho_ratio': np.float64(0.58375)}
+{'agent': 1, 'start_C': np.float64(0.04516059291714264), 'mid_C': np.float64(0.048125043203498294), 'final_C': np.float64(0.04995645759095965), 'start_phi': 1.525620369091004, 'mid_phi': 1.5226526877787947, 'final_phi': 1.520819066880881, 'positive_rho_ratio': np.float64(0.59125)}
+{'agent': 2, 'start_C': np.float64(0.11457307593584305), 'mid_C': np.float64(0.10959058423966493), 'final_C': np.float64(0.07858307050741839), 'start_phi': 1.4559710918622208, 'mid_phi': 1.4609851828633904, 'final_phi': 1.4921321517120678, 'positive_rho_ratio': np.float64(0.5825)}
+--------------------------------
+
+--------------------------------
+gamma = 0.06
+kappa = 0.005
+step_size = 0.0005
+avg_C = 0.10774072432135832
+avg_delta_phi = 1.4628457235776917
+avg_rho = 4.182040613153588e-09
+max_abs_chi = 554.3937505178133
+final_classes = ['Dissociation', 'Dissociation', 'Dissociation']
+trajectory_summary =
+{'agent': 0, 'start_C': np.float64(0.07832848351898955), 'mid_C': np.float64(0.1006813182807269), 'final_C': np.float64(0.11040770439711813), 'start_phi': 1.4923875258677972, 'mid_phi': 1.4699441313795585, 'final_phi': 1.46016307386314, 'positive_rho_ratio': np.float64(0.515)}
+{'agent': 1, 'start_C': np.float64(0.06970872992939343), 'mid_C': np.float64(0.09268972634943137), 'final_C': np.float64(0.10839908343731088), 'start_phi': 1.5010310170353156, 'mid_phi': 1.477973362492427, 'final_phi': 1.4621838248698298, 'positive_rho_ratio': np.float64(0.515)}
+{'agent': 2, 'start_C': np.float64(0.03398872446430693), 'mid_C': np.float64(0.06880091450144046), 'final_C': np.float64(0.10441538512964595), 'start_phi': 1.5368010547746702, 'mid_phi': 1.5019410174037406, 'final_phi': 1.4661902720001048, 'positive_rho_ratio': np.float64(0.5175)}
+--------------------------------
+
+--------------------------------
+gamma = 0.06
+kappa = 0.005
+step_size = 0.0008
+avg_C = 0.09824503269697664
+avg_delta_phi = 1.472392517872447
+avg_rho = 1.1158587191408482e-09
+max_abs_chi = 973.5981024265801
+final_classes = ['Dissociation', 'Dissociation', 'Dissociation']
+trajectory_summary =
+{'agent': 0, 'start_C': np.float64(0.04269236958820446), 'mid_C': np.float64(0.07830579535855611), 'final_C': np.float64(0.09726903459484593), 'start_phi': 1.5280909777661165, 'mid_phi': 1.4924102839297146, 'final_phi': 1.4733732541132063, 'positive_rho_ratio': np.float64(0.51125)}
+{'agent': 1, 'start_C': np.float64(0.051868748491195785), 'mid_C': np.float64(0.08466891664132253), 'final_C': np.float64(0.09801595338012657), 'start_phi': 1.5189042924391343, 'mid_phi': 1.4860259196252492, 'final_phi': 1.4726227490627204, 'positive_rho_ratio': np.float64(0.51125)}
+{'agent': 2, 'start_C': np.float64(0.08500564125504079), 'mid_C': np.float64(0.10006081598772697), 'final_C': np.float64(0.09945011011595742), 'start_phi': 1.4856879766644833, 'mid_phi': 1.4705677830781214, 'final_phi': 1.4711815504414139, 'positive_rho_ratio': np.float64(0.5075)}
+--------------------------------
+
+--------------------------------
+gamma = 0.06
+kappa = 0.007
+step_size = 0.0002
+avg_C = -0.06022645385557496
+avg_delta_phi = 1.6310633371211918
+avg_rho = -4.006333846680352e-09
+max_abs_chi = 2713.5316724531544
+final_classes = ['Dissociation', 'Dissociation', 'Dissociation']
+trajectory_summary =
+{'agent': 0, 'start_C': np.float64(0.010035941590470403), 'mid_C': np.float64(-0.009148116812471711), 'final_C': np.float64(-0.04994921583987159), 'start_phi': 1.560760216726577, 'mid_phi': 1.57994457121017, 'final_phi': 1.6207663359057605, 'positive_rho_ratio': np.float64(0.60125)}
+{'agent': 1, 'start_C': np.float64(-0.10137687332651679), 'mid_C': np.float64(-0.10015494687164068), 'final_C': np.float64(-0.0761156600309187), 'start_phi': 1.6723476544004272, 'mid_phi': 1.6711194766411208, 'final_phi': 1.6469856763064765, 'positive_rho_ratio': np.float64(0.58)}
+{'agent': 2, 'start_C': np.float64(-0.011330327947569668), 'mid_C': np.float64(-0.026013244605835473), 'final_C': np.float64(-0.054614485695934564), 'start_phi': 1.5821268971807947, 'mid_phi': 1.5968125061067582, 'final_phi': 1.6254379991513384, 'positive_rho_ratio': np.float64(0.60375)}--------------------------------
+
+--------------------------------
+gamma = 0.06
+kappa = 0.007
+step_size = 0.0005
+avg_C = -0.13652752448483627
+avg_delta_phi = 1.7077525603256298
+avg_rho = -6.520025121383652e-10
+max_abs_chi = 392.57526403189144
+final_classes = ['Full Incoherence', 'Dissociation', 'Dissociation']
+trajectory_summary =
+{'agent': 0, 'start_C': np.float64(-0.1353863402243649), 'mid_C': np.float64(-0.15463571633810047), 'final_C': np.float64(-0.13959770705717744), 'start_phi': 1.7065997092422143, 'mid_phi': 1.7260550507154173, 'final_phi': 1.7108514588319985, 'positive_rho_ratio': np.float64(0.5125)}
+{'agent': 1, 'start_C': np.float64(0.028231970123911456), 'mid_C': np.float64(-0.05719571503004431), 'final_C': np.float64(-0.1312756461026255), 'start_phi': 1.54256060497083, 'mid_phi': 1.6280232723535033, 'final_phi': 1.702451979275003, 'positive_rho_ratio': np.float64(0.5175)}
+{'agent': 2, 'start_C': np.float64(-0.12149137580310955), 'mid_C': np.float64(-0.145178699213238), 'final_C': np.float64(-0.13870922029470587), 'start_phi': 1.6925885772548175, 'mid_phi': 1.716489909630755, 'final_phi': 1.709954242869888, 'positive_rho_ratio': np.float64(0.515)}
+--------------------------------
+
+--------------------------------
+gamma = 0.06
+kappa = 0.007
+step_size = 0.0008
+avg_C = 0.076373987347146
+avg_delta_phi = 1.494347842857905
+avg_rho = 8.771662800588385e-11
+max_abs_chi = 4159.355031395972
+final_classes = ['Dissociation', 'Dissociation', 'Dissociation']
+trajectory_summary =
+{'agent': 0, 'start_C': np.float64(0.007853942520346728), 'mid_C': np.float64(0.05480198854038295), 'final_C': np.float64(0.07562090869173978), 'start_phi': 1.5629423035280028, 'mid_phi': 1.515966870365102, 'final_phi': 1.4951031586977588, 'positive_rho_ratio': np.float64(0.51125)}
+{'agent': 1, 'start_C': np.float64(0.1265934408586883), 'mid_C': np.float64(0.10719596681692808), 'final_C': np.float64(0.07802689457473629), 'start_phi': 1.4438622949939035, 'mid_phi': 1.4633939933765647, 'final_phi': 1.4926900406776586, 'positive_rho_ratio': np.float64(0.50875)}
+{'agent': 2, 'start_C': np.float64(-0.0022219139489820577), 'mid_C': np.float64(0.05160996251692175), 'final_C': np.float64(0.07547415877496193), 'start_phi': 1.573018242572111, 'mid_phi': 1.5191634254910966, 'final_phi': 1.495250329198297, 'positive_rho_ratio': np.float64(0.51125)}
+--------------------------------
+
+PS C:\Users\kcisn\chatbot-ui> 

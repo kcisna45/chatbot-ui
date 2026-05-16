@@ -12,9 +12,9 @@ class SourceFieldV11:
         self.state_size = state_size
         self.timesteps = timesteps
 
-        self.gamma = 0.06
-        self.kappa = 0.07
-        self.step_size = 0.0005
+        self.gamma = 0.05
+        self.kappa = 0.005
+        self.step_size = 0.0006
         self.epsilon = 1e-8
         self.beta = 1.0073
 
@@ -309,9 +309,9 @@ class SourceFieldV11:
 
 def run_parameter_sweep():
 
-    gamma_values = [0.04, 0.05, 0.06]
+    gamma_values = [0.05, 0.06]
     kappa_values = [0.003, 0.005, 0.007]
-    step_sizes = [0.0002, 0.0005, 0.0008]
+    step_sizes = [0.0005, 0.0006, 0.0007, 0.0008]
 
     print("\n==============================")
     print("SOURCEFIELD PARAMETER SWEEP")
@@ -341,6 +341,37 @@ def run_parameter_sweep():
 
                 final_classes = results["final_classifications"]
 
+                trajectory_summary = []
+
+                for agent_idx in range(len(results["C_hist"])):
+
+                    C_hist = results["C_hist"][agent_idx]
+                    phi_hist = results["delta_phi_hist"][agent_idx]
+                    rho_hist = results["rho_hist"][agent_idx]
+
+                    start_C = C_hist[0]
+                    mid_C = C_hist[len(C_hist) // 2]
+                    final_C = C_hist[-1]
+
+                    start_phi = phi_hist[0]
+                    mid_phi = phi_hist[len(phi_hist) // 2]
+                    final_phi = phi_hist[-1]
+
+                    positive_rho_ratio = np.mean(np.array(rho_hist) > 0)
+
+                    trajectory_summary.append(
+                        {
+                            "agent": agent_idx,
+                            "start_C": start_C,
+                            "mid_C": mid_C,
+                            "final_C": final_C,
+                            "start_phi": start_phi,
+                            "mid_phi": mid_phi,
+                            "final_phi": final_phi,
+                            "positive_rho_ratio": positive_rho_ratio,
+                        }
+                    )
+
                 print("--------------------------------")
 
                 print(f"gamma = {gamma}")
@@ -358,6 +389,11 @@ def run_parameter_sweep():
                 print(f"max_abs_chi = {max_chi}")
 
                 print(f"final_classes = {final_classes}")
+
+                print("trajectory_summary =")
+
+                for traj in trajectory_summary:
+                    print(traj)
 
                 print("--------------------------------\n")
 
