@@ -14,6 +14,7 @@ class SourceFieldV11:
 
         self.gamma = 0.05
         self.kappa = 0.01
+        self.step_size = 0.001
         self.epsilon = 1e-8
         self.beta = 1.0073
 
@@ -207,8 +208,13 @@ class SourceFieldV11:
                 local_coherence = self.coherence(S, Psi_bio)
                 H = self.hessian(Psi_bio, local_coherence)
 
-                S_new = S + 0.01 * H * (grad_internal + grad_bio + interaction)
-                S_new = np.clip(S_new, -1e10, 1e10)
+                S_new = S + self.step_size * H * (
+                    grad_internal + grad_bio + interaction
+                )
+
+                S_norm = np.linalg.norm(S_new)
+                if S_norm > 0:
+                    S_new = S_new / S_norm * min(S_norm, np.sqrt(self.tau_state))
 
                 self.C_hist[i].append(C_t)
                 self.delta_phi_hist[i].append(delta_phi_t)
@@ -294,6 +300,67 @@ class SourceFieldV11:
             ],
         }
 
+    # ============================================================
+
+
+# PARAMETER SWEEP
+# ============================================================
+
+
+def run_parameter_sweep():
+
+    gamma_values = [0.02, 0.05, 0.08]
+    kappa_values = [0.005, 0.01, 0.02]
+    step_sizes = [0.0005, 0.001, 0.002]
+
+    print("\n==============================")
+    print("SOURCEFIELD PARAMETER SWEEP")
+    print("==============================\n")
+
+    for gamma in gamma_values:
+
+        for kappa in kappa_values:
+
+            for step_size in step_sizes:
+
+                sf = SourceFieldV11(n_agents=3, state_size=100, timesteps=800)
+
+                sf.gamma = gamma
+                sf.kappa = kappa
+                sf.step_size = step_size
+
+                results = sf.run()
+
+                avg_C = np.mean([hist[-1] for hist in results["C_hist"]])
+
+                avg_phi = np.mean([hist[-1] for hist in results["delta_phi_hist"]])
+
+                avg_rho = np.mean([hist[-1] for hist in results["rho_hist"]])
+
+                max_chi = np.max([abs(hist[-1]) for hist in results["chi_hist"]])
+
+                final_classes = results["final_classifications"]
+
+                print("--------------------------------")
+
+                print(f"gamma = {gamma}")
+
+                print(f"kappa = {kappa}")
+
+                print(f"step_size = {step_size}")
+
+                print(f"avg_C = {avg_C}")
+
+                print(f"avg_delta_phi = {avg_phi}")
+
+                print(f"avg_rho = {avg_rho}")
+
+                print(f"max_abs_chi = {max_chi}")
+
+                print(f"final_classes = {final_classes}")
+
+                print("--------------------------------\n")
+
 
 if __name__ == "__main__":
     source_field = SourceFieldV11(n_agents=3, state_size=100, timesteps=800)
@@ -311,3 +378,6 @@ if __name__ == "__main__":
         print(f"Agent {i} Final ρ(t):", results["rho_hist"][i][-1])
         print(f"Agent {i} Final χ(t):", results["chi_hist"][i][-1])
         print(f"Agent {i} Final Ξ(t):", results["xi_hist"][i][-1])
+        print("\nRUNNING PARAMETER SWEEP...\n")
+
+        run_parameter_sweep()
