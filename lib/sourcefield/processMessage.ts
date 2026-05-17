@@ -5,6 +5,7 @@ import crypto from "crypto"
 import { analyzeResonance } from "./ResonanceEngine"
 import { MemoryCore } from "./MemoryCore"
 import { BaselineState } from "./core"
+import { trackResonance } from "./ResonancePatternTracker"
 
 const memory = new MemoryCore()
 
@@ -73,6 +74,8 @@ export async function processMessage(userId: string, message: string) {
 
     timestamp: new Date().toISOString()
   })
+
+  await trackResonance(userId, message, baseline)
 
   return resonance
 }
