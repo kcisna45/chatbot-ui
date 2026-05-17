@@ -15,10 +15,15 @@ const baseline: BaselineState = {
 }
 
 export async function processMessage(userId: string, message: string) {
+  const deterministicTimestep =
+    Math.abs(
+      crypto.createHash("sha256").update(message).digest().readInt32BE(0)
+    ) % 1000
+
   const resonance = analyzeResonance({
     signal: message,
     baseline,
-    timestep: Date.now() % 1000
+    timestep: deterministicTimestep
   })
 
   const resonanceHash = crypto
