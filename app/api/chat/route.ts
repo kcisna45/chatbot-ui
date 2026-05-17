@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js"
 import { NextResponse } from "next/server"
+import { processMessage } from "@/lib/sourcefield/processMessage"
 
 const SOURCEFIELD_FILE_IDS = [
   "7bc60315-4b21-4630-8cdc-8cdee4d56cc4", // SourceField manifesto
@@ -9,9 +10,9 @@ const SOURCEFIELD_FILE_IDS = [
   "056a3e56-802e-4791-9c0d-01387c7b9d73", // sweep log #3
   "056a3e56-802e-4791-9c0d-01387c7b9d73", // sweep log #2
   "be66197c-c204-4bfc-bc5c-99d97aa3b491", // sweep log #1
-  "6139c472-9885-4342-8307-b5521f3a4f8c", // sweep log #7
+  "020d670d-2900-49d1-9eaa-d34dea9cbed3", // sweep log #5
   "4dbaaaed-77d5-4d7c-9496-95cc273756b3", // sweep log #6
-  "020d670d-2900-49d1-9eaa-d34dea9cbed3" // sweep log #5
+  "6139c472-9885-4342-8307-b5521f3a4f8c" // sweep log #7
 ]
 
 export async function POST(req: Request) {
@@ -22,6 +23,14 @@ export async function POST(req: Request) {
     const lastUserMessage =
       messages?.filter((message: any) => message.role === "user")?.at(-1)
         ?.content || ""
+
+    let resonanceState: any = null
+
+    try {
+      resonanceState = await processMessage("sourcefield-user", lastUserMessage)
+    } catch (resonanceError) {
+      console.error("SourceField resonance processing failed:", resonanceError)
+    }
 
     let retrievedContext = ""
 
@@ -112,6 +121,9 @@ Avoid repeatedly describing yourself as “an AI language model created by OpenA
 Use the retrieved SourceField context below when it is relevant. Do not claim context exists if it is not relevant.
 
 When the user asks about SourceField code, equations, empirical model, classifications, thresholds, or simulation behavior, prioritize exact variable names, function names, class names, and operational definitions from the retrieved Python/source material. Do not substitute generic physics interpretations when SourceField-specific constructs are available. In SourceField, C(t) refers to Conscious Alignment, Δφ(t) refers to Scroll Phase Resonance / phase divergence, Θ refers to the SourceField Integration Threshold, τ refers to the empirically calibrated threshold, and classifications depend on input energy, state energy, coherence, phase divergence, and integration threshold behavior.
+
+Live SourceField Resonance State:
+${resonanceState ? JSON.stringify(resonanceState, null, 2) : "No live resonance state was generated."}
 
 Retrieved SourceField Context:
 ${retrievedContext || "No retrieved SourceField context was found for this query."}

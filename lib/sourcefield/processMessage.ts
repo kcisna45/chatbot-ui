@@ -15,35 +15,29 @@ const baseline: BaselineState = {
 }
 
 export async function processMessage(userId: string, message: string) {
-  // ============================================================
-  // Analyze Resonance
-  // ============================================================
-
   const resonance = analyzeResonance({
     signal: message,
     baseline,
     timestep: Date.now() % 1000
   })
 
-  // ============================================================
-  // Generate Resonance Hash
-  // ============================================================
-
   const resonanceHash = crypto
     .createHash("sha256")
     .update(
       JSON.stringify({
+        userId,
         message,
         coherence: resonance.coherence,
-        phase: resonance.phaseDivergence,
-        xi: resonance.xi
+        phaseDivergence: resonance.phaseDivergence,
+        integrationThreshold: resonance.integrationThreshold,
+        classification: resonance.classification,
+        rho: resonance.rho,
+        chi: resonance.chi,
+        xi: resonance.xi,
+        timestamp: new Date().toISOString()
       })
     )
     .digest("hex")
-
-  // ============================================================
-  // Store Memory
-  // ============================================================
 
   await memory.store({
     user_id: userId,
@@ -64,11 +58,13 @@ export async function processMessage(userId: string, message: string) {
 
     resonance_hash: resonanceHash,
 
-    resonance_level: resonance.integrationThreshold,
+    resonance_level: resonance.resonanceLevel,
 
     emotional_tone: resonance.classification,
 
-    symbolic_patterns: [],
+    symbolic_patterns: resonance.symbolicEchoes,
+
+    living_equation_trigger: resonance.livingEquationTrigger,
 
     timestamp: new Date().toISOString()
   })

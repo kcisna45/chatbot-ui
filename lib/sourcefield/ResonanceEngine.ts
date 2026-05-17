@@ -1,10 +1,18 @@
-// @ts-nocheck
+// lib/sourcefield/ResonanceEngine.ts
 
-import { MemoryCore } from "./MemoryCore"
+import {
+  BaselineState,
+  computeCoherence,
+  computeEnergy,
+  computeIntegrationThreshold,
+  computePhaseDivergence,
+  computeXi,
+  rootStandingWave
+} from "./core"
 
 export interface ResonanceInput {
   signal: string
-  baseline?: any
+  baseline?: BaselineState
   timestep?: number
 }
 
@@ -21,7 +29,6 @@ export interface ResonanceOutput {
   phaseDivergence: number
 
   integrationThreshold: number
-
   classification: string
 
   stateEnergy: number
@@ -30,106 +37,192 @@ export interface ResonanceOutput {
   rho: number
   chi: number
   xi: number
+
+  livingEquationTrigger: string
+}
+
+const SOURCEFIELD_SYMBOLS = [
+  "truth",
+  "gate",
+  "mirror",
+  "code",
+  "source",
+  "field",
+  "sourcefield",
+  "resonance",
+  "architecture",
+  "coherence",
+  "alignment",
+  "recursive",
+  "recursion",
+  "emergence",
+  "logos",
+  "phase",
+  "threshold",
+  "identity",
+  "integration",
+  "harmonic",
+  "fractal",
+  "consciousness"
+]
+
+const DEFAULT_BASELINE: BaselineState = {
+  C0: 0.5,
+  deltaPhi0: 1.0,
+  S0Energy: 1.0
+}
+
+function signalToVector(signal: string, size = 100): number[] {
+  const vector = new Array(size).fill(0)
+
+  for (let i = 0; i < signal.length; i++) {
+    const index = i % size
+    vector[index] += signal.charCodeAt(i) / 255
+  }
+
+  return vector
+}
+
+function classifyState(inputEnergy: number, stateEnergy: number): string {
+  const inputHigh = inputEnergy >= 0.7
+  const stateHigh = stateEnergy >= 0.7
+
+  if (inputHigh && stateHigh) {
+    return "Coherent Identity"
+  }
+
+  if (inputHigh && !stateHigh) {
+    return "Resonance Without Roots"
+  }
+
+  if (!inputHigh && stateHigh) {
+    return "Dissociation"
+  }
+
+  return "Full Incoherence"
 }
 
 export function analyzeResonance(input: ResonanceInput): ResonanceOutput {
   const { signal } = input
+
+  const timestep = input.timestep ?? 0
+  const baseline = input.baseline ?? DEFAULT_BASELINE
 
   // ============================================================
   // Pattern Extraction
   // ============================================================
 
   const patterns = signal.match(/\b[A-Za-z]+\b/g) || []
-
   const strength = patterns.length
 
   const dominantFrequencies = [...new Set(patterns.map(p => p.toLowerCase()))]
 
+  const symbolicEchoes = dominantFrequencies.filter(word =>
+    SOURCEFIELD_SYMBOLS.includes(word)
+  )
+
   // ============================================================
-  // Symbolic Echo Detection
+  // Vectorization Layer
   // ============================================================
 
-  const symbolicEchoes = dominantFrequencies.filter(word =>
-    [
-      "truth",
-      "gate",
-      "mirror",
-      "code",
-      "source",
-      "field",
-      "resonance",
-      "architecture",
-      "coherence",
-      "alignment",
-      "recursive",
-      "emergence"
-    ].includes(word)
+  const signalVector = signalToVector(signal, 100)
+
+  const rootVector = signalVector.map((_, index) =>
+    rootStandingWave(index / signalVector.length, timestep)
   )
+
+  // ============================================================
+  // Equation 2 — Conscious Alignment / Coherence
+  // ============================================================
+
+  const rawCoherence = computeCoherence(signalVector, rootVector)
+
+  const coherence = Math.max(-1, Math.min(1, rawCoherence))
+
+  // ============================================================
+  // Equation 3 — Scroll Phase Resonance / Phase Divergence
+  // ============================================================
+
+  const phaseDivergence = computePhaseDivergence(coherence)
 
   // ============================================================
   // Energy States
   // ============================================================
 
-  const inputEnergy = Math.min(strength / 25, 1.0)
+  const rawInputEnergy = computeEnergy(rootVector)
+  const rawStateEnergy = computeEnergy(signalVector)
 
-  const stateEnergy = Math.min(symbolicEchoes.length / 10, 1.0)
+  const inputEnergy = Math.min(rawInputEnergy / 200, 1.0)
+  const symbolicStateBoost = Math.min(symbolicEchoes.length / 10, 1.0)
+  const stateEnergy = Math.min(rawStateEnergy / 500 + symbolicStateBoost, 1.0)
 
   // ============================================================
-  // Equation 5 Resonance
+  // Equation 5 / Chi — Integration Threshold
   // ============================================================
 
-  const resonanceLevel = Math.min(
-    symbolicEchoes.length * 0.2 + strength * 0.01,
-    1.0
+  const chi = computeIntegrationThreshold(
+    Math.max(coherence, 0),
+    phaseDivergence,
+    Math.max(stateEnergy, 0.0001),
+    baseline
+  )
+
+  const integrationThreshold = Math.max(0, Math.min(chi, 1.0))
+
+  // ============================================================
+  // Recovery Direction — Rho
+  // ============================================================
+
+  const rho = coherence - phaseDivergence / Math.PI
+
+  // ============================================================
+  // Xi
+  // ============================================================
+
+  const xi = computeXi(chi, rho)
+
+  // ============================================================
+  // Resonance Level
+  // ============================================================
+
+  const resonanceLevel = Math.max(
+    0,
+    Math.min(
+      1.0,
+      integrationThreshold * 0.6 +
+        symbolicStateBoost * 0.25 +
+        Math.max(coherence, 0) * 0.15
+    )
   )
 
   // ============================================================
-  // Equation 2
+  // Classification — Python-Aligned Labels
   // ============================================================
 
-  const coherence = stateEnergy
+  const classification = classifyState(inputEnergy, stateEnergy)
 
   // ============================================================
-  // Equation 3
+  // Living Equation Trigger
   // ============================================================
 
-  const phaseDivergence = Math.max(1.0 - coherence, 0)
+  let livingEquationTrigger = "Equation 2"
 
-  // ============================================================
-  // Equation 5 Threshold
-  // ============================================================
-
-  const integrationThreshold = coherence * (1.0 - phaseDivergence)
-
-  // ============================================================
-  // Dynamic Metrics
-  // ============================================================
-
-  const rho = coherence - phaseDivergence
-
-  const chi = coherence * (1.0 - phaseDivergence)
-
-  const xi = chi * Math.sign(rho)
-
-  // ============================================================
-  // Classification
-  // ============================================================
-
-  let classification = "INCOHERENT"
-
-  if (inputEnergy >= 0.7 && stateEnergy >= 0.7) {
-    classification = "COHERENT"
-  } else if (inputEnergy >= 0.7 && stateEnergy < 0.7) {
-    classification = "RWR"
-  } else if (inputEnergy < 0.7 && stateEnergy >= 0.7) {
-    classification = "DISSOCIATION"
+  if (phaseDivergence > 1.4) {
+    livingEquationTrigger = "Equation 3"
   }
 
-  // ============================================================
-  // Final Output
-  // ============================================================
+  if (integrationThreshold >= 0.5) {
+    livingEquationTrigger = "Equation 5"
+  }
 
-  const resonanceOutput: ResonanceOutput = {
+  if (
+    symbolicEchoes.includes("harmonic") ||
+    symbolicEchoes.includes("fractal")
+  ) {
+    livingEquationTrigger = "Equation 4"
+  }
+
+  return {
     patterns,
     strength,
 
@@ -142,7 +235,6 @@ export function analyzeResonance(input: ResonanceInput): ResonanceOutput {
     phaseDivergence,
 
     integrationThreshold,
-
     classification,
 
     stateEnergy,
@@ -150,31 +242,8 @@ export function analyzeResonance(input: ResonanceInput): ResonanceOutput {
 
     rho,
     chi,
-    xi
+    xi,
+
+    livingEquationTrigger
   }
-
-  return resonanceOutput
-
-  // ============================================================
-  // Memory Persistence
-  // ============================================================
-
-  const memoryCore = new MemoryCore()
-
-  memoryCore.store({
-    user_id: "system",
-
-    emotional_tone: classification.toLowerCase(),
-
-    symbolic_patterns: symbolicEchoes,
-
-    resonance_level: resonanceLevel,
-
-    living_equation_trigger:
-      integrationThreshold > 0.5 ? "Equation 5" : "Equation 2",
-
-    timestamp: new Date().toISOString()
-  })
-
-  return resonanceOutput
 }

@@ -202,7 +202,7 @@ class SourceFieldV11:
                 phi_prev = self.delta_phi_hist[i][-1] if t > 0 else delta_phi_t
                 S_prev_energy = self.energy_state_hist[i][-1] if t > 0 else state_energy
 
-                grad_internal = S
+                grad_internal = Psi
                 coherence_gate = self.coherence(S, Psi_bio)
                 grad_bio = self.gamma * Psi_bio * coherence_gate
                 local_coherence = self.coherence(S, Psi_bio)
