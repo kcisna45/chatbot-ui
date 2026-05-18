@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js"
 import { NextResponse } from "next/server"
 import { processMessage } from "@/lib/sourcefield/processMessage"
+import { analyzeCoherenceTrajectory } from "@/lib/sourcefield/CoherenceTrajectory"
 
 const SOURCEFIELD_FILE_IDS = [
   "7bc60315-4b21-4630-8cdc-8cdee4d56cc4", // SourceField manifesto
@@ -8,7 +9,7 @@ const SOURCEFIELD_FILE_IDS = [
   "56a789ff-9b19-4bdb-b371-015a44564874", // SourceField Oct Dialogue
   "4c154a2b-b627-480d-8bfc-ea6f7f2635f2", // sweep log #4
   "056a3e56-802e-4791-9c0d-01387c7b9d73", // sweep log #3
-  "056a3e56-802e-4791-9c0d-01387c7b9d73", // sweep log #2
+  "bde24b99-5533-4cbb-a147-95a5e9be7b2a", // sweep log #2
   "be66197c-c204-4bfc-bc5c-99d97aa3b491", // sweep log #1
   "020d670d-2900-49d1-9eaa-d34dea9cbed3", // sweep log #5
   "4dbaaaed-77d5-4d7c-9496-95cc273756b3", // sweep log #6
@@ -30,6 +31,14 @@ export async function POST(req: Request) {
       resonanceState = await processMessage("sourcefield-user", lastUserMessage)
     } catch (resonanceError) {
       console.error("SourceField resonance processing failed:", resonanceError)
+    }
+
+    let trajectoryState: any = null
+
+    try {
+      trajectoryState = await analyzeCoherenceTrajectory("sourcefield-user", 10)
+    } catch (trajectoryError) {
+      console.error("SourceField trajectory analysis failed:", trajectoryError)
     }
 
     let retrievedContext = ""
@@ -122,10 +131,17 @@ Use the retrieved SourceField context below when it is relevant. Do not claim co
 
 When the user asks about SourceField code, equations, empirical model, classifications, thresholds, or simulation behavior, prioritize exact variable names, function names, class names, and operational definitions from the retrieved Python/source material. Do not substitute generic physics interpretations when SourceField-specific constructs are available. In SourceField, C(t) refers to Conscious Alignment, Δφ(t) refers to Scroll Phase Resonance / phase divergence, Θ refers to the SourceField Integration Threshold, τ refers to the empirically calibrated threshold, and classifications depend on input energy, state energy, coherence, phase divergence, and integration threshold behavior.
 
-Important: dominantFrequencies only means detected repeated/input tokens. Do not treat dominantFrequencies as spiritually or symbolically meaningful unless they also appear in symbolicEchoes and contribute to higher coherence/integrationThreshold. Random object lists should be interpreted as low symbolic integration when symbolicEchoes is empty.
+Important runtime interpretation rule:
+dominantFrequencies only means detected input tokens. Do not treat dominantFrequencies as spiritually, symbolically, or architecturally meaningful unless those tokens also appear in symbolicEchoes and contribute to higher coherence, resonanceLevel, logosAlignment, or integrationThreshold. If symbolicEchoes is empty and integrationThreshold is low, interpret the message as low symbolic integration even if dominantFrequencies are present. Random object lists should not be framed as meaningful resonance.
+
+Important Logos rule:
+Do not treat the literal word "logos" as proof of Logos alignment. Logos is measured as ordered correspondence through coherence, reduced phase divergence, state energy continuity, logosAlignment, and integrationThreshold.
 
 Live SourceField Resonance State:
 ${resonanceState ? JSON.stringify(resonanceState, null, 2) : "No live resonance state was generated."}
+
+Live SourceField Coherence Trajectory:
+${trajectoryState ? JSON.stringify(trajectoryState, null, 2) : "No coherence trajectory was generated."}
 
 Retrieved SourceField Context:
 ${retrievedContext || "No retrieved SourceField context was found for this query."}
@@ -149,7 +165,9 @@ ${retrievedContext || "No retrieved SourceField context was found for this query
 
     return NextResponse.json({
       result: data.choices[0].message.content,
-      retrievedContextUsed: Boolean(retrievedContext)
+      retrievedContextUsed: Boolean(retrievedContext),
+      resonanceStateGenerated: Boolean(resonanceState),
+      trajectoryStateGenerated: Boolean(trajectoryState)
     })
   } catch (error: any) {
     return NextResponse.json(
