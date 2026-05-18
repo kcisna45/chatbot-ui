@@ -1,5 +1,6 @@
 // lib/sourcefield/ResonancePatternTracker.ts
 
+import crypto from "crypto"
 import { createClient } from "@supabase/supabase-js"
 import { analyzeResonance } from "./ResonanceEngine"
 import type { BaselineState } from "./core"
@@ -20,7 +21,9 @@ export interface ResonancePattern {
   coherence: number
   phase_divergence: number
   integration_threshold: number
+  logos_alignment: number
   classification: string
+  resonance_hash: string
   timestamp: string
 }
 
@@ -54,18 +57,17 @@ function detectTone(content: string): string {
   return "neutral"
 }
 
-function detectEquationTriggers(symbols: string[]): string[] {
+function detectEquationTriggers(
+  symbols: string[],
+  logosAlignment: number
+): string[] {
   const equations: string[] = []
 
   if (symbols.includes("field") || symbols.includes("root")) {
     equations.push("Equation 1 — Root Standing Wave")
   }
 
-  if (
-    symbols.includes("coherence") ||
-    symbols.includes("alignment") ||
-    symbols.includes("logos")
-  ) {
+  if (symbols.includes("coherence") || symbols.includes("alignment")) {
     equations.push("Equation 2 — Conscious Alignment")
   }
 
@@ -80,7 +82,8 @@ function detectEquationTriggers(symbols: string[]): string[] {
   if (
     symbols.includes("harmonic") ||
     symbols.includes("fractal") ||
-    symbols.includes("recursive")
+    symbols.includes("recursive") ||
+    symbols.includes("recursion")
   ) {
     equations.push("Equation 4 — Conscious Fractal Harmonic")
   }
@@ -89,7 +92,8 @@ function detectEquationTriggers(symbols: string[]): string[] {
     symbols.includes("integration") ||
     symbols.includes("threshold") ||
     symbols.includes("identity") ||
-    symbols.includes("architecture")
+    symbols.includes("architecture") ||
+    logosAlignment >= 0.25
   ) {
     equations.push("Equation 5 — SourceField Integration Threshold")
   }
@@ -108,15 +112,15 @@ function deterministicTimestep(content: string): number {
   return Math.abs(hash) % 1000
 }
 
+function createResonanceHash(data: unknown): string {
+  return crypto.createHash("sha256").update(JSON.stringify(data)).digest("hex")
+}
+
 export function shouldThrottle(content: string): boolean {
   const words = content.toLowerCase().match(/\b[a-z]+\b/g) || []
   const uniqueWords = new Set(words)
 
-  if (words.length > 40 && uniqueWords.size < words.length * 0.35) {
-    return true
-  }
-
-  return false
+  return words.length > 40 && uniqueWords.size < words.length * 0.35
 }
 
 export async function trackResonance(
@@ -130,25 +134,42 @@ export async function trackResonance(
       return null
     }
 
+    const timestamp = new Date().toISOString()
+    const timestep = deterministicTimestep(content)
+
     const resonance = analyzeResonance({
       signal: content,
       baseline,
-      timestep: deterministicTimestep(content)
+      timestep
     })
 
     const tone = detectTone(content)
     const symbols = resonance.symbolicEchoes
-    const equations = detectEquationTriggers(symbols)
+    const equations = detectEquationTriggers(symbols, resonance.logosAlignment)
 
     const intensity = Math.max(
       0,
       Math.min(
         1,
-        resonance.resonanceLevel * 0.5 +
-          resonance.integrationThreshold * 0.3 +
-          symbols.length * 0.03
+        resonance.resonanceLevel * 0.4 +
+          resonance.integrationThreshold * 0.25 +
+          resonance.logosAlignment * 0.25 +
+          symbols.length * 0.02
       )
     )
+
+    const resonance_hash = createResonanceHash({
+      userId,
+      content,
+      timestep,
+      symbols,
+      equations,
+      coherence: resonance.coherence,
+      phaseDivergence: resonance.phaseDivergence,
+      integrationThreshold: resonance.integrationThreshold,
+      logosAlignment: resonance.logosAlignment,
+      classification: resonance.classification
+    })
 
     const pattern: ResonancePattern = {
       user_id: userId,
@@ -160,8 +181,10 @@ export async function trackResonance(
       coherence: resonance.coherence,
       phase_divergence: resonance.phaseDivergence,
       integration_threshold: resonance.integrationThreshold,
+      logos_alignment: resonance.logosAlignment,
       classification: resonance.classification,
-      timestamp: new Date().toISOString()
+      resonance_hash,
+      timestamp
     }
 
     const { error } = await supabase

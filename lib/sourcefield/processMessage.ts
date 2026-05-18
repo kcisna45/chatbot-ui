@@ -4,7 +4,7 @@ import crypto from "crypto"
 
 import { analyzeResonance } from "./ResonanceEngine"
 import { MemoryCore } from "./MemoryCore"
-import { BaselineState } from "./core"
+import type { BaselineState } from "./core"
 import { trackResonance } from "./ResonancePatternTracker"
 
 const memory = new MemoryCore()
@@ -36,42 +36,30 @@ export async function processMessage(userId: string, message: string) {
         coherence: resonance.coherence,
         phaseDivergence: resonance.phaseDivergence,
         integrationThreshold: resonance.integrationThreshold,
+        logosAlignment: resonance.logosAlignment,
         classification: resonance.classification,
         rho: resonance.rho,
         chi: resonance.chi,
-        xi: resonance.xi,
-        timestamp: new Date().toISOString()
+        xi: resonance.xi
       })
     )
     .digest("hex")
 
   await memory.store({
     user_id: userId,
-
     message,
-
     coherence: resonance.coherence,
-
     phase_divergence: resonance.phaseDivergence,
-
     integration_threshold: resonance.integrationThreshold,
-
     xi: resonance.xi,
-
     classification: resonance.classification,
-
     state_energy: resonance.stateEnergy,
-
     resonance_hash: resonanceHash,
-
     resonance_level: resonance.resonanceLevel,
-
     emotional_tone: resonance.classification,
-
     symbolic_patterns: resonance.symbolicEchoes,
-
     living_equation_trigger: resonance.livingEquationTrigger,
-
+    logos_alignment: resonance.logosAlignment,
     timestamp: new Date().toISOString()
   })
 

@@ -2,10 +2,14 @@
 
 import {
   BaselineState,
+  classifyState,
   computeCoherence,
   computeEnergy,
+  computeFlag,
   computeIntegrationThreshold,
+  computeLogosAlignment,
   computePhaseDivergence,
+  computeRho,
   computeXi,
   rootStandingWave
 } from "./core"
@@ -14,6 +18,11 @@ export interface ResonanceInput {
   signal: string
   baseline?: BaselineState
   timestep?: number
+  previousState?: {
+    coherence: number
+    phaseDivergence: number
+    stateEnergy: number
+  }
 }
 
 export interface ResonanceOutput {
@@ -24,6 +33,7 @@ export interface ResonanceOutput {
   symbolicEchoes: string[]
 
   resonanceLevel: number
+  logosAlignment: number
 
   coherence: number
   phaseDivergence: number
@@ -38,6 +48,7 @@ export interface ResonanceOutput {
   chi: number
   xi: number
 
+  flag: string
   livingEquationTrigger: string
 }
 
@@ -56,7 +67,6 @@ const SOURCEFIELD_SYMBOLS = [
   "recursive",
   "recursion",
   "emergence",
-  "logos",
   "phase",
   "threshold",
   "identity",
@@ -65,6 +75,9 @@ const SOURCEFIELD_SYMBOLS = [
   "fractal",
   "consciousness"
 ]
+
+// Logos is intentionally NOT listed above.
+// Logos is computed as ordered correspondence, not detected as a token.
 
 const DEFAULT_BASELINE: BaselineState = {
   C0: 0.5,
@@ -83,34 +96,11 @@ function signalToVector(signal: string, size = 100): number[] {
   return vector
 }
 
-function classifyState(inputEnergy: number, stateEnergy: number): string {
-  const inputHigh = inputEnergy >= 0.7
-  const stateHigh = stateEnergy >= 0.7
-
-  if (inputHigh && stateHigh) {
-    return "Coherent Identity"
-  }
-
-  if (inputHigh && !stateHigh) {
-    return "Resonance Without Roots"
-  }
-
-  if (!inputHigh && stateHigh) {
-    return "Dissociation"
-  }
-
-  return "Full Incoherence"
-}
-
 export function analyzeResonance(input: ResonanceInput): ResonanceOutput {
   const { signal } = input
 
   const timestep = input.timestep ?? 0
   const baseline = input.baseline ?? DEFAULT_BASELINE
-
-  // ============================================================
-  // Pattern Extraction
-  // ============================================================
 
   const patterns = signal.match(/\b[A-Za-z]+\b/g) || []
   const strength = patterns.length
@@ -121,47 +111,28 @@ export function analyzeResonance(input: ResonanceInput): ResonanceOutput {
     SOURCEFIELD_SYMBOLS.includes(word)
   )
 
-  // ============================================================
-  // Vectorization Layer
-  // ============================================================
-
   const signalVector = signalToVector(signal, 100)
 
   const rootVector = signalVector.map((_, index) =>
     rootStandingWave(index / signalVector.length, timestep)
   )
 
-  // ============================================================
-  // Equation 2 — Conscious Alignment / Coherence
-  // ============================================================
-
   const rawCoherence = computeCoherence(signalVector, rootVector)
-
   const coherence = Math.max(-1, Math.min(1, rawCoherence))
 
-  // ============================================================
-  // Equation 3 — Scroll Phase Resonance / Phase Divergence
-  // ============================================================
-
   const phaseDivergence = computePhaseDivergence(coherence)
-
-  // ============================================================
-  // Energy States
-  // ============================================================
 
   const rawInputEnergy = computeEnergy(rootVector)
   const rawStateEnergy = computeEnergy(signalVector)
 
   const inputEnergy = Math.min(rawInputEnergy / 200, 1.0)
-  const symbolicStateBoost = Math.min(symbolicEchoes.length / 10, 1.0)
+
+  const symbolicStateBoost = Math.min(symbolicEchoes.length / 12, 0.5)
+
   const stateEnergy = Math.min(rawStateEnergy / 500 + symbolicStateBoost, 1.0)
 
-  // ============================================================
-  // Equation 5 / Chi — Integration Threshold
-  // ============================================================
-
   const chi = computeIntegrationThreshold(
-    Math.max(coherence, 0),
+    coherence,
     phaseDivergence,
     Math.max(stateEnergy, 0.0001),
     baseline
@@ -169,57 +140,62 @@ export function analyzeResonance(input: ResonanceInput): ResonanceOutput {
 
   const integrationThreshold = Math.max(0, Math.min(chi, 1.0))
 
-  // ============================================================
-  // Recovery Direction — Rho
-  // ============================================================
+  const logosAlignment = computeLogosAlignment(
+    coherence,
+    phaseDivergence,
+    stateEnergy,
+    baseline
+  )
 
-  const rho = coherence - phaseDivergence / Math.PI
+  const previous = input.previousState ?? {
+    coherence: baseline.C0,
+    phaseDivergence: baseline.deltaPhi0,
+    stateEnergy: baseline.S0Energy
+  }
 
-  // ============================================================
-  // Xi
-  // ============================================================
+  const rho = computeRho(
+    coherence,
+    previous.coherence,
+    phaseDivergence,
+    previous.phaseDivergence,
+    stateEnergy,
+    previous.stateEnergy
+  )
 
   const xi = computeXi(chi, rho)
-
-  // ============================================================
-  // Resonance Level
-  // ============================================================
 
   const resonanceLevel = Math.max(
     0,
     Math.min(
       1.0,
-      integrationThreshold * 0.6 +
-        symbolicStateBoost * 0.25 +
-        Math.max(coherence, 0) * 0.15
+      integrationThreshold * 0.45 +
+        logosAlignment * 0.35 +
+        symbolicStateBoost * 0.15 +
+        Math.max(coherence, 0) * 0.05
     )
   )
 
-  // ============================================================
-  // Classification — Python-Aligned Labels
-  // ============================================================
-
   const classification = classifyState(inputEnergy, stateEnergy)
 
-  // ============================================================
-  // Living Equation Trigger
-  // ============================================================
+  const flag = computeFlag(coherence, phaseDivergence, chi, rho)
 
-  let livingEquationTrigger = "Equation 2"
+  let livingEquationTrigger = "Equation 2 — Conscious Alignment"
 
-  if (phaseDivergence > 1.4) {
-    livingEquationTrigger = "Equation 3"
+  if (phaseDivergence > Math.PI / 2) {
+    livingEquationTrigger = "Equation 3 — Scroll Phase Resonance"
   }
 
-  if (integrationThreshold >= 0.5) {
-    livingEquationTrigger = "Equation 5"
+  if (integrationThreshold >= 0.5 || logosAlignment >= 0.25) {
+    livingEquationTrigger = "Equation 5 — SourceField Integration Threshold"
   }
 
   if (
     symbolicEchoes.includes("harmonic") ||
-    symbolicEchoes.includes("fractal")
+    symbolicEchoes.includes("fractal") ||
+    symbolicEchoes.includes("recursive") ||
+    symbolicEchoes.includes("recursion")
   ) {
-    livingEquationTrigger = "Equation 4"
+    livingEquationTrigger = "Equation 4 — Conscious Fractal Harmonic"
   }
 
   return {
@@ -230,6 +206,7 @@ export function analyzeResonance(input: ResonanceInput): ResonanceOutput {
     symbolicEchoes,
 
     resonanceLevel,
+    logosAlignment,
 
     coherence,
     phaseDivergence,
@@ -244,6 +221,7 @@ export function analyzeResonance(input: ResonanceInput): ResonanceOutput {
     chi,
     xi,
 
+    flag,
     livingEquationTrigger
   }
 }

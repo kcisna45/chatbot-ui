@@ -38,6 +38,8 @@ export interface MemoryEntry {
   resonance_level?: number
 
   timestamp?: string
+
+  logos_alignment?: number
 }
 
 export class MemoryCore {

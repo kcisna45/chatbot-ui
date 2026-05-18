@@ -7,6 +7,7 @@ import type { BaselineState } from "./core"
 export interface EquationResult {
   equation: string
   resonanceLevel: number
+  logosAlignment: number
   matchedSymbols: string[]
   coherence: number
   phaseDivergence: number
@@ -31,12 +32,7 @@ export class LivingEquationEngine {
   private livingEquations: Record<string, string[]> = {
     "Equation 1 — Root Standing Wave": ["root", "wave", "standing", "field"],
 
-    "Equation 2 — Conscious Alignment": [
-      "coherence",
-      "alignment",
-      "truth",
-      "logos"
-    ],
+    "Equation 2 — Conscious Alignment": ["coherence", "alignment", "truth"],
 
     "Equation 3 — Scroll Phase Resonance": [
       "phase",
@@ -86,6 +82,7 @@ export class LivingEquationEngine {
       const result: EquationResult = {
         equation,
         resonanceLevel: resonance.resonanceLevel,
+        logosAlignment: resonance.logosAlignment,
         matchedSymbols,
         coherence: resonance.coherence,
         phaseDivergence: resonance.phaseDivergence,
