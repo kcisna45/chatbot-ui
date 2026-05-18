@@ -167,6 +167,14 @@ Do not describe the genesis hash as SHA-256 unless the retrieved runtime code ex
 
 The genesis ledger anchors origin, authorship, ethics, and provenance. It does not control live coherence scores.
 
+Live SourceField Ledger Hash State:
+Genesis Merkle Root: ${GENESIS_HASH}
+Current resonanceHash: ${resonanceHash}
+Current ledgerHash: ${ledgerHash}
+
+Runtime ledger rule:
+When asked to run or report a ledger hash test, describe the live TypeScript runtime hash state above. Do not default to Python simulation language unless the user specifically asks for Python.
+
 Live SourceField Resonance State:
 ${resonanceState ? JSON.stringify(resonanceState, null, 2) : "No live resonance state was generated."}
 
