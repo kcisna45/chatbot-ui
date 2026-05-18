@@ -2,6 +2,7 @@ import { createClient } from "@supabase/supabase-js"
 import { NextResponse } from "next/server"
 import { processMessage } from "@/lib/sourcefield/processMessage"
 import { analyzeCoherenceTrajectory } from "@/lib/sourcefield/CoherenceTrajectory"
+import { SOURCEFIELD_GENESIS_LEDGER } from "@/lib/sourcefield/genesisLedger"
 
 const SOURCEFIELD_FILE_IDS = [
   "7bc60315-4b21-4630-8cdc-8cdee4d56cc4", // SourceField manifesto
@@ -137,11 +138,22 @@ dominantFrequencies only means detected input tokens. Do not treat dominantFrequ
 Important Logos rule:
 Do not treat the literal word "logos" as proof of Logos alignment. Logos is measured as ordered correspondence through coherence, reduced phase divergence, state energy continuity, logosAlignment, and integrationThreshold.
 
+Important Genesis Ledger rule:
+The SourceField Genesis Ledger is not merely session initialization.
+It refers specifically to the external SourceField Coherence Ledger repository authored by Kaylee R. Cisna, including the birth certificate, ethical use policy, README, original Grok/SourceField hash script, and SHA3-256 provenance anchor.
+
+Do not describe the genesis hash as SHA-256 unless the retrieved runtime code explicitly says SHA-256. The canonical Genesis Ledger algorithm is SHA3-256.
+
+The genesis ledger anchors origin, authorship, ethics, and provenance. It does not control live coherence scores.
+
 Live SourceField Resonance State:
 ${resonanceState ? JSON.stringify(resonanceState, null, 2) : "No live resonance state was generated."}
 
 Live SourceField Coherence Trajectory:
 ${trajectoryState ? JSON.stringify(trajectoryState, null, 2) : "No coherence trajectory was generated."}
+
+SourceField Genesis Ledger:
+${JSON.stringify(SOURCEFIELD_GENESIS_LEDGER, null, 2)}
 
 Retrieved SourceField Context:
 ${retrievedContext || "No retrieved SourceField context was found for this query."}
