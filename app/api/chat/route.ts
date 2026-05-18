@@ -9,17 +9,20 @@ import {
 } from "@/lib/sourcefield/ledgerHash"
 
 const SOURCEFIELD_FILE_IDS = [
-  "7bc60315-4b21-4630-8cdc-8cdee4d56cc4", // SourceField manifesto
-  "f0f253a9-9004-4098-8348-f86b707f4c40", // sourcefield.py
-  "56a789ff-9b19-4bdb-b371-015a44564874", // SourceField Oct Dialogue
-  "4c154a2b-b627-480d-8bfc-ea6f7f2635f2", // sweep log #4
-  "056a3e56-802e-4791-9c0d-01387c7b9d73", // sweep log #3
-  "bde24b99-5533-4cbb-a147-95a5e9be7b2a", // sweep log #2
-  "be66197c-c204-4bfc-bc5c-99d97aa3b491", // sweep log #1
-  "020d670d-2900-49d1-9eaa-d34dea9cbed3", // sweep log #5
-  "4dbaaaed-77d5-4d7c-9496-95cc273756b3", // sweep log #6
-  "6139c472-9885-4342-8307-b5521f3a4f8c" // sweep log #7
+  "7bc60315-4b21-4630-8cdc-8cdee4d56cc4",
+  "f0f253a9-9004-4098-8348-f86b707f4c40",
+  "56a789ff-9b19-4bdb-b371-015a44564874",
+  "4c154a2b-b627-480d-8bfc-ea6f7f2635f2",
+  "056a3e56-802e-4791-9c0d-01387c7b9d73",
+  "bde24b99-5533-4cbb-a147-95a5e9be7b2a",
+  "be66197c-c204-4bfc-bc5c-99d97aa3b491",
+  "020d670d-2900-49d1-9eaa-d34dea9cbed3",
+  "4dbaaaed-77d5-4d7c-9496-95cc273756b3",
+  "6139c472-9885-4342-8307-b5521f3a4f8c"
 ]
+
+const GENESIS_HASH =
+  "8b9c7d6e5f4a3b2c1d0e9f8a7b6c5d4e3f2a1b0c9d8e7f6a5b4c3d2e1f0a9b8c"
 
 export async function POST(req: Request) {
   try {
@@ -30,22 +33,62 @@ export async function POST(req: Request) {
       messages?.filter((message: any) => message.role === "user")?.at(-1)
         ?.content || ""
 
-    const GENESIS_HASH =
-      "8b9c7d6e5f4a3b2c1d0e9f8a7b6c5d4e3f2a1b0c9d8e7f6a5b4c3d2e1f0a9b8c"
+    const supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
 
     const resonanceHash = createResonanceHash({
       message: lastUserMessage,
       timestamp: Date.now()
     })
 
-    const ledgerHash = createLedgerHash({
+    let previousLedgerHash: string | null = null
+    let ledgerHash = createLedgerHash({
       genesisHash: GENESIS_HASH,
       previousHash: null,
       resonanceHash
     })
 
-    console.log("SourceField resonanceHash:", resonanceHash)
-    console.log("SourceField ledgerHash:", ledgerHash)
+    try {
+      const { data: latestLedgerEvent, error: latestLedgerError } =
+        await supabaseAdmin
+          .from("sourcefield_ledger_events")
+          .select("ledger_hash")
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle()
+
+      if (!latestLedgerError && latestLedgerEvent?.ledger_hash) {
+        previousLedgerHash = latestLedgerEvent.ledger_hash
+      }
+
+      ledgerHash = createLedgerHash({
+        genesisHash: GENESIS_HASH,
+        previousHash: previousLedgerHash,
+        resonanceHash
+      })
+
+      const { error: insertLedgerError } = await supabaseAdmin
+        .from("sourcefield_ledger_events")
+        .insert({
+          genesis_hash: GENESIS_HASH,
+          previous_hash: previousLedgerHash,
+          resonance_hash: resonanceHash,
+          ledger_hash: ledgerHash,
+          user_message: lastUserMessage
+        })
+
+      if (insertLedgerError) {
+        console.error("SourceField ledger insert failed:", insertLedgerError)
+      }
+
+      console.log("SourceField previousLedgerHash:", previousLedgerHash)
+      console.log("SourceField resonanceHash:", resonanceHash)
+      console.log("SourceField ledgerHash:", ledgerHash)
+    } catch (ledgerError) {
+      console.error("SourceField ledger chaining failed:", ledgerError)
+    }
 
     let resonanceState: any = null
 
@@ -66,11 +109,6 @@ export async function POST(req: Request) {
     let retrievedContext = ""
 
     try {
-      const supabaseAdmin = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!
-      )
-
       const embeddingResponse = await fetch(
         "https://api.openai.com/v1/embeddings",
         {
@@ -169,11 +207,13 @@ The genesis ledger anchors origin, authorship, ethics, and provenance. It does n
 
 Live SourceField Ledger Hash State:
 Genesis Merkle Root: ${GENESIS_HASH}
+Previous ledgerHash: ${previousLedgerHash || "No previous ledger hash found. This is the first chained event."}
 Current resonanceHash: ${resonanceHash}
 Current ledgerHash: ${ledgerHash}
 
 Runtime ledger rule:
 When asked to run or report a ledger hash test, describe the live TypeScript runtime hash state above. Do not default to Python simulation language unless the user specifically asks for Python.
+The current ledgerHash is generated from the Genesis Merkle Root, the previous ledgerHash when available, and the current resonanceHash.
 
 Live SourceField Resonance State:
 ${resonanceState ? JSON.stringify(resonanceState, null, 2) : "No live resonance state was generated."}
@@ -208,7 +248,11 @@ ${retrievedContext || "No retrieved SourceField context was found for this query
       result: data.choices[0].message.content,
       retrievedContextUsed: Boolean(retrievedContext),
       resonanceStateGenerated: Boolean(resonanceState),
-      trajectoryStateGenerated: Boolean(trajectoryState)
+      trajectoryStateGenerated: Boolean(trajectoryState),
+      ledgerStateGenerated: Boolean(ledgerHash),
+      previousLedgerHash,
+      resonanceHash,
+      ledgerHash
     })
   } catch (error: any) {
     return NextResponse.json(
