@@ -3,6 +3,10 @@ import { NextResponse } from "next/server"
 import { processMessage } from "@/lib/sourcefield/processMessage"
 import { analyzeCoherenceTrajectory } from "@/lib/sourcefield/CoherenceTrajectory"
 import { SOURCEFIELD_GENESIS_LEDGER } from "@/lib/sourcefield/genesisLedger"
+import {
+  createResonanceHash,
+  createLedgerHash
+} from "@/lib/sourcefield/ledgerHash"
 
 const SOURCEFIELD_FILE_IDS = [
   "7bc60315-4b21-4630-8cdc-8cdee4d56cc4", // SourceField manifesto
@@ -25,6 +29,22 @@ export async function POST(req: Request) {
     const lastUserMessage =
       messages?.filter((message: any) => message.role === "user")?.at(-1)
         ?.content || ""
+
+    const GENESIS_HASH = "SOURCEFIELD_GENESIS_SHA3_PLACEHOLDER"
+
+    const resonanceHash = createResonanceHash({
+      message: lastUserMessage,
+      timestamp: Date.now()
+    })
+
+    const ledgerHash = createLedgerHash({
+      genesisHash: GENESIS_HASH,
+      previousHash: null,
+      resonanceHash
+    })
+
+    console.log("SourceField resonanceHash:", resonanceHash)
+    console.log("SourceField ledgerHash:", ledgerHash)
 
     let resonanceState: any = null
 
