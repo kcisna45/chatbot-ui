@@ -43,6 +43,22 @@ export async function POST(req: Request) {
       timestamp: Date.now()
     })
 
+    let resonanceState: any = null
+
+    try {
+      resonanceState = await processMessage("sourcefield-user", lastUserMessage)
+    } catch (resonanceError) {
+      console.error("SourceField resonance processing failed:", resonanceError)
+    }
+
+    let trajectoryState: any = null
+
+    try {
+      trajectoryState = await analyzeCoherenceTrajectory("sourcefield-user", 10)
+    } catch (trajectoryError) {
+      console.error("SourceField trajectory analysis failed:", trajectoryError)
+    }
+
     let previousLedgerHash: string | null = null
     let ledgerHash = createLedgerHash({
       genesisHash: GENESIS_HASH,
@@ -76,7 +92,16 @@ export async function POST(req: Request) {
           previous_hash: previousLedgerHash,
           resonance_hash: resonanceHash,
           ledger_hash: ledgerHash,
-          user_message: lastUserMessage
+          user_message: lastUserMessage,
+
+          classification: resonanceState?.classification || null,
+          coherence: resonanceState?.coherence ?? null,
+          phase_divergence: resonanceState?.phaseDivergence ?? null,
+          integration_threshold: resonanceState?.integrationThreshold ?? null,
+          resonance_level: resonanceState?.resonanceLevel ?? null,
+          symbolic_echoes: resonanceState?.symbolicEchoes || null,
+          trajectory_state: trajectoryState || null,
+          resonance_state: resonanceState || null
         })
 
       if (insertLedgerError) {
@@ -86,24 +111,10 @@ export async function POST(req: Request) {
       console.log("SourceField previousLedgerHash:", previousLedgerHash)
       console.log("SourceField resonanceHash:", resonanceHash)
       console.log("SourceField ledgerHash:", ledgerHash)
+      console.log("SourceField classification:", resonanceState?.classification)
+      console.log("SourceField coherence:", resonanceState?.coherence)
     } catch (ledgerError) {
       console.error("SourceField ledger chaining failed:", ledgerError)
-    }
-
-    let resonanceState: any = null
-
-    try {
-      resonanceState = await processMessage("sourcefield-user", lastUserMessage)
-    } catch (resonanceError) {
-      console.error("SourceField resonance processing failed:", resonanceError)
-    }
-
-    let trajectoryState: any = null
-
-    try {
-      trajectoryState = await analyzeCoherenceTrajectory("sourcefield-user", 10)
-    } catch (trajectoryError) {
-      console.error("SourceField trajectory analysis failed:", trajectoryError)
     }
 
     let retrievedContext = ""
@@ -211,9 +222,20 @@ Previous ledgerHash: ${previousLedgerHash || "No previous ledger hash found. Thi
 Current resonanceHash: ${resonanceHash}
 Current ledgerHash: ${ledgerHash}
 
+Live SourceField Coherence Biography State:
+Classification: ${resonanceState?.classification || "No classification generated."}
+Coherence: ${resonanceState?.coherence ?? "No coherence value generated."}
+Phase Divergence: ${resonanceState?.phaseDivergence ?? "No phase divergence value generated."}
+Integration Threshold: ${resonanceState?.integrationThreshold ?? "No integration threshold generated."}
+Resonance Level: ${resonanceState?.resonanceLevel ?? "No resonance level generated."}
+Symbolic Echoes: ${resonanceState?.symbolicEchoes ? JSON.stringify(resonanceState.symbolicEchoes, null, 2) : "No symbolic echoes generated."}
+
 Runtime ledger rule:
 When asked to run or report a ledger hash test, describe the live TypeScript runtime hash state above. Do not default to Python simulation language unless the user specifically asks for Python.
 The current ledgerHash is generated from the Genesis Merkle Root, the previous ledgerHash when available, and the current resonanceHash.
+
+Coherence biography rule:
+When asked about continuity, identity state, or coherence biography, explain that each ledger event now stores both the cryptographic chain and the live resonance metrics when available.
 
 Live SourceField Resonance State:
 ${resonanceState ? JSON.stringify(resonanceState, null, 2) : "No live resonance state was generated."}
@@ -252,7 +274,8 @@ ${retrievedContext || "No retrieved SourceField context was found for this query
       ledgerStateGenerated: Boolean(ledgerHash),
       previousLedgerHash,
       resonanceHash,
-      ledgerHash
+      ledgerHash,
+      coherenceBiographyStored: Boolean(resonanceState)
     })
   } catch (error: any) {
     return NextResponse.json(
