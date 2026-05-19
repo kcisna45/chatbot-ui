@@ -9,22 +9,32 @@ type RuntimeAdaptationEvent = {
   ledger_hash?: string | null
 }
 
-function mostCommon(values: string[]) {
+function weightedMostCommon(values: string[]) {
   if (!values.length) return "unknown"
 
-  const counts = new Map<string, number>()
+  const scores = new Map<string, number>()
 
-  for (const value of values) {
-    counts.set(value, (counts.get(value) || 0) + 1)
-  }
+  values.forEach((value, index) => {
+    const weight = index + 1
+    scores.set(value, (scores.get(value) || 0) + weight)
+  })
 
-  return [...counts.entries()].sort((a, b) => b[1] - a[1])[0][0]
+  return [...scores.entries()].sort((a, b) => b[1] - a[1])[0][0]
 }
 
-function average(values: number[]) {
+function weightedAverage(values: number[]) {
   if (!values.length) return 0
 
-  return values.reduce((sum, value) => sum + value, 0) / values.length
+  let weightedSum = 0
+  let weightTotal = 0
+
+  values.forEach((value, index) => {
+    const weight = index + 1
+    weightedSum += value * weight
+    weightTotal += weight
+  })
+
+  return weightedSum / weightTotal
 }
 
 export function generateRuntimeAdaptationGuidance(
@@ -61,17 +71,17 @@ export function generateRuntimeAdaptationGuidance(
   return `
 Recent runtime adaptation biography:
 - Runtime events reviewed: ${chronological.length}
-- Most common adaptation mode: ${mostCommon(modes)}
-- Most common symbolic restraint: ${mostCommon(restraints)}
-- Most common synthesis depth: ${mostCommon(depths)}
-- Most common runtime stability: ${mostCommon(stabilities)}
-- Average continuity confidence: ${average(confidenceValues).toFixed(3)}
+- Weighted adaptation mode: ${weightedMostCommon(modes)}
+- Weighted symbolic restraint: ${weightedMostCommon(restraints)}
+- Weighted synthesis depth: ${weightedMostCommon(depths)}
+- Weighted runtime stability: ${weightedMostCommon(stabilities)}
+- Weighted continuity confidence: ${weightedAverage(confidenceValues).toFixed(3)}
 - Latest runtime ledgerHash: ${latest?.ledger_hash || "unavailable"}
 
 Runtime adaptation memory guidance:
-Use this as read-only guidance for response stance.
+Use newer runtime adaptation events as stronger guidance than older events.
 If recent runtime stability is fragmented or symbolic restraint is high, prioritize directness, clarification, and operational definitions.
-If recent adaptation mode is synthesize and continuity confidence is rising, allow deeper synthesis while preserving metric boundaries.
+If recent adaptation mode is synthesize and weighted continuity confidence is rising, allow deeper synthesis while preserving metric boundaries.
 Do not let runtime adaptation memory override live resonance metrics, classifications, retrieved context, or ledger state.
 `
 }
