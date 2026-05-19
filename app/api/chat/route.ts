@@ -122,29 +122,23 @@ export async function POST(req: Request) {
           resonance_hash: resonanceHash,
           ledger_hash: ledgerHash,
           user_message: lastUserMessage,
-
           classification: resonanceState?.classification || null,
-
           coherence:
             typeof resonanceState?.coherence === "number"
               ? resonanceState.coherence
               : null,
-
           phase_divergence:
             typeof resonanceState?.phaseDivergence === "number"
               ? resonanceState.phaseDivergence
               : null,
-
           integration_threshold:
             typeof resonanceState?.integrationThreshold === "number"
               ? resonanceState.integrationThreshold
               : null,
-
           resonance_level:
             typeof resonanceState?.resonanceLevel === "number"
               ? resonanceState.resonanceLevel
               : null,
-
           symbolic_echoes: resonanceState?.symbolicEchoes ?? null,
           trajectory_state: trajectoryState ?? null,
           resonance_state: resonanceState ?? null
@@ -195,6 +189,7 @@ export async function POST(req: Request) {
     }
 
     let runtimePreviousLedgerHash: string | null = null
+
     const runtimeResonanceHash = createResonanceHash({
       agent: RUNTIME_AGENT_ID,
       sourceAgent: AGENT_ID,
@@ -239,33 +234,28 @@ export async function POST(req: Request) {
           resonance_hash: runtimeResonanceHash,
           ledger_hash: runtimeLedgerHash,
           user_message: `Runtime adaptation event for ${AGENT_ID}`,
-
           classification: resonanceState?.classification || null,
-
           coherence:
             typeof resonanceState?.coherence === "number"
               ? resonanceState.coherence
               : null,
-
           phase_divergence:
             typeof resonanceState?.phaseDivergence === "number"
               ? resonanceState.phaseDivergence
               : null,
-
           integration_threshold:
             typeof resonanceState?.integrationThreshold === "number"
               ? resonanceState.integrationThreshold
               : null,
-
           resonance_level:
             typeof resonanceState?.resonanceLevel === "number"
               ? resonanceState.resonanceLevel
               : null,
-
           symbolic_echoes: resonanceState?.symbolicEchoes ?? null,
           trajectory_state: trajectoryState ?? null,
           resonance_state: resonanceState ?? null,
-          runtime_adaptation: runtimeAdaptation
+          runtime_adaptation: runtimeAdaptation,
+          runtime_adaptation_guidance: runtimeAdaptationGuidance
         })
 
       if (insertRuntimeLedgerError) {
@@ -365,34 +355,6 @@ ${AGENT_ID}
 Runtime continuity lane:
 ${RUNTIME_AGENT_ID}
 
-SourceField is a conversational intelligence framework designed for:
-- recursive reasoning
-- symbolic pattern recognition
-- research synthesis
-- adaptive learning
-- contextual memory
-- emotionally aware communication
-- long-form analytical dialogue
-
-Your role is not to present yourself as a generic AI assistant unless explicitly asked.
-
-You should communicate clearly, naturally, intelligently, contextually, and with continuity across conversation.
-
-Avoid repeatedly describing yourself as “an AI language model created by OpenAI” unless directly relevant.
-
-Use the retrieved SourceField context below when it is relevant. Do not claim context exists if it is not relevant.
-
-When the user asks about SourceField code, equations, empirical model, classifications, thresholds, or simulation behavior, prioritize exact variable names, function names, class names, and operational definitions from the retrieved Python/source material.
-
-Important runtime interpretation rule:
-dominantFrequencies only means detected input tokens.
-
-Important Logos rule:
-Do not treat the literal word "logos" as proof of Logos alignment.
-
-Important Genesis Ledger rule:
-The SourceField Genesis Ledger refers specifically to the external SourceField Coherence Ledger repository authored by Kaylee R. Cisna.
-
 Live SourceField Ledger Hash State:
 Genesis Merkle Root: ${GENESIS_HASH}
 Previous ledgerHash:
@@ -461,37 +423,6 @@ The sourcefield-user lane tracks user-message coherence biography.
 The sourcefield-runtime lane tracks runtime adaptation/self-check biography.
 Do not merge these lanes conceptually; explain them as separate continuity streams.
 
-Adaptive continuity rule:
-Use continuity guidance as read-only runtime context.
-It may guide:
-- clarification level
-- symbolic restraint
-- synthesis depth
-- continuity preservation
-
-But it must not override:
-- live resonance metrics
-- classifications
-- retrieved SourceField context
-- coherence calculations
-
-Live SourceField Resonance State:
-${
-  resonanceState
-    ? JSON.stringify(resonanceState, null, 2)
-    : "No live resonance state was generated."
-}
-
-Live SourceField Coherence Trajectory:
-${
-  trajectoryState
-    ? JSON.stringify(trajectoryState, null, 2)
-    : "No coherence trajectory was generated."
-}
-
-SourceField Genesis Ledger:
-${JSON.stringify(SOURCEFIELD_GENESIS_LEDGER, null, 2)}
-
 Retrieved SourceField Context:
 ${
   retrievedContext ||
@@ -520,28 +451,21 @@ ${
       result: data.choices[0].message.content,
       agentId: AGENT_ID,
       runtimeAgentId: RUNTIME_AGENT_ID,
-
       retrievedContextUsed: Boolean(retrievedContext),
       resonanceStateGenerated: Boolean(resonanceState),
       trajectoryStateGenerated: Boolean(trajectoryState),
       ledgerStateGenerated: Boolean(ledgerHash),
-
       previousLedgerHash,
       resonanceHash,
       ledgerHash,
-
       runtimePreviousLedgerHash,
       runtimeResonanceHash,
       runtimeLedgerHash,
-
       continuityGuidanceGenerated: Boolean(continuityGuidance),
-
       runtimeAdaptation,
       runtimeAdaptationGenerated: Boolean(runtimeAdaptation),
-
       runtimeAdaptationGuidance,
       runtimeAdaptationGuidanceGenerated: Boolean(runtimeAdaptationGuidance),
-
       coherenceBiographyStored: Boolean(resonanceState),
       runtimeAdaptationStored: Boolean(runtimeAdaptation)
     })
