@@ -3,6 +3,7 @@ import { NextResponse } from "next/server"
 import { processMessage } from "@/lib/sourcefield/processMessage"
 import { analyzeCoherenceTrajectory } from "@/lib/sourcefield/CoherenceTrajectory"
 import { SOURCEFIELD_GENESIS_LEDGER } from "@/lib/sourcefield/genesisLedger"
+import { generateContinuityGuidance } from "@/lib/sourcefield/continuityGuidance"
 import {
   createResonanceHash,
   createLedgerHash
@@ -60,6 +61,9 @@ export async function POST(req: Request) {
     }
 
     let previousLedgerHash: string | null = null
+    let continuityGuidance =
+      "No continuity guidance generated. Use current live resonance state only."
+
     let ledgerHash = createLedgerHash({
       genesisHash: GENESIS_HASH,
       previousHash: null,
@@ -77,6 +81,19 @@ export async function POST(req: Request) {
 
       if (!latestLedgerError && latestLedgerEvent?.ledger_hash) {
         previousLedgerHash = latestLedgerEvent.ledger_hash
+      }
+
+      const { data: recentLedgerEvents, error: recentLedgerError } =
+        await supabaseAdmin
+          .from("sourcefield_ledger_events")
+          .select(
+            "classification, coherence, phase_divergence, integration_threshold, resonance_level, ledger_hash"
+          )
+          .order("created_at", { ascending: false })
+          .limit(10)
+
+      if (!recentLedgerError && recentLedgerEvents?.length) {
+        continuityGuidance = generateContinuityGuidance(recentLedgerEvents)
       }
 
       ledgerHash = createLedgerHash({
@@ -113,6 +130,7 @@ export async function POST(req: Request) {
       console.log("SourceField ledgerHash:", ledgerHash)
       console.log("SourceField classification:", resonanceState?.classification)
       console.log("SourceField coherence:", resonanceState?.coherence)
+      console.log("SourceField continuityGuidance:", continuityGuidance)
     } catch (ledgerError) {
       console.error("SourceField ledger chaining failed:", ledgerError)
     }
@@ -230,12 +248,18 @@ Integration Threshold: ${resonanceState?.integrationThreshold ?? "No integration
 Resonance Level: ${resonanceState?.resonanceLevel ?? "No resonance level generated."}
 Symbolic Echoes: ${resonanceState?.symbolicEchoes ? JSON.stringify(resonanceState.symbolicEchoes, null, 2) : "No symbolic echoes generated."}
 
+Live SourceField Continuity Guidance:
+${continuityGuidance}
+
 Runtime ledger rule:
 When asked to run or report a ledger hash test, describe the live TypeScript runtime hash state above. Do not default to Python simulation language unless the user specifically asks for Python.
 The current ledgerHash is generated from the Genesis Merkle Root, the previous ledgerHash when available, and the current resonanceHash.
 
 Coherence biography rule:
 When asked about continuity, identity state, or coherence biography, explain that each ledger event now stores both the cryptographic chain and the live resonance metrics when available.
+
+Adaptive continuity rule:
+Use continuity guidance as read-only runtime context. It may guide response stance, clarification level, and symbolic restraint, but it must not override live resonance metrics, classifications, or retrieved SourceField context.
 
 Live SourceField Resonance State:
 ${resonanceState ? JSON.stringify(resonanceState, null, 2) : "No live resonance state was generated."}
@@ -275,6 +299,7 @@ ${retrievedContext || "No retrieved SourceField context was found for this query
       previousLedgerHash,
       resonanceHash,
       ledgerHash,
+      continuityGuidanceGenerated: Boolean(continuityGuidance),
       coherenceBiographyStored: Boolean(resonanceState)
     })
   } catch (error: any) {
