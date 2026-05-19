@@ -258,7 +258,8 @@ export async function POST(req: Request) {
           trajectory_state: trajectoryState ?? null,
           resonance_state: resonanceState ?? null,
           runtime_adaptation: runtimeAdaptation,
-          runtime_adaptation_guidance: runtimeAdaptationGuidance
+          runtime_adaptation_guidance: runtimeAdaptationGuidance,
+          runtime_recovery_state: runtimeRecoveryState
         })
 
       if (insertRuntimeLedgerError) {
@@ -468,7 +469,8 @@ ${
       runtimeRecoveryState,
       runtimeRecoveryStateGenerated: Boolean(runtimeRecoveryState),
       coherenceBiographyStored: Boolean(resonanceState),
-      runtimeAdaptationStored: Boolean(runtimeAdaptation)
+      runtimeAdaptationStored: Boolean(runtimeAdaptation),
+      runtimeRecoveryStored: Boolean(runtimeRecoveryState)
     })
   } catch (error: any) {
     return NextResponse.json(
