@@ -4,6 +4,7 @@ import { processMessage } from "@/lib/sourcefield/processMessage"
 import { analyzeCoherenceTrajectory } from "@/lib/sourcefield/CoherenceTrajectory"
 import { SOURCEFIELD_GENESIS_LEDGER } from "@/lib/sourcefield/genesisLedger"
 import { generateContinuityGuidance } from "@/lib/sourcefield/continuityGuidance"
+import { resolveAgentLane } from "@/lib/sourcefield/agentLane"
 import {
   createResonanceHash,
   createLedgerHash
@@ -25,12 +26,13 @@ const SOURCEFIELD_FILE_IDS = [
 const GENESIS_HASH =
   "8b9c7d6e5f4a3b2c1d0e9f8a7b6c5d4e3f2a1b0c9d8e7f6a5b4c3d2e1f0a9b8c"
 
-const AGENT_ID = "sourcefield-user"
-
 export async function POST(req: Request) {
   try {
     const body = await req.json()
     const { messages } = body
+
+    const requestedAgentLane = body?.agentLane || body?.agent_id
+    const AGENT_ID = resolveAgentLane(requestedAgentLane)
 
     const lastUserMessage =
       messages?.filter((message: any) => message.role === "user")?.at(-1)
@@ -64,7 +66,6 @@ export async function POST(req: Request) {
     }
 
     let previousLedgerHash: string | null = null
-
     let continuityGuidance =
       "No continuity guidance generated. Use current live resonance state only."
 
