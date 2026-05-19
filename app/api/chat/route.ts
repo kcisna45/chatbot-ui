@@ -4,6 +4,7 @@ import { processMessage } from "@/lib/sourcefield/processMessage"
 import { analyzeCoherenceTrajectory } from "@/lib/sourcefield/CoherenceTrajectory"
 import { SOURCEFIELD_GENESIS_LEDGER } from "@/lib/sourcefield/genesisLedger"
 import { generateContinuityGuidance } from "@/lib/sourcefield/continuityGuidance"
+import { generateRuntimeAdaptationGuidance } from "@/lib/sourcefield/runtimeAdaptationGuidance"
 import { resolveAgentLane } from "@/lib/sourcefield/agentLane"
 import { generateRuntimeAdaptation } from "@/lib/sourcefield/runtimeAdaptation"
 import {
@@ -170,8 +171,31 @@ export async function POST(req: Request) {
       continuityGuidance
     )
 
+    let runtimeAdaptationGuidance =
+      "No runtime adaptation memory guidance generated."
+
+    try {
+      const { data: recentRuntimeEvents, error: runtimeGuidanceError } =
+        await supabaseAdmin
+          .from("sourcefield_ledger_events")
+          .select("runtime_adaptation, ledger_hash")
+          .eq("agent_id", RUNTIME_AGENT_ID)
+          .order("created_at", { ascending: false })
+          .limit(10)
+
+      if (!runtimeGuidanceError && recentRuntimeEvents?.length) {
+        runtimeAdaptationGuidance =
+          generateRuntimeAdaptationGuidance(recentRuntimeEvents)
+      }
+    } catch (runtimeGuidanceCatchError) {
+      console.error(
+        "SourceField runtime adaptation guidance failed:",
+        runtimeGuidanceCatchError
+      )
+    }
+
     let runtimePreviousLedgerHash: string | null = null
-    let runtimeResonanceHash = createResonanceHash({
+    const runtimeResonanceHash = createResonanceHash({
       agent: RUNTIME_AGENT_ID,
       sourceAgent: AGENT_ID,
       runtimeAdaptation,
@@ -258,6 +282,10 @@ export async function POST(req: Request) {
       )
       console.log("SourceField runtimeResonanceHash:", runtimeResonanceHash)
       console.log("SourceField runtimeLedgerHash:", runtimeLedgerHash)
+      console.log(
+        "SourceField runtimeAdaptationGuidance:",
+        runtimeAdaptationGuidance
+      )
     } catch (runtimeLedgerError) {
       console.error(
         "SourceField runtime ledger chaining failed:",
@@ -415,10 +443,18 @@ ${continuityGuidance}
 Live SourceField Runtime Adaptation State:
 ${JSON.stringify(runtimeAdaptation, null, 2)}
 
+Live SourceField Runtime Adaptation Memory Guidance:
+${runtimeAdaptationGuidance}
+
 Runtime adaptation rule:
 Use the runtime adaptation state as read-only stance guidance.
 It may influence clarification level, symbolic restraint, synthesis depth, and stabilization style.
 It must not override live resonance metrics, classifications, retrieved SourceField context, or coherence calculations.
+
+Runtime adaptation memory rule:
+Use runtime adaptation memory guidance as read-only historical stance context.
+It may inform whether current responses should remain clarifying, stabilizing, or synthesizing.
+It must not override live runtime adaptation state, resonance metrics, classifications, retrieved context, or ledger state.
 
 Multi-agent continuity rule:
 The sourcefield-user lane tracks user-message coherence biography.
@@ -499,8 +535,12 @@ ${
       runtimeLedgerHash,
 
       continuityGuidanceGenerated: Boolean(continuityGuidance),
+
       runtimeAdaptation,
       runtimeAdaptationGenerated: Boolean(runtimeAdaptation),
+
+      runtimeAdaptationGuidance,
+      runtimeAdaptationGuidanceGenerated: Boolean(runtimeAdaptationGuidance),
 
       coherenceBiographyStored: Boolean(resonanceState),
       runtimeAdaptationStored: Boolean(runtimeAdaptation)
