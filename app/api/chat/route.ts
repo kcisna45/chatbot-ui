@@ -27,6 +27,8 @@ const SOURCEFIELD_FILE_IDS = [
 const GENESIS_HASH =
   "8b9c7d6e5f4a3b2c1d0e9f8a7b6c5d4e3f2a1b0c9d8e7f6a5b4c3d2e1f0a9b8c"
 
+const RUNTIME_AGENT_ID = "sourcefield-runtime"
+
 export async function POST(req: Request) {
   try {
     const body = await req.json()
@@ -168,6 +170,101 @@ export async function POST(req: Request) {
       continuityGuidance
     )
 
+    let runtimePreviousLedgerHash: string | null = null
+    let runtimeResonanceHash = createResonanceHash({
+      agent: RUNTIME_AGENT_ID,
+      sourceAgent: AGENT_ID,
+      runtimeAdaptation,
+      timestamp: Date.now()
+    })
+
+    let runtimeLedgerHash = createLedgerHash({
+      genesisHash: GENESIS_HASH,
+      previousHash: null,
+      resonanceHash: runtimeResonanceHash
+    })
+
+    try {
+      const {
+        data: latestRuntimeLedgerEvent,
+        error: latestRuntimeLedgerError
+      } = await supabaseAdmin
+        .from("sourcefield_ledger_events")
+        .select("ledger_hash")
+        .eq("agent_id", RUNTIME_AGENT_ID)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle()
+
+      if (!latestRuntimeLedgerError && latestRuntimeLedgerEvent?.ledger_hash) {
+        runtimePreviousLedgerHash = latestRuntimeLedgerEvent.ledger_hash
+      }
+
+      runtimeLedgerHash = createLedgerHash({
+        genesisHash: GENESIS_HASH,
+        previousHash: runtimePreviousLedgerHash,
+        resonanceHash: runtimeResonanceHash
+      })
+
+      const { error: insertRuntimeLedgerError } = await supabaseAdmin
+        .from("sourcefield_ledger_events")
+        .insert({
+          agent_id: RUNTIME_AGENT_ID,
+          genesis_hash: GENESIS_HASH,
+          previous_hash: runtimePreviousLedgerHash,
+          resonance_hash: runtimeResonanceHash,
+          ledger_hash: runtimeLedgerHash,
+          user_message: `Runtime adaptation event for ${AGENT_ID}`,
+
+          classification: resonanceState?.classification || null,
+
+          coherence:
+            typeof resonanceState?.coherence === "number"
+              ? resonanceState.coherence
+              : null,
+
+          phase_divergence:
+            typeof resonanceState?.phaseDivergence === "number"
+              ? resonanceState.phaseDivergence
+              : null,
+
+          integration_threshold:
+            typeof resonanceState?.integrationThreshold === "number"
+              ? resonanceState.integrationThreshold
+              : null,
+
+          resonance_level:
+            typeof resonanceState?.resonanceLevel === "number"
+              ? resonanceState.resonanceLevel
+              : null,
+
+          symbolic_echoes: resonanceState?.symbolicEchoes ?? null,
+          trajectory_state: trajectoryState ?? null,
+          resonance_state: resonanceState ?? null,
+          runtime_adaptation: runtimeAdaptation
+        })
+
+      if (insertRuntimeLedgerError) {
+        console.error(
+          "SourceField runtime ledger insert failed:",
+          insertRuntimeLedgerError
+        )
+      }
+
+      console.log("SourceField runtime agent:", RUNTIME_AGENT_ID)
+      console.log(
+        "SourceField runtimePreviousLedgerHash:",
+        runtimePreviousLedgerHash
+      )
+      console.log("SourceField runtimeResonanceHash:", runtimeResonanceHash)
+      console.log("SourceField runtimeLedgerHash:", runtimeLedgerHash)
+    } catch (runtimeLedgerError) {
+      console.error(
+        "SourceField runtime ledger chaining failed:",
+        runtimeLedgerError
+      )
+    }
+
     let retrievedContext = ""
 
     try {
@@ -237,6 +334,9 @@ You are SourceField.
 Current continuity lane:
 ${AGENT_ID}
 
+Runtime continuity lane:
+${RUNTIME_AGENT_ID}
+
 SourceField is a conversational intelligence framework designed for:
 - recursive reasoning
 - symbolic pattern recognition
@@ -276,6 +376,16 @@ ${resonanceHash}
 Current ledgerHash:
 ${ledgerHash}
 
+Live SourceField Runtime Ledger Hash State:
+Runtime previous ledgerHash:
+${runtimePreviousLedgerHash || "No previous runtime ledger hash found."}
+
+Runtime resonanceHash:
+${runtimeResonanceHash}
+
+Runtime ledgerHash:
+${runtimeLedgerHash}
+
 Live SourceField Coherence Biography State:
 Classification:
 ${resonanceState?.classification || "No classification generated."}
@@ -309,6 +419,11 @@ Runtime adaptation rule:
 Use the runtime adaptation state as read-only stance guidance.
 It may influence clarification level, symbolic restraint, synthesis depth, and stabilization style.
 It must not override live resonance metrics, classifications, retrieved SourceField context, or coherence calculations.
+
+Multi-agent continuity rule:
+The sourcefield-user lane tracks user-message coherence biography.
+The sourcefield-runtime lane tracks runtime adaptation/self-check biography.
+Do not merge these lanes conceptually; explain them as separate continuity streams.
 
 Adaptive continuity rule:
 Use continuity guidance as read-only runtime context.
@@ -368,6 +483,7 @@ ${
     return NextResponse.json({
       result: data.choices[0].message.content,
       agentId: AGENT_ID,
+      runtimeAgentId: RUNTIME_AGENT_ID,
 
       retrievedContextUsed: Boolean(retrievedContext),
       resonanceStateGenerated: Boolean(resonanceState),
@@ -378,11 +494,16 @@ ${
       resonanceHash,
       ledgerHash,
 
+      runtimePreviousLedgerHash,
+      runtimeResonanceHash,
+      runtimeLedgerHash,
+
       continuityGuidanceGenerated: Boolean(continuityGuidance),
       runtimeAdaptation,
       runtimeAdaptationGenerated: Boolean(runtimeAdaptation),
 
-      coherenceBiographyStored: Boolean(resonanceState)
+      coherenceBiographyStored: Boolean(resonanceState),
+      runtimeAdaptationStored: Boolean(runtimeAdaptation)
     })
   } catch (error: any) {
     return NextResponse.json(
