@@ -6,6 +6,7 @@ import { SOURCEFIELD_GENESIS_LEDGER } from "@/lib/sourcefield/genesisLedger"
 import { generateContinuityGuidance } from "@/lib/sourcefield/continuityGuidance"
 import { generateRuntimeAdaptationGuidance } from "@/lib/sourcefield/runtimeAdaptationGuidance"
 import { detectRuntimeRecovery } from "@/lib/sourcefield/runtimeRecovery"
+import { generateRecoveryWeightedAdaptation } from "@/lib/sourcefield/runtimeRecoveryAdaptation"
 import { resolveAgentLane } from "@/lib/sourcefield/agentLane"
 import { generateRuntimeAdaptation } from "@/lib/sourcefield/runtimeAdaptation"
 import {
@@ -167,6 +168,12 @@ export async function POST(req: Request) {
       confidenceTrend: "unknown"
     }
 
+    let recoveryWeightedAdaptation: any = {
+      stabilizationPriority: "normal",
+      adaptiveStrategy: "maintain",
+      recoveryWeighted: false
+    }
+
     try {
       const { data: recentRuntimeEvents, error: runtimeGuidanceError } =
         await supabaseAdmin
@@ -181,6 +188,9 @@ export async function POST(req: Request) {
           generateRuntimeAdaptationGuidance(recentRuntimeEvents)
 
         runtimeRecoveryState = detectRuntimeRecovery(recentRuntimeEvents)
+
+        recoveryWeightedAdaptation =
+          generateRecoveryWeightedAdaptation(runtimeRecoveryState)
       }
     } catch (runtimeGuidanceCatchError) {
       console.error(
@@ -197,6 +207,7 @@ export async function POST(req: Request) {
       runtimeAdaptation,
       runtimeAdaptationGuidance,
       runtimeRecoveryState,
+      recoveryWeightedAdaptation,
       timestamp: Date.now()
     })
 
@@ -259,7 +270,8 @@ export async function POST(req: Request) {
           resonance_state: resonanceState ?? null,
           runtime_adaptation: runtimeAdaptation,
           runtime_adaptation_guidance: runtimeAdaptationGuidance,
-          runtime_recovery_state: runtimeRecoveryState
+          runtime_recovery_state: runtimeRecoveryState,
+          recovery_weighted_adaptation: recoveryWeightedAdaptation
         })
 
       if (insertRuntimeLedgerError) {
@@ -403,10 +415,18 @@ ${runtimeAdaptationGuidance}
 Live SourceField Runtime Recovery State:
 ${JSON.stringify(runtimeRecoveryState, null, 2)}
 
+Live SourceField Recovery Weighted Adaptation:
+${JSON.stringify(recoveryWeightedAdaptation, null, 2)}
+
 Runtime recovery rule:
 Use runtime recovery state as read-only trajectory context.
 It may describe whether runtime adaptation continuity is fragmented, drifting, recovering, or stable.
 It must not override live resonance metrics, classifications, retrieved context, ledger state, or runtime adaptation state.
+
+Adaptive recovery weighting rule:
+Recovery-weighted adaptation is read-only stabilization guidance derived from runtime recovery trajectory.
+It may influence stabilization priority and adaptive response strategy.
+It must not override live resonance metrics, classifications, runtime adaptation state, retrieved context, or ledger state.
 
 Runtime adaptation rule:
 Use the runtime adaptation state as read-only stance guidance.
@@ -468,6 +488,8 @@ ${
       runtimeAdaptationGuidanceGenerated: Boolean(runtimeAdaptationGuidance),
       runtimeRecoveryState,
       runtimeRecoveryStateGenerated: Boolean(runtimeRecoveryState),
+      recoveryWeightedAdaptation,
+      recoveryWeightedAdaptationGenerated: Boolean(recoveryWeightedAdaptation),
       coherenceBiographyStored: Boolean(resonanceState),
       runtimeAdaptationStored: Boolean(runtimeAdaptation),
       runtimeRecoveryStored: Boolean(runtimeRecoveryState)
