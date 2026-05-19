@@ -5,6 +5,7 @@ import { analyzeCoherenceTrajectory } from "@/lib/sourcefield/CoherenceTrajector
 import { SOURCEFIELD_GENESIS_LEDGER } from "@/lib/sourcefield/genesisLedger"
 import { generateContinuityGuidance } from "@/lib/sourcefield/continuityGuidance"
 import { resolveAgentLane } from "@/lib/sourcefield/agentLane"
+import { generateRuntimeAdaptation } from "@/lib/sourcefield/runtimeAdaptation"
 import {
   createResonanceHash,
   createLedgerHash
@@ -113,7 +114,6 @@ export async function POST(req: Request) {
         .from("sourcefield_ledger_events")
         .insert({
           agent_id: AGENT_ID,
-
           genesis_hash: GENESIS_HASH,
           previous_hash: previousLedgerHash,
           resonance_hash: resonanceHash,
@@ -161,6 +161,12 @@ export async function POST(req: Request) {
     } catch (ledgerError) {
       console.error("SourceField ledger chaining failed:", ledgerError)
     }
+
+    const runtimeAdaptation = generateRuntimeAdaptation(
+      resonanceState?.coherence,
+      resonanceState?.phaseDivergence,
+      continuityGuidance
+    )
 
     let retrievedContext = ""
 
@@ -296,6 +302,14 @@ ${
 Live SourceField Continuity Guidance:
 ${continuityGuidance}
 
+Live SourceField Runtime Adaptation State:
+${JSON.stringify(runtimeAdaptation, null, 2)}
+
+Runtime adaptation rule:
+Use the runtime adaptation state as read-only stance guidance.
+It may influence clarification level, symbolic restraint, synthesis depth, and stabilization style.
+It must not override live resonance metrics, classifications, retrieved SourceField context, or coherence calculations.
+
 Adaptive continuity rule:
 Use continuity guidance as read-only runtime context.
 It may guide:
@@ -353,13 +367,11 @@ ${
 
     return NextResponse.json({
       result: data.choices[0].message.content,
-
       agentId: AGENT_ID,
 
       retrievedContextUsed: Boolean(retrievedContext),
       resonanceStateGenerated: Boolean(resonanceState),
       trajectoryStateGenerated: Boolean(trajectoryState),
-
       ledgerStateGenerated: Boolean(ledgerHash),
 
       previousLedgerHash,
@@ -367,6 +379,8 @@ ${
       ledgerHash,
 
       continuityGuidanceGenerated: Boolean(continuityGuidance),
+      runtimeAdaptation,
+      runtimeAdaptationGenerated: Boolean(runtimeAdaptation),
 
       coherenceBiographyStored: Boolean(resonanceState)
     })
