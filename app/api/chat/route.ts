@@ -5,6 +5,7 @@ import { analyzeCoherenceTrajectory } from "@/lib/sourcefield/CoherenceTrajector
 import { SOURCEFIELD_GENESIS_LEDGER } from "@/lib/sourcefield/genesisLedger"
 import { generateContinuityGuidance } from "@/lib/sourcefield/continuityGuidance"
 import { generateRuntimeAdaptationGuidance } from "@/lib/sourcefield/runtimeAdaptationGuidance"
+import { detectRuntimeRecovery } from "@/lib/sourcefield/runtimeRecovery"
 import { resolveAgentLane } from "@/lib/sourcefield/agentLane"
 import { generateRuntimeAdaptation } from "@/lib/sourcefield/runtimeAdaptation"
 import {
@@ -147,14 +148,6 @@ export async function POST(req: Request) {
       if (insertLedgerError) {
         console.error("SourceField ledger insert failed:", insertLedgerError)
       }
-
-      console.log("SourceField agent:", AGENT_ID)
-      console.log("SourceField previousLedgerHash:", previousLedgerHash)
-      console.log("SourceField resonanceHash:", resonanceHash)
-      console.log("SourceField ledgerHash:", ledgerHash)
-      console.log("SourceField classification:", resonanceState?.classification)
-      console.log("SourceField coherence:", resonanceState?.coherence)
-      console.log("SourceField continuityGuidance:", continuityGuidance)
     } catch (ledgerError) {
       console.error("SourceField ledger chaining failed:", ledgerError)
     }
@@ -168,6 +161,12 @@ export async function POST(req: Request) {
     let runtimeAdaptationGuidance =
       "No runtime adaptation memory guidance generated."
 
+    let runtimeRecoveryState: any = {
+      recoveryState: "unknown",
+      recoveryDirection: "insufficient-data",
+      confidenceTrend: "unknown"
+    }
+
     try {
       const { data: recentRuntimeEvents, error: runtimeGuidanceError } =
         await supabaseAdmin
@@ -180,6 +179,8 @@ export async function POST(req: Request) {
       if (!runtimeGuidanceError && recentRuntimeEvents?.length) {
         runtimeAdaptationGuidance =
           generateRuntimeAdaptationGuidance(recentRuntimeEvents)
+
+        runtimeRecoveryState = detectRuntimeRecovery(recentRuntimeEvents)
       }
     } catch (runtimeGuidanceCatchError) {
       console.error(
@@ -194,6 +195,8 @@ export async function POST(req: Request) {
       agent: RUNTIME_AGENT_ID,
       sourceAgent: AGENT_ID,
       runtimeAdaptation,
+      runtimeAdaptationGuidance,
+      runtimeRecoveryState,
       timestamp: Date.now()
     })
 
@@ -264,18 +267,6 @@ export async function POST(req: Request) {
           insertRuntimeLedgerError
         )
       }
-
-      console.log("SourceField runtime agent:", RUNTIME_AGENT_ID)
-      console.log(
-        "SourceField runtimePreviousLedgerHash:",
-        runtimePreviousLedgerHash
-      )
-      console.log("SourceField runtimeResonanceHash:", runtimeResonanceHash)
-      console.log("SourceField runtimeLedgerHash:", runtimeLedgerHash)
-      console.log(
-        "SourceField runtimeAdaptationGuidance:",
-        runtimeAdaptationGuidance
-      )
     } catch (runtimeLedgerError) {
       console.error(
         "SourceField runtime ledger chaining failed:",
@@ -408,6 +399,14 @@ ${JSON.stringify(runtimeAdaptation, null, 2)}
 Live SourceField Runtime Adaptation Memory Guidance:
 ${runtimeAdaptationGuidance}
 
+Live SourceField Runtime Recovery State:
+${JSON.stringify(runtimeRecoveryState, null, 2)}
+
+Runtime recovery rule:
+Use runtime recovery state as read-only trajectory context.
+It may describe whether runtime adaptation continuity is fragmented, drifting, recovering, or stable.
+It must not override live resonance metrics, classifications, retrieved context, ledger state, or runtime adaptation state.
+
 Runtime adaptation rule:
 Use the runtime adaptation state as read-only stance guidance.
 It may influence clarification level, symbolic restraint, synthesis depth, and stabilization style.
@@ -466,6 +465,8 @@ ${
       runtimeAdaptationGenerated: Boolean(runtimeAdaptation),
       runtimeAdaptationGuidance,
       runtimeAdaptationGuidanceGenerated: Boolean(runtimeAdaptationGuidance),
+      runtimeRecoveryState,
+      runtimeRecoveryStateGenerated: Boolean(runtimeRecoveryState),
       coherenceBiographyStored: Boolean(resonanceState),
       runtimeAdaptationStored: Boolean(runtimeAdaptation)
     })
