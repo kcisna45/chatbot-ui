@@ -7,6 +7,7 @@ import { generateContinuityGuidance } from "@/lib/sourcefield/continuityGuidance
 import { generateRuntimeAdaptationGuidance } from "@/lib/sourcefield/runtimeAdaptationGuidance"
 import { detectRuntimeRecovery } from "@/lib/sourcefield/runtimeRecovery"
 import { generateRecoveryWeightedAdaptation } from "@/lib/sourcefield/runtimeRecoveryAdaptation"
+import { generateRuntimeStabilization } from "@/lib/sourcefield/runtimeStabilization"
 import { resolveAgentLane } from "@/lib/sourcefield/agentLane"
 import { generateRuntimeAdaptation } from "@/lib/sourcefield/runtimeAdaptation"
 import {
@@ -199,6 +200,12 @@ export async function POST(req: Request) {
       )
     }
 
+    const runtimeStabilization = generateRuntimeStabilization({
+      runtimeAdaptation,
+      runtimeRecoveryState,
+      recoveryWeightedAdaptation
+    })
+
     let runtimePreviousLedgerHash: string | null = null
 
     const runtimeResonanceHash = createResonanceHash({
@@ -208,6 +215,7 @@ export async function POST(req: Request) {
       runtimeAdaptationGuidance,
       runtimeRecoveryState,
       recoveryWeightedAdaptation,
+      runtimeStabilization,
       timestamp: Date.now()
     })
 
@@ -418,6 +426,14 @@ ${JSON.stringify(runtimeRecoveryState, null, 2)}
 Live SourceField Recovery Weighted Adaptation:
 ${JSON.stringify(recoveryWeightedAdaptation, null, 2)}
 
+Live SourceField Runtime Stabilization State:
+${JSON.stringify(runtimeStabilization, null, 2)}
+
+Runtime stabilization rule:
+Use runtime stabilization as read-only response governance.
+It may shape compression, operational grounding, symbolic throttle, recovery floor, clarification style, and synthesis depth.
+It must not override live resonance metrics, classifications, runtime adaptation state, retrieved context, ledger state, or user intent.
+
 Runtime recovery rule:
 Use runtime recovery state as read-only trajectory context.
 It may describe whether runtime adaptation continuity is fragmented, drifting, recovering, or stable.
@@ -490,6 +506,8 @@ ${
       runtimeRecoveryStateGenerated: Boolean(runtimeRecoveryState),
       recoveryWeightedAdaptation,
       recoveryWeightedAdaptationGenerated: Boolean(recoveryWeightedAdaptation),
+      runtimeStabilization,
+      runtimeStabilizationGenerated: Boolean(runtimeStabilization),
       coherenceBiographyStored: Boolean(resonanceState),
       runtimeAdaptationStored: Boolean(runtimeAdaptation),
       runtimeRecoveryStored: Boolean(runtimeRecoveryState)
