@@ -11,6 +11,7 @@ import { generateRuntimeStabilization } from "@/lib/sourcefield/runtimeStabiliza
 import { generateResponseGovernance } from "@/lib/sourcefield/responseGovernance"
 import { generateContinuityCompression } from "@/lib/sourcefield/continuityCompression"
 import { generateCrossAgentConsensus } from "@/lib/sourcefield/crossAgentConsensus"
+import { generateConsensusStabilization } from "@/lib/sourcefield/consensusStabilization"
 import { resolveAgentLane } from "@/lib/sourcefield/agentLane"
 import { generateRuntimeAdaptation } from "@/lib/sourcefield/runtimeAdaptation"
 import {
@@ -243,6 +244,11 @@ export async function POST(req: Request) {
       )
     }
 
+    const consensusStabilization = generateConsensusStabilization(
+      crossAgentConsensus,
+      runtimeStabilization
+    )
+
     let runtimePreviousLedgerHash: string | null = null
 
     const runtimeResonanceHash = createResonanceHash({
@@ -256,6 +262,7 @@ export async function POST(req: Request) {
       responseGovernance,
       continuityCompression,
       crossAgentConsensus,
+      consensusStabilization,
       timestamp: Date.now()
     })
 
@@ -322,7 +329,8 @@ export async function POST(req: Request) {
           recovery_weighted_adaptation: recoveryWeightedAdaptation,
           response_governance: responseGovernance,
           continuity_compression: continuityCompression,
-          cross_agent_consensus: crossAgentConsensus
+          cross_agent_consensus: crossAgentConsensus,
+          consensus_stabilization: consensusStabilization
         })
 
       if (insertRuntimeLedgerError) {
@@ -481,6 +489,14 @@ ${JSON.stringify(continuityCompression, null, 2)}
 Live SourceField Cross-Agent Consensus State:
 ${JSON.stringify(crossAgentConsensus, null, 2)}
 
+Live SourceField Consensus Stabilization State:
+${JSON.stringify(consensusStabilization, null, 2)}
+
+Consensus stabilization rule:
+Use consensus stabilization as read-only enforcement guidance.
+It may shape how lane divergence is clarified and stabilized.
+It must not override live metrics, classifications, hashes, retrieval context, stored lane history, or user intent.
+
 Cross-agent consensus rule:
 Use cross-agent consensus as read-only system-level diagnostic guidance.
 It may compare lane alignment, coherence, recovery direction, stability risk, and dominant concerns.
@@ -581,12 +597,15 @@ ${
       continuityCompressionGenerated: Boolean(continuityCompression),
       crossAgentConsensus,
       crossAgentConsensusGenerated: Boolean(crossAgentConsensus),
+      consensusStabilization,
+      consensusStabilizationGenerated: Boolean(consensusStabilization),
       coherenceBiographyStored: Boolean(resonanceState),
       runtimeAdaptationStored: Boolean(runtimeAdaptation),
       runtimeRecoveryStored: Boolean(runtimeRecoveryState),
       responseGovernanceStored: Boolean(responseGovernance),
       continuityCompressionStored: Boolean(continuityCompression),
-      crossAgentConsensusStored: Boolean(crossAgentConsensus)
+      crossAgentConsensusStored: Boolean(crossAgentConsensus),
+      consensusStabilizationStored: Boolean(consensusStabilization)
     })
   } catch (error: any) {
     return NextResponse.json(
