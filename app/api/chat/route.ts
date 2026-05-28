@@ -8,6 +8,7 @@ import { generateRuntimeAdaptationGuidance } from "@/lib/sourcefield/runtimeAdap
 import { detectRuntimeRecovery } from "@/lib/sourcefield/runtimeRecovery"
 import { generateRecoveryWeightedAdaptation } from "@/lib/sourcefield/runtimeRecoveryAdaptation"
 import { generateRuntimeStabilization } from "@/lib/sourcefield/runtimeStabilization"
+import { generateResponseGovernance } from "@/lib/sourcefield/responseGovernance"
 import { resolveAgentLane } from "@/lib/sourcefield/agentLane"
 import { generateRuntimeAdaptation } from "@/lib/sourcefield/runtimeAdaptation"
 import {
@@ -206,6 +207,8 @@ export async function POST(req: Request) {
       recoveryWeightedAdaptation
     })
 
+    const responseGovernance = generateResponseGovernance(runtimeStabilization)
+
     let runtimePreviousLedgerHash: string | null = null
 
     const runtimeResonanceHash = createResonanceHash({
@@ -216,6 +219,7 @@ export async function POST(req: Request) {
       runtimeRecoveryState,
       recoveryWeightedAdaptation,
       runtimeStabilization,
+      responseGovernance,
       timestamp: Date.now()
     })
 
@@ -429,6 +433,14 @@ ${JSON.stringify(recoveryWeightedAdaptation, null, 2)}
 Live SourceField Runtime Stabilization State:
 ${JSON.stringify(runtimeStabilization, null, 2)}
 
+Live SourceField Response Governance State:
+${JSON.stringify(responseGovernance, null, 2)}
+
+Response governance rule:
+Use response governance to shape output style only.
+It may reduce symbolic density, increase clarity, prioritize operational grounding, compress responses, and increase clarification when stabilization priority is high.
+It must not alter live metrics, classifications, hashes, retrieval context, user intent, or ledger state.
+
 Runtime stabilization rule:
 Use runtime stabilization as read-only response governance.
 It may shape compression, operational grounding, symbolic throttle, recovery floor, clarification style, and synthesis depth.
@@ -508,6 +520,8 @@ ${
       recoveryWeightedAdaptationGenerated: Boolean(recoveryWeightedAdaptation),
       runtimeStabilization,
       runtimeStabilizationGenerated: Boolean(runtimeStabilization),
+      responseGovernance,
+      responseGovernanceGenerated: Boolean(responseGovernance),
       coherenceBiographyStored: Boolean(resonanceState),
       runtimeAdaptationStored: Boolean(runtimeAdaptation),
       runtimeRecoveryStored: Boolean(runtimeRecoveryState)
