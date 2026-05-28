@@ -12,6 +12,7 @@ import { generateResponseGovernance } from "@/lib/sourcefield/responseGovernance
 import { generateContinuityCompression } from "@/lib/sourcefield/continuityCompression"
 import { generateCrossAgentConsensus } from "@/lib/sourcefield/crossAgentConsensus"
 import { generateConsensusStabilization } from "@/lib/sourcefield/consensusStabilization"
+import { generateAdaptiveEnforcement } from "@/lib/sourcefield/adaptiveEnforcement"
 import { resolveAgentLane } from "@/lib/sourcefield/agentLane"
 import { generateRuntimeAdaptation } from "@/lib/sourcefield/runtimeAdaptation"
 import {
@@ -249,6 +250,11 @@ export async function POST(req: Request) {
       runtimeStabilization
     )
 
+    const adaptiveEnforcement = generateAdaptiveEnforcement(
+      consensusStabilization,
+      responseGovernance
+    )
+
     let runtimePreviousLedgerHash: string | null = null
 
     const runtimeResonanceHash = createResonanceHash({
@@ -263,6 +269,7 @@ export async function POST(req: Request) {
       continuityCompression,
       crossAgentConsensus,
       consensusStabilization,
+      adaptiveEnforcement,
       timestamp: Date.now()
     })
 
@@ -330,7 +337,8 @@ export async function POST(req: Request) {
           response_governance: responseGovernance,
           continuity_compression: continuityCompression,
           cross_agent_consensus: crossAgentConsensus,
-          consensus_stabilization: consensusStabilization
+          consensus_stabilization: consensusStabilization,
+          adaptive_enforcement: adaptiveEnforcement
         })
 
       if (insertRuntimeLedgerError) {
@@ -492,6 +500,14 @@ ${JSON.stringify(crossAgentConsensus, null, 2)}
 Live SourceField Consensus Stabilization State:
 ${JSON.stringify(consensusStabilization, null, 2)}
 
+Live SourceField Adaptive Enforcement State:
+${JSON.stringify(adaptiveEnforcement, null, 2)}
+
+Adaptive enforcement rule:
+Use adaptive enforcement as soft response influence only.
+It may shape output behavior, grounding, clarification, symbolic density, and synthesis restraint.
+It must not override live metrics, classifications, hashes, retrieved context, stored history, or user intent.
+
 Consensus stabilization rule:
 Use consensus stabilization as read-only enforcement guidance.
 It may shape how lane divergence is clarified and stabilized.
@@ -599,13 +615,16 @@ ${
       crossAgentConsensusGenerated: Boolean(crossAgentConsensus),
       consensusStabilization,
       consensusStabilizationGenerated: Boolean(consensusStabilization),
+      adaptiveEnforcement,
+      adaptiveEnforcementGenerated: Boolean(adaptiveEnforcement),
       coherenceBiographyStored: Boolean(resonanceState),
       runtimeAdaptationStored: Boolean(runtimeAdaptation),
       runtimeRecoveryStored: Boolean(runtimeRecoveryState),
       responseGovernanceStored: Boolean(responseGovernance),
       continuityCompressionStored: Boolean(continuityCompression),
       crossAgentConsensusStored: Boolean(crossAgentConsensus),
-      consensusStabilizationStored: Boolean(consensusStabilization)
+      consensusStabilizationStored: Boolean(consensusStabilization),
+      adaptiveEnforcementStored: Boolean(adaptiveEnforcement)
     })
   } catch (error: any) {
     return NextResponse.json(
