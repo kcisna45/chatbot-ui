@@ -9,6 +9,7 @@ import { detectRuntimeRecovery } from "@/lib/sourcefield/runtimeRecovery"
 import { generateRecoveryWeightedAdaptation } from "@/lib/sourcefield/runtimeRecoveryAdaptation"
 import { generateRuntimeStabilization } from "@/lib/sourcefield/runtimeStabilization"
 import { generateResponseGovernance } from "@/lib/sourcefield/responseGovernance"
+import { generateContinuityCompression } from "@/lib/sourcefield/continuityCompression"
 import { resolveAgentLane } from "@/lib/sourcefield/agentLane"
 import { generateRuntimeAdaptation } from "@/lib/sourcefield/runtimeAdaptation"
 import {
@@ -209,6 +210,13 @@ export async function POST(req: Request) {
 
     const responseGovernance = generateResponseGovernance(runtimeStabilization)
 
+    const continuityCompression = generateContinuityCompression({
+      continuityGuidance,
+      runtimeAdaptationGuidance,
+      runtimeRecoveryState,
+      responseGovernance
+    })
+
     let runtimePreviousLedgerHash: string | null = null
 
     const runtimeResonanceHash = createResonanceHash({
@@ -220,6 +228,7 @@ export async function POST(req: Request) {
       recoveryWeightedAdaptation,
       runtimeStabilization,
       responseGovernance,
+      continuityCompression,
       timestamp: Date.now()
     })
 
@@ -284,7 +293,8 @@ export async function POST(req: Request) {
           runtime_adaptation_guidance: runtimeAdaptationGuidance,
           runtime_recovery_state: runtimeRecoveryState,
           recovery_weighted_adaptation: recoveryWeightedAdaptation,
-          response_governance: responseGovernance
+          response_governance: responseGovernance,
+          continuity_compression: continuityCompression
         })
 
       if (insertRuntimeLedgerError) {
@@ -437,6 +447,14 @@ ${JSON.stringify(runtimeStabilization, null, 2)}
 Live SourceField Response Governance State:
 ${JSON.stringify(responseGovernance, null, 2)}
 
+Live SourceField Continuity Compression State:
+${JSON.stringify(continuityCompression, null, 2)}
+
+Continuity compression rule:
+Use continuity compression to reduce recursive noise while preserving essential metrics, hashes, recovery direction, stabilization state, and response governance state.
+It may suppress repetitive meta-analysis, symbolic inflation, unnecessary recursion, and low-signal historical detail.
+It must not delete, alter, or hide stored history, live metrics, classifications, hashes, retrieval context, or user intent.
+
 Response governance rule:
 Use response governance to shape output style only.
 It may reduce symbolic density, increase clarity, prioritize operational grounding, compress responses, and increase clarification when stabilization priority is high.
@@ -523,9 +541,13 @@ ${
       runtimeStabilizationGenerated: Boolean(runtimeStabilization),
       responseGovernance,
       responseGovernanceGenerated: Boolean(responseGovernance),
+      continuityCompression,
+      continuityCompressionGenerated: Boolean(continuityCompression),
       coherenceBiographyStored: Boolean(resonanceState),
       runtimeAdaptationStored: Boolean(runtimeAdaptation),
-      runtimeRecoveryStored: Boolean(runtimeRecoveryState)
+      runtimeRecoveryStored: Boolean(runtimeRecoveryState),
+      responseGovernanceStored: Boolean(responseGovernance),
+      continuityCompressionStored: Boolean(continuityCompression)
     })
   } catch (error: any) {
     return NextResponse.json(
