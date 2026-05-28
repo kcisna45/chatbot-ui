@@ -10,6 +10,7 @@ import { generateRecoveryWeightedAdaptation } from "@/lib/sourcefield/runtimeRec
 import { generateRuntimeStabilization } from "@/lib/sourcefield/runtimeStabilization"
 import { generateResponseGovernance } from "@/lib/sourcefield/responseGovernance"
 import { generateContinuityCompression } from "@/lib/sourcefield/continuityCompression"
+import { generateCrossAgentConsensus } from "@/lib/sourcefield/crossAgentConsensus"
 import { resolveAgentLane } from "@/lib/sourcefield/agentLane"
 import { generateRuntimeAdaptation } from "@/lib/sourcefield/runtimeAdaptation"
 import {
@@ -217,6 +218,31 @@ export async function POST(req: Request) {
       responseGovernance
     })
 
+    let crossAgentConsensus: any = {
+      consensusState: "unknown",
+      crossAgentConsensusActive: false
+    }
+
+    try {
+      const { data: laneEvents, error: laneEventsError } = await supabaseAdmin
+        .from("sourcefield_ledger_events")
+        .select(
+          "agent_id, coherence, classification, runtime_recovery_state, recovery_weighted_adaptation"
+        )
+        .in("agent_id", ["sourcefield-user", "sourcefield-runtime"])
+        .order("created_at", { ascending: false })
+        .limit(20)
+
+      if (!laneEventsError && laneEvents?.length) {
+        crossAgentConsensus = generateCrossAgentConsensus(laneEvents)
+      }
+    } catch (consensusError) {
+      console.error(
+        "SourceField cross-agent consensus generation failed:",
+        consensusError
+      )
+    }
+
     let runtimePreviousLedgerHash: string | null = null
 
     const runtimeResonanceHash = createResonanceHash({
@@ -229,6 +255,7 @@ export async function POST(req: Request) {
       runtimeStabilization,
       responseGovernance,
       continuityCompression,
+      crossAgentConsensus,
       timestamp: Date.now()
     })
 
@@ -294,7 +321,8 @@ export async function POST(req: Request) {
           runtime_recovery_state: runtimeRecoveryState,
           recovery_weighted_adaptation: recoveryWeightedAdaptation,
           response_governance: responseGovernance,
-          continuity_compression: continuityCompression
+          continuity_compression: continuityCompression,
+          cross_agent_consensus: crossAgentConsensus
         })
 
       if (insertRuntimeLedgerError) {
@@ -450,6 +478,14 @@ ${JSON.stringify(responseGovernance, null, 2)}
 Live SourceField Continuity Compression State:
 ${JSON.stringify(continuityCompression, null, 2)}
 
+Live SourceField Cross-Agent Consensus State:
+${JSON.stringify(crossAgentConsensus, null, 2)}
+
+Cross-agent consensus rule:
+Use cross-agent consensus as read-only system-level diagnostic guidance.
+It may compare lane alignment, coherence, recovery direction, stability risk, and dominant concerns.
+It must not override live metrics, classifications, hashes, retrieval context, stored lane history, or user intent.
+
 Continuity compression rule:
 Use continuity compression to reduce recursive noise while preserving essential metrics, hashes, recovery direction, stabilization state, and response governance state.
 It may suppress repetitive meta-analysis, symbolic inflation, unnecessary recursion, and low-signal historical detail.
@@ -543,11 +579,14 @@ ${
       responseGovernanceGenerated: Boolean(responseGovernance),
       continuityCompression,
       continuityCompressionGenerated: Boolean(continuityCompression),
+      crossAgentConsensus,
+      crossAgentConsensusGenerated: Boolean(crossAgentConsensus),
       coherenceBiographyStored: Boolean(resonanceState),
       runtimeAdaptationStored: Boolean(runtimeAdaptation),
       runtimeRecoveryStored: Boolean(runtimeRecoveryState),
       responseGovernanceStored: Boolean(responseGovernance),
-      continuityCompressionStored: Boolean(continuityCompression)
+      continuityCompressionStored: Boolean(continuityCompression),
+      crossAgentConsensusStored: Boolean(crossAgentConsensus)
     })
   } catch (error: any) {
     return NextResponse.json(
