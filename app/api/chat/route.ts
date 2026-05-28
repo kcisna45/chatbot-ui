@@ -283,7 +283,8 @@ export async function POST(req: Request) {
           runtime_adaptation: runtimeAdaptation,
           runtime_adaptation_guidance: runtimeAdaptationGuidance,
           runtime_recovery_state: runtimeRecoveryState,
-          recovery_weighted_adaptation: recoveryWeightedAdaptation
+          recovery_weighted_adaptation: recoveryWeightedAdaptation,
+          response_governance: responseGovernance
         })
 
       if (insertRuntimeLedgerError) {
