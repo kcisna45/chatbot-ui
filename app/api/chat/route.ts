@@ -484,25 +484,26 @@ function getPredictiveAlignmentAction(
   }
 
   if (
-    normalized.includes("measured state object") ||
-    normalized.includes("alignment engine") ||
-    normalized.includes("what kind") ||
-    normalized.includes("classification") ||
-    normalized.includes("forecast validation")
-  ) {
-    return "classification"
-  }
-
-  if (
+    normalized.includes("forecasttarget") ||
     normalized.includes("forecast target") ||
+    normalized.includes("observedtarget") ||
     normalized.includes("observed target") ||
+    normalized.includes("coherentreferencetarget") ||
+    normalized.includes("coherent reference target") ||
     normalized.includes("coherent reference") ||
-    normalized.includes("targets")
+    normalized.includes("identify:") ||
+    normalized.includes("identify")
   ) {
     return "targets"
   }
 
   if (
+    normalized.includes("forecastaccuracy") ||
+    normalized.includes("forecast accuracy") ||
+    normalized.includes("forecastalignment") ||
+    normalized.includes("forecast alignment") ||
+    normalized.includes("forecastcalibration") ||
+    normalized.includes("forecast calibration") ||
     normalized.includes("accuracy") ||
     normalized.includes("matched") ||
     normalized.includes("unmatched")
@@ -511,12 +512,25 @@ function getPredictiveAlignmentAction(
   }
 
   if (
-    normalized.includes("calibration") ||
+    normalized.includes("coherencegap") ||
     normalized.includes("coherence gap") ||
+    normalized.includes("recommendedadjustment") ||
     normalized.includes("recommended adjustment") ||
+    normalized.includes("calibration") ||
     normalized.includes("adjustment")
   ) {
     return "calibration"
+  }
+
+  if (
+    normalized.includes("measured state object") ||
+    normalized.includes("calibration layer") ||
+    normalized.includes("forecasting layer") ||
+    normalized.includes("what kind") ||
+    normalized.includes("classification") ||
+    normalized.includes("forecast validation")
+  ) {
+    return "classification"
   }
 
   if (
