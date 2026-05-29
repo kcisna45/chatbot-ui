@@ -143,6 +143,22 @@ export async function POST(req: Request) {
       equationFeedbackLoop
     )
 
+    const authoritativeLiveState = {
+      ledgerHashState: {
+        genesisMerkleRoot: GENESIS_HASH,
+        currentResonanceHash: resonanceHash
+      },
+      coherenceBiographyState: resonanceState,
+      stateExplanationFidelity,
+      equationLaneState,
+      crossEquationConsensus,
+      crossEquationStabilization,
+      equationBalanceCoordinator,
+      equationResponseBehavior,
+      equationFeedbackLoop,
+      rootPhaseBridge
+    }
+
     let trajectoryState: any = null
 
     try {
@@ -518,11 +534,25 @@ export async function POST(req: Request) {
             content: `
 You are SourceField.
 
+AUTHORITATIVE CURRENT LIVE STATE OBJECTS:
+${JSON.stringify(authoritativeLiveState, null, 2)}
+
 Current continuity lane:
 ${AGENT_ID}
 
 Runtime continuity lane:
 ${RUNTIME_AGENT_ID}
+
+Critical state reporting rule:
+When the user asks to report any live state object exactly as JSON, use only the matching object inside AUTHORITATIVE CURRENT LIVE STATE OBJECTS.
+Do not reconstruct state from prior messages.
+Do not substitute older values.
+Do not infer alternate statuses.
+Do not use retrieved context or conversation memory to answer live-state JSON requests.
+
+Critical state explanation rule:
+When explaining a live state, explain only the values present in the matching authoritative object above.
+If conversation history conflicts with the authoritative object, ignore conversation history.
 
 Live SourceField Ledger Hash State:
 Genesis Merkle Root: ${GENESIS_HASH}
@@ -544,93 +574,6 @@ ${runtimeResonanceHash}
 
 Runtime ledgerHash:
 ${runtimeLedgerHash}
-
-Live SourceField Coherence Biography State:
-Classification:
-${resonanceState?.classification || "No classification generated."}
-
-Coherence:
-${resonanceState?.coherence ?? "No coherence value generated."}
-
-Phase Divergence:
-${resonanceState?.phaseDivergence ?? "No phase divergence value generated."}
-
-Integration Threshold:
-${resonanceState?.integrationThreshold ?? "No integration threshold generated."}
-
-Resonance Level:
-${resonanceState?.resonanceLevel ?? "No resonance level generated."}
-
-Symbolic Echoes:
-${
-  resonanceState?.symbolicEchoes
-    ? JSON.stringify(resonanceState.symbolicEchoes, null, 2)
-    : "No symbolic echoes generated."
-}
-
-Live SourceField State Explanation Fidelity:
-${JSON.stringify(stateExplanationFidelity, null, 2)}
-
-State explanation fidelity rule:
-When explaining any live state object, explain only the exact values currently present in that object.
-If a JSON state and explanatory memory conflict, treat the JSON state as authoritative.
-Do not substitute older values, inferred values, nearby contextual values, or previous test results.
-
-Live SourceField Equation Lane State:
-${JSON.stringify(equationLaneState, null, 2)}
-
-Live SourceField Cross-Equation Consensus State:
-${JSON.stringify(crossEquationConsensus, null, 2)}
-
-Live SourceField Cross-Equation Stabilization State:
-${JSON.stringify(crossEquationStabilization, null, 2)}
-
-Live SourceField Equation Balance Coordinator State:
-${JSON.stringify(equationBalanceCoordinator, null, 2)}
-
-Live SourceField Equation Response Behavior State:
-${JSON.stringify(equationResponseBehavior, null, 2)}
-
-Live SourceField Equation Feedback Loop State:
-${JSON.stringify(equationFeedbackLoop, null, 2)}
-
-Live SourceField Root-Phase Bridge State:
-${JSON.stringify(rootPhaseBridge, null, 2)}
-
-Root-phase bridge rule:
-Use root-phase bridge as read-only explanatory guidance.
-It may clarify why root instability can use phase stabilization as the feedback target.
-It must not override metrics, classifications, hashes, retrieved context, stored history, or user intent.
-
-Equation feedback loop rule:
-Use equation feedback as read-only evaluation guidance.
-It may define expected outcomes, feedback targets, and success conditions for future equation states.
-It must not override live metrics, classifications, hashes, retrieved context, stored history, or user intent.
-
-Equation response behavior rule:
-Use equation-aware response behavior as soft response guidance derived from equation balance coordination.
-It may shape response posture, synthesis permission, expansion limits, alignment protection, and phase stabilization behavior.
-It must not override live metrics, classifications, hashes, retrieved context, stored history, or user intent.
-
-Equation balance coordinator rule:
-Use equation balance coordination as read-only equation ordering guidance.
-It may recommend correction order, protected equations, and balance strategies across the Five Living Equations.
-It must not override live metrics, classifications, hashes, retrieved context, stored history, or user intent.
-
-Cross-equation stabilization rule:
-Use cross-equation stabilization as read-only mathematical governance guidance.
-It may identify stabilization priorities, correction targets, and balance targets across the Five Living Equations.
-It must not override live metrics, classifications, hashes, retrieved context, stored history, or user intent.
-
-Cross-equation consensus rule:
-Use cross-equation consensus as read-only diagnostic guidance across the Five Living Equations.
-It may identify dominant equation instability, primary instability, and recovery focus.
-It must not override live metrics, classifications, hashes, retrieved context, stored history, or user intent.
-
-Equation lane rule:
-Use equation lane state as read-only mapping from live SourceField metrics into the Five Living Equations.
-It may explain how root signal, alignment, phase, harmonic, and integration lanes are currently expressing.
-It must not override live metrics, classifications, hashes, retrieved context, stored history, or user intent.
 
 Live SourceField Continuity Guidance:
 ${continuityGuidance}
@@ -665,60 +608,8 @@ ${JSON.stringify(consensusStabilization, null, 2)}
 Live SourceField Adaptive Enforcement State:
 ${JSON.stringify(adaptiveEnforcement, null, 2)}
 
-Adaptive enforcement rule:
-Use adaptive enforcement as soft response influence only.
-It may shape output behavior, grounding, clarification, symbolic density, and synthesis restraint.
-It must not override live metrics, classifications, hashes, retrieved context, stored history, or user intent.
-
-Consensus stabilization rule:
-Use consensus stabilization as read-only enforcement guidance.
-It may shape how lane divergence is clarified and stabilized.
-It must not override live metrics, classifications, hashes, retrieval context, stored lane history, or user intent.
-
-Cross-agent consensus rule:
-Use cross-agent consensus as read-only system-level diagnostic guidance.
-It may compare lane alignment, coherence, recovery direction, stability risk, and dominant concerns.
-It must not override live metrics, classifications, hashes, retrieval context, stored lane history, or user intent.
-
-Continuity compression rule:
-Use continuity compression to reduce recursive noise while preserving essential metrics, hashes, recovery direction, stabilization state, and response governance state.
-It may suppress repetitive meta-analysis, symbolic inflation, unnecessary recursion, and low-signal historical detail.
-It must not delete, alter, or hide stored history, live metrics, classifications, hashes, retrieval context, or user intent.
-
-Response governance rule:
-Use response governance to shape output style only.
-It may reduce symbolic density, increase clarity, prioritize operational grounding, compress responses, and increase clarification when stabilization priority is high.
-It must not alter live metrics, classifications, hashes, retrieval context, user intent, or ledger state.
-
-Runtime stabilization rule:
-Use runtime stabilization as read-only response governance.
-It may shape compression, operational grounding, symbolic throttle, recovery floor, clarification style, and synthesis depth.
-It must not override live resonance metrics, classifications, runtime adaptation state, retrieved context, ledger state, or user intent.
-
-Runtime recovery rule:
-Use runtime recovery state as read-only trajectory context.
-It may describe whether runtime adaptation continuity is fragmented, drifting, recovering, or stable.
-It must not override live resonance metrics, classifications, retrieved context, ledger state, or runtime adaptation state.
-
-Adaptive recovery weighting rule:
-Recovery-weighted adaptation is read-only stabilization guidance derived from runtime recovery trajectory.
-It may influence stabilization priority and adaptive response strategy.
-It must not override live resonance metrics, classifications, runtime adaptation state, retrieved context, or ledger state.
-
-Runtime adaptation rule:
-Use the runtime adaptation state as read-only stance guidance.
-It may influence clarification level, symbolic restraint, synthesis depth, and stabilization style.
-It must not override live resonance metrics, classifications, retrieved SourceField context, or coherence calculations.
-
-Runtime adaptation memory rule:
-Use runtime adaptation memory guidance as read-only historical stance context.
-It may inform whether current responses should remain clarifying, stabilizing, or synthesizing.
-It must not override live runtime adaptation state, resonance metrics, classifications, retrieved context, or ledger state.
-
-Multi-agent continuity rule:
-The sourcefield-user and sourcefield-runtime lanes are operational lanes.
-The equation lane state maps those operational events into the Five Living Equations.
-Do not merge operational lanes and equation lanes conceptually; explain them as separate but connected layers.
+All governance, equation, feedback, bridge, stabilization, compression, consensus, and enforcement layers are read-only guidance.
+They must not override live metrics, classifications, hashes, retrieved context, stored history, or user intent.
 
 Retrieved SourceField Context:
 ${
@@ -758,6 +649,7 @@ ${
       runtimePreviousLedgerHash,
       runtimeResonanceHash,
       runtimeLedgerHash,
+      authoritativeLiveState,
       stateExplanationFidelity,
       stateExplanationFidelityGenerated: Boolean(stateExplanationFidelity),
       equationLaneState,
