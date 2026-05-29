@@ -19,6 +19,7 @@ import { generateEquationBalanceCoordinator } from "@/lib/sourcefield/equationBa
 import { generateEquationResponseBehavior } from "@/lib/sourcefield/equationResponseBehavior"
 import { generateEquationFeedbackLoop } from "@/lib/sourcefield/equationFeedbackLoop"
 import { generateRootPhaseBridge } from "@/lib/sourcefield/rootPhaseBridge"
+import { generateLaneStabilityDistance } from "@/lib/sourcefield/laneStabilityDistance"
 import { generateStateExplanationFidelity } from "@/lib/sourcefield/stateExplanationFidelity"
 import { resolveAgentLane } from "@/lib/sourcefield/agentLane"
 import { generateRuntimeAdaptation } from "@/lib/sourcefield/runtimeAdaptation"
@@ -109,6 +110,13 @@ function getDirectStateColumn(message: string) {
     }
   }
 
+  if (normalized.includes("lane stability distance state")) {
+    return {
+      key: "lane stability distance state",
+      column: "lane_stability_distance"
+    }
+  }
+
   if (normalized.includes("state explanation fidelity state")) {
     return {
       key: "state explanation fidelity state",
@@ -176,7 +184,8 @@ export async function POST(req: Request) {
         })
       }
 
-      const value = latestState[directStateRequest.column]
+      const latestStateRecord = latestState as Record<string, any>
+      const value = latestStateRecord[directStateRequest.column]
 
       return NextResponse.json({
         result: JSON.stringify(value ?? null, null, 2),
@@ -188,9 +197,9 @@ export async function POST(req: Request) {
         value: value ?? null,
         agentId: AGENT_ID,
         runtimeAgentId: RUNTIME_AGENT_ID,
-        ledgerHash: latestState.ledger_hash,
-        resonanceHash: latestState.resonance_hash,
-        createdAt: latestState.created_at
+        ledgerHash: latestStateRecord.ledger_hash,
+        resonanceHash: latestStateRecord.resonance_hash,
+        createdAt: latestStateRecord.created_at
       })
     }
 
@@ -218,6 +227,9 @@ export async function POST(req: Request) {
       symbolicEchoes: resonanceState?.symbolicEchoes,
       classification: resonanceState?.classification
     })
+
+    const laneStabilityDistance =
+      generateLaneStabilityDistance(equationLaneState)
 
     const crossEquationConsensus =
       generateCrossEquationConsensus(equationLaneState)
@@ -275,6 +287,7 @@ export async function POST(req: Request) {
       coherenceBiographyState: resonanceState,
       stateExplanationFidelity,
       equationLaneState,
+      laneStabilityDistance,
       crossEquationConsensus,
       crossEquationStabilization,
       equationBalanceCoordinator,
@@ -365,6 +378,7 @@ export async function POST(req: Request) {
           trajectory_state: trajectoryState ?? null,
           resonance_state: resonanceState ?? null,
           equation_lane_state: equationLaneState,
+          lane_stability_distance: laneStabilityDistance,
           cross_equation_consensus: crossEquationConsensus,
           cross_equation_stabilization: crossEquationStabilization,
           equation_balance_coordinator: equationBalanceCoordinator,
@@ -493,6 +507,7 @@ export async function POST(req: Request) {
       consensusStabilization,
       adaptiveEnforcement,
       equationLaneState,
+      laneStabilityDistance,
       crossEquationConsensus,
       crossEquationStabilization,
       equationBalanceCoordinator,
@@ -561,6 +576,7 @@ export async function POST(req: Request) {
           trajectory_state: trajectoryState ?? null,
           resonance_state: resonanceState ?? null,
           equation_lane_state: equationLaneState,
+          lane_stability_distance: laneStabilityDistance,
           cross_equation_consensus: crossEquationConsensus,
           cross_equation_stabilization: crossEquationStabilization,
           equation_balance_coordinator: equationBalanceCoordinator,
@@ -778,6 +794,8 @@ ${
       stateExplanationFidelityGenerated: Boolean(stateExplanationFidelity),
       equationLaneState,
       equationLaneStateGenerated: Boolean(equationLaneState),
+      laneStabilityDistance,
+      laneStabilityDistanceGenerated: Boolean(laneStabilityDistance),
       crossEquationConsensus,
       crossEquationConsensusGenerated: Boolean(crossEquationConsensus),
       crossEquationStabilization,
@@ -814,6 +832,7 @@ ${
       coherenceBiographyStored: Boolean(resonanceState),
       stateExplanationFidelityStored: Boolean(stateExplanationFidelity),
       equationLaneStateStored: Boolean(equationLaneState),
+      laneStabilityDistanceStored: Boolean(laneStabilityDistance),
       crossEquationConsensusStored: Boolean(crossEquationConsensus),
       crossEquationStabilizationStored: Boolean(crossEquationStabilization),
       equationBalanceCoordinatorStored: Boolean(equationBalanceCoordinator),
