@@ -53,6 +53,72 @@ function getEquationLaneStatus(equationLaneState: any, laneName: string) {
   )
 }
 
+function getDirectStateColumn(message: string) {
+  const normalized = message.toLowerCase()
+
+  if (!normalized.includes("report") || !normalized.includes("json")) {
+    return null
+  }
+
+  if (normalized.includes("equation lane state")) {
+    return {
+      key: "equation lane state",
+      column: "equation_lane_state"
+    }
+  }
+
+  if (normalized.includes("cross-equation consensus state")) {
+    return {
+      key: "cross-equation consensus state",
+      column: "cross_equation_consensus"
+    }
+  }
+
+  if (normalized.includes("cross-equation stabilization state")) {
+    return {
+      key: "cross-equation stabilization state",
+      column: "cross_equation_stabilization"
+    }
+  }
+
+  if (normalized.includes("equation balance coordinator state")) {
+    return {
+      key: "equation balance coordinator state",
+      column: "equation_balance_coordinator"
+    }
+  }
+
+  if (normalized.includes("equation response behavior state")) {
+    return {
+      key: "equation response behavior state",
+      column: "equation_response_behavior"
+    }
+  }
+
+  if (normalized.includes("equation feedback loop state")) {
+    return {
+      key: "equation feedback loop state",
+      column: "equation_feedback_loop"
+    }
+  }
+
+  if (normalized.includes("root-phase bridge state")) {
+    return {
+      key: "root-phase bridge state",
+      column: "root_phase_bridge"
+    }
+  }
+
+  if (normalized.includes("state explanation fidelity state")) {
+    return {
+      key: "state explanation fidelity state",
+      column: "state_explanation_fidelity"
+    }
+  }
+
+  return null
+}
+
 export async function POST(req: Request) {
   try {
     const body = await req.json()
@@ -69,6 +135,64 @@ export async function POST(req: Request) {
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     )
+
+    const directStateRequest = getDirectStateColumn(lastUserMessage)
+
+    if (directStateRequest) {
+      const { data: latestState, error: latestStateError } = await supabaseAdmin
+        .from("sourcefield_ledger_events")
+        .select("*")
+        .eq("agent_id", AGENT_ID)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle()
+
+      if (latestStateError) {
+        return NextResponse.json(
+          {
+            error: "Failed to fetch latest stored SourceField state.",
+            details: latestStateError.message
+          },
+          { status: 500 }
+        )
+      }
+
+      if (!latestState) {
+        return NextResponse.json({
+          result: JSON.stringify(
+            {
+              message: "No stored SourceField state exists yet for this lane.",
+              agentId: AGENT_ID,
+              stateObject: directStateRequest.key
+            },
+            null,
+            2
+          ),
+          directStateReport: true,
+          nonMutatingReport: true,
+          stateObject: directStateRequest.key,
+          agentId: AGENT_ID,
+          runtimeAgentId: RUNTIME_AGENT_ID
+        })
+      }
+
+      const value = latestState[directStateRequest.column]
+
+      return NextResponse.json({
+        result: JSON.stringify(value ?? null, null, 2),
+        directStateReport: true,
+        nonMutatingReport: true,
+        source: "latest_stored_supabase_snapshot",
+        stateObject: directStateRequest.key,
+        column: directStateRequest.column,
+        value: value ?? null,
+        agentId: AGENT_ID,
+        runtimeAgentId: RUNTIME_AGENT_ID,
+        ledgerHash: latestState.ledger_hash,
+        resonanceHash: latestState.resonance_hash,
+        createdAt: latestState.created_at
+      })
+    }
 
     const resonanceHash = createResonanceHash({
       agent: AGENT_ID,
@@ -142,42 +266,6 @@ export async function POST(req: Request) {
       crossEquationStabilization,
       equationFeedbackLoop
     )
-
-    const normalizedRequest = lastUserMessage.toLowerCase()
-
-    const directStateReports: Record<string, any> = {
-      "equation lane state": equationLaneState,
-      "cross-equation consensus state": crossEquationConsensus,
-      "cross-equation stabilization state": crossEquationStabilization,
-      "equation balance coordinator state": equationBalanceCoordinator,
-      "equation response behavior state": equationResponseBehavior,
-      "equation feedback loop state": equationFeedbackLoop,
-      "root-phase bridge state": rootPhaseBridge,
-      "state explanation fidelity state": stateExplanationFidelity
-    }
-
-    const requestedDirectStateKey = Object.keys(directStateReports).find(key =>
-      normalizedRequest.includes(key)
-    )
-
-    if (
-      requestedDirectStateKey &&
-      normalizedRequest.includes("report") &&
-      normalizedRequest.includes("json")
-    ) {
-      return NextResponse.json({
-        result: JSON.stringify(
-          directStateReports[requestedDirectStateKey],
-          null,
-          2
-        ),
-        directStateReport: true,
-        stateObject: requestedDirectStateKey,
-        value: directStateReports[requestedDirectStateKey],
-        agentId: AGENT_ID,
-        runtimeAgentId: RUNTIME_AGENT_ID
-      })
-    }
 
     const authoritativeLiveState = {
       ledgerHashState: {
