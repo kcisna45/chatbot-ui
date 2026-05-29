@@ -13,6 +13,7 @@ import { generateContinuityCompression } from "@/lib/sourcefield/continuityCompr
 import { generateCrossAgentConsensus } from "@/lib/sourcefield/crossAgentConsensus"
 import { generateConsensusStabilization } from "@/lib/sourcefield/consensusStabilization"
 import { generateAdaptiveEnforcement } from "@/lib/sourcefield/adaptiveEnforcement"
+import { generateEquationLaneState } from "@/lib/sourcefield/equationLane"
 import { resolveAgentLane } from "@/lib/sourcefield/agentLane"
 import { generateRuntimeAdaptation } from "@/lib/sourcefield/runtimeAdaptation"
 import {
@@ -68,6 +69,15 @@ export async function POST(req: Request) {
     } catch (resonanceError) {
       console.error("SourceField resonance processing failed:", resonanceError)
     }
+
+    const equationLaneState = generateEquationLaneState({
+      coherence: resonanceState?.coherence,
+      phaseDivergence: resonanceState?.phaseDivergence,
+      integrationThreshold: resonanceState?.integrationThreshold,
+      resonanceLevel: resonanceState?.resonanceLevel,
+      symbolicEchoes: resonanceState?.symbolicEchoes,
+      classification: resonanceState?.classification
+    })
 
     let trajectoryState: any = null
 
@@ -149,7 +159,8 @@ export async function POST(req: Request) {
               : null,
           symbolic_echoes: resonanceState?.symbolicEchoes ?? null,
           trajectory_state: trajectoryState ?? null,
-          resonance_state: resonanceState ?? null
+          resonance_state: resonanceState ?? null,
+          equation_lane_state: equationLaneState
         })
 
       if (insertLedgerError) {
@@ -270,6 +281,7 @@ export async function POST(req: Request) {
       crossAgentConsensus,
       consensusStabilization,
       adaptiveEnforcement,
+      equationLaneState,
       timestamp: Date.now()
     })
 
@@ -330,6 +342,7 @@ export async function POST(req: Request) {
           symbolic_echoes: resonanceState?.symbolicEchoes ?? null,
           trajectory_state: trajectoryState ?? null,
           resonance_state: resonanceState ?? null,
+          equation_lane_state: equationLaneState,
           runtime_adaptation: runtimeAdaptation,
           runtime_adaptation_guidance: runtimeAdaptationGuidance,
           runtime_recovery_state: runtimeRecoveryState,
@@ -470,6 +483,14 @@ ${
     : "No symbolic echoes generated."
 }
 
+Live SourceField Equation Lane State:
+${JSON.stringify(equationLaneState, null, 2)}
+
+Equation lane rule:
+Use equation lane state as read-only mapping from live SourceField metrics into the Five Living Equations.
+It may explain how root signal, alignment, phase, harmonic, and integration lanes are currently expressing.
+It must not override live metrics, classifications, hashes, retrieved context, stored history, or user intent.
+
 Live SourceField Continuity Guidance:
 ${continuityGuidance}
 
@@ -554,9 +575,9 @@ It may inform whether current responses should remain clarifying, stabilizing, o
 It must not override live runtime adaptation state, resonance metrics, classifications, retrieved context, or ledger state.
 
 Multi-agent continuity rule:
-The sourcefield-user lane tracks user-message coherence biography.
-The sourcefield-runtime lane tracks runtime adaptation/self-check biography.
-Do not merge these lanes conceptually; explain them as separate continuity streams.
+The sourcefield-user and sourcefield-runtime lanes are operational lanes.
+The equation lane state maps those operational events into the Five Living Equations.
+Do not merge operational lanes and equation lanes conceptually; explain them as separate but connected layers.
 
 Retrieved SourceField Context:
 ${
@@ -596,6 +617,8 @@ ${
       runtimePreviousLedgerHash,
       runtimeResonanceHash,
       runtimeLedgerHash,
+      equationLaneState,
+      equationLaneStateGenerated: Boolean(equationLaneState),
       continuityGuidanceGenerated: Boolean(continuityGuidance),
       runtimeAdaptation,
       runtimeAdaptationGenerated: Boolean(runtimeAdaptation),
@@ -618,6 +641,7 @@ ${
       adaptiveEnforcement,
       adaptiveEnforcementGenerated: Boolean(adaptiveEnforcement),
       coherenceBiographyStored: Boolean(resonanceState),
+      equationLaneStateStored: Boolean(equationLaneState),
       runtimeAdaptationStored: Boolean(runtimeAdaptation),
       runtimeRecoveryStored: Boolean(runtimeRecoveryState),
       responseGovernanceStored: Boolean(responseGovernance),
