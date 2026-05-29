@@ -16,6 +16,7 @@ import { generateAdaptiveEnforcement } from "@/lib/sourcefield/adaptiveEnforceme
 import { generateEquationLaneState } from "@/lib/sourcefield/equationLane"
 import { generateCrossEquationConsensus } from "@/lib/sourcefield/crossEquationConsensus"
 import { generateCrossEquationStabilization } from "@/lib/sourcefield/crossEquationStabilization"
+import { generateStateExplanationFidelity } from "@/lib/sourcefield/stateExplanationFidelity"
 import { resolveAgentLane } from "@/lib/sourcefield/agentLane"
 import { generateRuntimeAdaptation } from "@/lib/sourcefield/runtimeAdaptation"
 import {
@@ -71,6 +72,8 @@ export async function POST(req: Request) {
     } catch (resonanceError) {
       console.error("SourceField resonance processing failed:", resonanceError)
     }
+
+    const stateExplanationFidelity = generateStateExplanationFidelity()
 
     const equationLaneState = generateEquationLaneState({
       coherence: resonanceState?.coherence,
@@ -171,7 +174,8 @@ export async function POST(req: Request) {
           resonance_state: resonanceState ?? null,
           equation_lane_state: equationLaneState,
           cross_equation_consensus: crossEquationConsensus,
-          cross_equation_stabilization: crossEquationStabilization
+          cross_equation_stabilization: crossEquationStabilization,
+          state_explanation_fidelity: stateExplanationFidelity
         })
 
       if (insertLedgerError) {
@@ -295,6 +299,7 @@ export async function POST(req: Request) {
       equationLaneState,
       crossEquationConsensus,
       crossEquationStabilization,
+      stateExplanationFidelity,
       timestamp: Date.now()
     })
 
@@ -358,6 +363,7 @@ export async function POST(req: Request) {
           equation_lane_state: equationLaneState,
           cross_equation_consensus: crossEquationConsensus,
           cross_equation_stabilization: crossEquationStabilization,
+          state_explanation_fidelity: stateExplanationFidelity,
           runtime_adaptation: runtimeAdaptation,
           runtime_adaptation_guidance: runtimeAdaptationGuidance,
           runtime_recovery_state: runtimeRecoveryState,
@@ -497,6 +503,14 @@ ${
     ? JSON.stringify(resonanceState.symbolicEchoes, null, 2)
     : "No symbolic echoes generated."
 }
+
+Live SourceField State Explanation Fidelity:
+${JSON.stringify(stateExplanationFidelity, null, 2)}
+
+State explanation fidelity rule:
+When explaining any live state object, explain only the exact values currently present in that object.
+If a JSON state and explanatory memory conflict, treat the JSON state as authoritative.
+Do not substitute older values, inferred values, nearby contextual values, or previous test results.
 
 Live SourceField Equation Lane State:
 ${JSON.stringify(equationLaneState, null, 2)}
@@ -648,6 +662,8 @@ ${
       runtimePreviousLedgerHash,
       runtimeResonanceHash,
       runtimeLedgerHash,
+      stateExplanationFidelity,
+      stateExplanationFidelityGenerated: Boolean(stateExplanationFidelity),
       equationLaneState,
       equationLaneStateGenerated: Boolean(equationLaneState),
       crossEquationConsensus,
@@ -676,6 +692,7 @@ ${
       adaptiveEnforcement,
       adaptiveEnforcementGenerated: Boolean(adaptiveEnforcement),
       coherenceBiographyStored: Boolean(resonanceState),
+      stateExplanationFidelityStored: Boolean(stateExplanationFidelity),
       equationLaneStateStored: Boolean(equationLaneState),
       crossEquationConsensusStored: Boolean(crossEquationConsensus),
       crossEquationStabilizationStored: Boolean(crossEquationStabilization),
