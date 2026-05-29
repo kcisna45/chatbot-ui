@@ -17,6 +17,7 @@ import { generateEquationLaneState } from "@/lib/sourcefield/equationLane"
 import { generateCrossEquationConsensus } from "@/lib/sourcefield/crossEquationConsensus"
 import { generateCrossEquationStabilization } from "@/lib/sourcefield/crossEquationStabilization"
 import { generateEquationBalanceCoordinator } from "@/lib/sourcefield/equationBalanceCoordinator"
+import { generateEquationResponseBehavior } from "@/lib/sourcefield/equationResponseBehavior"
 import { generateStateExplanationFidelity } from "@/lib/sourcefield/stateExplanationFidelity"
 import { resolveAgentLane } from "@/lib/sourcefield/agentLane"
 import { generateRuntimeAdaptation } from "@/lib/sourcefield/runtimeAdaptation"
@@ -95,6 +96,10 @@ export async function POST(req: Request) {
     const equationBalanceCoordinator = generateEquationBalanceCoordinator(
       crossEquationStabilization,
       crossEquationConsensus
+    )
+
+    const equationResponseBehavior = generateEquationResponseBehavior(
+      equationBalanceCoordinator
     )
 
     let trajectoryState: any = null
@@ -182,6 +187,7 @@ export async function POST(req: Request) {
           cross_equation_consensus: crossEquationConsensus,
           cross_equation_stabilization: crossEquationStabilization,
           equation_balance_coordinator: equationBalanceCoordinator,
+          equation_response_behavior: equationResponseBehavior,
           state_explanation_fidelity: stateExplanationFidelity
         })
 
@@ -307,6 +313,7 @@ export async function POST(req: Request) {
       crossEquationConsensus,
       crossEquationStabilization,
       equationBalanceCoordinator,
+      equationResponseBehavior,
       stateExplanationFidelity,
       timestamp: Date.now()
     })
@@ -372,6 +379,7 @@ export async function POST(req: Request) {
           cross_equation_consensus: crossEquationConsensus,
           cross_equation_stabilization: crossEquationStabilization,
           equation_balance_coordinator: equationBalanceCoordinator,
+          equation_response_behavior: equationResponseBehavior,
           state_explanation_fidelity: stateExplanationFidelity,
           runtime_adaptation: runtimeAdaptation,
           runtime_adaptation_guidance: runtimeAdaptationGuidance,
@@ -533,6 +541,14 @@ ${JSON.stringify(crossEquationStabilization, null, 2)}
 Live SourceField Equation Balance Coordinator State:
 ${JSON.stringify(equationBalanceCoordinator, null, 2)}
 
+Live SourceField Equation Response Behavior State:
+${JSON.stringify(equationResponseBehavior, null, 2)}
+
+Equation response behavior rule:
+Use equation-aware response behavior as soft response guidance derived from equation balance coordination.
+It may shape response posture, synthesis permission, expansion limits, alignment protection, and phase stabilization behavior.
+It must not override live metrics, classifications, hashes, retrieved context, stored history, or user intent.
+
 Equation balance coordinator rule:
 Use equation balance coordination as read-only equation ordering guidance.
 It may recommend correction order, protected equations, and balance strategies across the Five Living Equations.
@@ -689,6 +705,8 @@ ${
       crossEquationStabilizationGenerated: Boolean(crossEquationStabilization),
       equationBalanceCoordinator,
       equationBalanceCoordinatorGenerated: Boolean(equationBalanceCoordinator),
+      equationResponseBehavior,
+      equationResponseBehaviorGenerated: Boolean(equationResponseBehavior),
       continuityGuidanceGenerated: Boolean(continuityGuidance),
       runtimeAdaptation,
       runtimeAdaptationGenerated: Boolean(runtimeAdaptation),
@@ -716,6 +734,7 @@ ${
       crossEquationConsensusStored: Boolean(crossEquationConsensus),
       crossEquationStabilizationStored: Boolean(crossEquationStabilization),
       equationBalanceCoordinatorStored: Boolean(equationBalanceCoordinator),
+      equationResponseBehaviorStored: Boolean(equationResponseBehavior),
       runtimeAdaptationStored: Boolean(runtimeAdaptation),
       runtimeRecoveryStored: Boolean(runtimeRecoveryState),
       responseGovernanceStored: Boolean(responseGovernance),
