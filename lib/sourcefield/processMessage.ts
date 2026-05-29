@@ -15,16 +15,41 @@ const baseline: BaselineState = {
   S0Energy: 1.0
 }
 
-export async function processMessage(userId: string, message: string) {
-  const deterministicTimestep =
+type PreviousRuntimeState = {
+  coherence: number
+  phaseDivergence: number
+  stateEnergy: number
+}
+
+const previousRuntimeStateByUser = new Map<string, PreviousRuntimeState>()
+
+let runtimeSequence = 0
+
+function getRuntimeTimestep(message: string) {
+  runtimeSequence += 1
+
+  const messageSeed =
     Math.abs(
       crypto.createHash("sha256").update(message).digest().readInt32BE(0)
     ) % 1000
 
+  return messageSeed + runtimeSequence
+}
+
+export async function processMessage(userId: string, message: string) {
+  const previousState = previousRuntimeStateByUser.get(userId) ?? {
+    coherence: baseline.C0,
+    phaseDivergence: baseline.deltaPhi0,
+    stateEnergy: baseline.S0Energy
+  }
+
+  const timestep = getRuntimeTimestep(message)
+
   const resonance = analyzeResonance({
     signal: message,
     baseline,
-    timestep: deterministicTimestep
+    timestep,
+    previousState
   })
 
   const resonanceHash = crypto
@@ -33,6 +58,8 @@ export async function processMessage(userId: string, message: string) {
       JSON.stringify({
         userId,
         message,
+        timestep,
+        previousState,
         coherence: resonance.coherence,
         phaseDivergence: resonance.phaseDivergence,
         integrationThreshold: resonance.integrationThreshold,
@@ -61,6 +88,12 @@ export async function processMessage(userId: string, message: string) {
     living_equation_trigger: resonance.livingEquationTrigger,
     logos_alignment: resonance.logosAlignment,
     timestamp: new Date().toISOString()
+  })
+
+  previousRuntimeStateByUser.set(userId, {
+    coherence: resonance.coherence,
+    phaseDivergence: resonance.phaseDivergence,
+    stateEnergy: resonance.stateEnergy
   })
 
   await trackResonance(userId, message, baseline)
