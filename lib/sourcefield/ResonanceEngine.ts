@@ -175,7 +175,14 @@ export function analyzeResonance(input: ResonanceInput): ResonanceOutput {
     )
   )
 
-  const classification = classifyState(inputEnergy, stateEnergy)
+  const classification = classifyState(
+    inputEnergy,
+    stateEnergy,
+    undefined,
+    coherence,
+    phaseDivergence,
+    integrationThreshold
+  )
 
   const flag = computeFlag(coherence, phaseDivergence, chi, rho)
 

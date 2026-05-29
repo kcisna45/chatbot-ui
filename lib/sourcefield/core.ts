@@ -27,6 +27,18 @@ export interface ResonanceState {
 
 const EPSILON = 1e-8
 
+function clamp(value: number, min: number, max: number): number {
+  return Math.max(min, Math.min(max, value))
+}
+
+function coherenceSupport(coherence: number): number {
+  return clamp((coherence + 1) / 2, 0, 1)
+}
+
+function phaseOrderFromDivergence(phaseDivergence: number): number {
+  return clamp((Math.PI - phaseDivergence) / Math.PI, 0, 1)
+}
+
 // ============================================================
 // Equation 1 — Root Standing Wave
 // Ψroot(x,t) = 2A · sin((2π/λ)x) · cos(2πft + φ)
@@ -62,7 +74,7 @@ export function computeCoherence(signal: number[], root: number[]): number {
 
   const magRoot = Math.sqrt(root.reduce((sum, value) => sum + value * value, 0))
 
-  return dot / (magSignal * magRoot + EPSILON)
+  return clamp(dot / (magSignal * magRoot + EPSILON), -1, 1)
 }
 
 // ============================================================
@@ -71,7 +83,7 @@ export function computeCoherence(signal: number[], root: number[]): number {
 // ============================================================
 
 export function computePhaseDivergence(coherence: number): number {
-  const clamped = Math.max(-1, Math.min(1, coherence))
+  const clamped = clamp(coherence, -1, 1)
 
   return Math.acos(clamped)
 }
@@ -88,7 +100,11 @@ export function computeEnergy(vector: number[]): number {
 // Logos Alignment
 // Logos is not a token.
 // Logos = ordered correspondence:
-// positive alignment + reduced phase divergence + sustained state energy.
+// coherence support + reduced phase divergence + sustained state energy.
+//
+// Important:
+// This uses coherenceSupport instead of Math.max(coherence, 0)
+// so negative coherence does not hard-collapse all recovery signal to zero.
 // ============================================================
 
 export function computeLogosAlignment(
@@ -97,21 +113,27 @@ export function computeLogosAlignment(
   stateEnergy: number,
   baseline: BaselineState
 ): number {
-  const positiveCoherence = Math.max(coherence, 0)
+  const alignmentSupport = coherenceSupport(coherence)
 
-  const phaseOrder = Math.max(0, (Math.PI - phaseDivergence) / Math.PI)
+  const phaseOrder = phaseOrderFromDivergence(phaseDivergence)
 
-  const energyContinuity = Math.max(
+  const energyContinuity = clamp(
+    stateEnergy / (baseline.S0Energy + EPSILON),
     0,
-    stateEnergy / (baseline.S0Energy + EPSILON)
+    1
   )
 
-  return positiveCoherence * phaseOrder * energyContinuity
+  return clamp(alignmentSupport * phaseOrder * energyContinuity, 0, 1)
 }
 
 // ============================================================
 // Equation 5 / χ — SourceField Integration Expression
 // This measures whether current state integrates relative to baseline.
+//
+// Important:
+// This uses gradient-sensitive coherence support.
+// Negative coherence still lowers integration strongly,
+// but no longer forces integrationThreshold to absolute zero.
 // ============================================================
 
 export function computeIntegrationThreshold(
@@ -121,19 +143,21 @@ export function computeIntegrationThreshold(
   baseline: BaselineState,
   beta = 1.0073
 ): number {
-  const positiveCoherence = Math.max(coherence, 0)
+  const alignmentSupport = coherenceSupport(coherence)
 
   const phaseRatio =
     (Math.PI - phaseDivergence) / (Math.PI - baseline.deltaPhi0 + EPSILON)
 
-  const safePhaseRatio = Math.max(phaseRatio, 0)
+  const safePhaseRatio = clamp(phaseRatio, 0, 1)
 
-  const energyRatio = stateEnergy / (baseline.S0Energy + EPSILON)
+  const energyRatio = clamp(stateEnergy / (baseline.S0Energy + EPSILON), 0, 1)
 
-  return (
-    (positiveCoherence / Math.max(baseline.C0, EPSILON)) *
-    Math.pow(safePhaseRatio, beta) *
-    energyRatio
+  return clamp(
+    (alignmentSupport / Math.max(baseline.C0, EPSILON)) *
+      Math.pow(safePhaseRatio, beta) *
+      energyRatio,
+    0,
+    1
   )
 }
 
@@ -172,19 +196,11 @@ export function computeXi(chi: number, rho: number): number {
 }
 
 // ============================================================
-// Python-aligned Four-State Classification
+// Four-State Classification
 //
-// Coherent Identity:
-//   high input energy + high state energy
-//
-// Resonance Without Roots:
-//   high input energy + low state energy
-//
-// Dissociation:
-//   low input energy + high state energy
-//
-// Full Incoherence:
-//   low input energy + low state energy
+// This keeps the original energy-based classification,
+// but adds coherence/phase awareness so the state does not
+// over-collapse into broad buckets when energy alone is ambiguous.
 // ============================================================
 
 export function classifyState(
@@ -193,24 +209,49 @@ export function classifyState(
   thresholds: EnergyThresholds = {
     tauInput: 0.7,
     tauState: 0.7
-  }
+  },
+  coherence?: number,
+  phaseDivergence?: number,
+  integrationThreshold?: number
 ): string {
   const inputHigh = inputEnergy >= thresholds.tauInput
   const stateHigh = stateEnergy >= thresholds.tauState
 
-  if (inputHigh && stateHigh) {
+  const hasCoherenceData = typeof coherence === "number"
+  const hasPhaseData = typeof phaseDivergence === "number"
+  const hasIntegrationData = typeof integrationThreshold === "number"
+
+  const phaseIsOrdered = hasPhaseData && phaseDivergence < Math.PI / 2
+
+  const phaseIsDivergent = hasPhaseData && phaseDivergence >= Math.PI / 2
+
+  const coherencePositive = hasCoherenceData && coherence > 0
+
+  const integrationEmerging = hasIntegrationData && integrationThreshold > 0.05
+
+  if (inputHigh && stateHigh && coherencePositive && phaseIsOrdered) {
     return "Coherent Identity"
   }
 
   if (inputHigh && !stateHigh) {
-    return "Resonance Without Roots"
+    if (phaseIsDivergent) return "Resonance Without Roots"
+    return "Root Seeking"
   }
 
   if (!inputHigh && stateHigh) {
-    return "Dissociation"
+    if (phaseIsDivergent) return "Dissociation"
+    return "State Carrying"
   }
 
-  return "Full Incoherence"
+  if (integrationEmerging && coherencePositive) {
+    return "Coherence Forming"
+  }
+
+  if (phaseIsDivergent) {
+    return "Full Incoherence"
+  }
+
+  return "Subthreshold Alignment"
 }
 
 // ============================================================
@@ -227,8 +268,12 @@ export function computeFlag(
     return "COHERENCE_FORMING"
   }
 
-  if (rho > 0) {
+  if (rho > 0 && chi > 0) {
     return "RECOVERING"
+  }
+
+  if (rho > 0) {
+    return "RECOVERY_SIGNAL"
   }
 
   return "DRIFTING"
