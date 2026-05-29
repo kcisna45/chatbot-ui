@@ -18,6 +18,7 @@ import { generateCrossEquationStabilization } from "@/lib/sourcefield/crossEquat
 import { generateEquationBalanceCoordinator } from "@/lib/sourcefield/equationBalanceCoordinator"
 import { generateEquationResponseBehavior } from "@/lib/sourcefield/equationResponseBehavior"
 import { generateEquationFeedbackLoop } from "@/lib/sourcefield/equationFeedbackLoop"
+import { generateRootPhaseBridge } from "@/lib/sourcefield/rootPhaseBridge"
 import { generateStateExplanationFidelity } from "@/lib/sourcefield/stateExplanationFidelity"
 import { resolveAgentLane } from "@/lib/sourcefield/agentLane"
 import { generateRuntimeAdaptation } from "@/lib/sourcefield/runtimeAdaptation"
@@ -136,6 +137,12 @@ export async function POST(req: Request) {
       equationResponseBehavior
     )
 
+    const rootPhaseBridge = generateRootPhaseBridge(
+      crossEquationConsensus,
+      crossEquationStabilization,
+      equationFeedbackLoop
+    )
+
     let trajectoryState: any = null
 
     try {
@@ -223,6 +230,7 @@ export async function POST(req: Request) {
           equation_balance_coordinator: equationBalanceCoordinator,
           equation_response_behavior: equationResponseBehavior,
           equation_feedback_loop: equationFeedbackLoop,
+          root_phase_bridge: rootPhaseBridge,
           state_explanation_fidelity: stateExplanationFidelity
         })
 
@@ -350,6 +358,7 @@ export async function POST(req: Request) {
       equationBalanceCoordinator,
       equationResponseBehavior,
       equationFeedbackLoop,
+      rootPhaseBridge,
       stateExplanationFidelity,
       timestamp: Date.now()
     })
@@ -417,6 +426,7 @@ export async function POST(req: Request) {
           equation_balance_coordinator: equationBalanceCoordinator,
           equation_response_behavior: equationResponseBehavior,
           equation_feedback_loop: equationFeedbackLoop,
+          root_phase_bridge: rootPhaseBridge,
           state_explanation_fidelity: stateExplanationFidelity,
           runtime_adaptation: runtimeAdaptation,
           runtime_adaptation_guidance: runtimeAdaptationGuidance,
@@ -583,6 +593,14 @@ ${JSON.stringify(equationResponseBehavior, null, 2)}
 
 Live SourceField Equation Feedback Loop State:
 ${JSON.stringify(equationFeedbackLoop, null, 2)}
+
+Live SourceField Root-Phase Bridge State:
+${JSON.stringify(rootPhaseBridge, null, 2)}
+
+Root-phase bridge rule:
+Use root-phase bridge as read-only explanatory guidance.
+It may clarify why root instability can use phase stabilization as the feedback target.
+It must not override metrics, classifications, hashes, retrieved context, stored history, or user intent.
 
 Equation feedback loop rule:
 Use equation feedback as read-only evaluation guidance.
@@ -754,6 +772,8 @@ ${
       equationResponseBehaviorGenerated: Boolean(equationResponseBehavior),
       equationFeedbackLoop,
       equationFeedbackLoopGenerated: Boolean(equationFeedbackLoop),
+      rootPhaseBridge,
+      rootPhaseBridgeGenerated: Boolean(rootPhaseBridge),
       continuityGuidanceGenerated: Boolean(continuityGuidance),
       runtimeAdaptation,
       runtimeAdaptationGenerated: Boolean(runtimeAdaptation),
@@ -783,6 +803,7 @@ ${
       equationBalanceCoordinatorStored: Boolean(equationBalanceCoordinator),
       equationResponseBehaviorStored: Boolean(equationResponseBehavior),
       equationFeedbackLoopStored: Boolean(equationFeedbackLoop),
+      rootPhaseBridgeStored: Boolean(rootPhaseBridge),
       runtimeAdaptationStored: Boolean(runtimeAdaptation),
       runtimeRecoveryStored: Boolean(runtimeRecoveryState),
       responseGovernanceStored: Boolean(responseGovernance),
