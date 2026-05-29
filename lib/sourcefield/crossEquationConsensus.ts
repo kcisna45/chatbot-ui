@@ -9,6 +9,32 @@ type EquationLaneState = {
   dominantEquationLane?: string
 }
 
+const UNSTABLE_STATUSES = ["low", "divergent", "not-integrated", "inactive"]
+
+const PARTIAL_STATUSES = [
+  "weak",
+  "partial",
+  "drifting",
+  "pattern-detected",
+  "subthreshold"
+]
+
+const STABLE_STATUSES = [
+  "active",
+  "aligned",
+  "stable",
+  "pattern-rich",
+  "integrated"
+]
+
+function getLaneStatus(lanes: EquationLane[], laneName: string) {
+  return lanes.find(lane => lane.lane === laneName)?.status || "unknown"
+}
+
+function isUnstable(status: string) {
+  return UNSTABLE_STATUSES.includes(status)
+}
+
 export function generateCrossEquationConsensus(
   equationLaneState: EquationLaneState
 ) {
@@ -18,26 +44,21 @@ export function generateCrossEquationConsensus(
     lanes.map(lane => [lane.lane || "unknown", lane.status || "unknown"])
   )
 
+  const dominantEquationLane =
+    equationLaneState?.dominantEquationLane || "unknown"
+
+  const dominantStatus = getLaneStatus(lanes, dominantEquationLane)
+
   const unstableLanes = lanes.filter(lane =>
-    ["low", "divergent", "not-integrated", "inactive"].includes(
-      lane.status || ""
-    )
+    UNSTABLE_STATUSES.includes(lane.status || "")
   )
 
   const stableLanes = lanes.filter(lane =>
-    ["active", "aligned", "stable", "pattern-rich", "integrated"].includes(
-      lane.status || ""
-    )
+    STABLE_STATUSES.includes(lane.status || "")
   )
 
   const partialLanes = lanes.filter(lane =>
-    [
-      "weak",
-      "partial",
-      "drifting",
-      "pattern-detected",
-      "subthreshold"
-    ].includes(lane.status || "")
+    PARTIAL_STATUSES.includes(lane.status || "")
   )
 
   let equationConsensusState:
@@ -47,21 +68,25 @@ export function generateCrossEquationConsensus(
     | "integration-failure"
     | "unstable" = "partially-coherent"
 
-  const dominantEquationLane =
-    equationLaneState?.dominantEquationLane || "unknown"
-
-  if (dominantEquationLane === "sourcefield-phase") {
+  if (
+    dominantEquationLane === "sourcefield-phase" &&
+    isUnstable(dominantStatus)
+  ) {
     equationConsensusState = "phase-dominant-instability"
-  } else if (dominantEquationLane === "sourcefield-integration") {
+  } else if (
+    dominantEquationLane === "sourcefield-integration" &&
+    isUnstable(dominantStatus)
+  ) {
     equationConsensusState = "integration-failure"
   } else if (unstableLanes.length >= 3) {
     equationConsensusState = "unstable"
-  } else if (stableLanes.length >= 3) {
+  } else if (stableLanes.length >= 3 && unstableLanes.length === 0) {
     equationConsensusState = "coherent"
   }
 
-  const primaryInstability =
-    unstableLanes[0]?.lane || dominantEquationLane || "unknown"
+  const primaryInstability = isUnstable(dominantStatus)
+    ? dominantEquationLane
+    : unstableLanes[0]?.lane || dominantEquationLane || "unknown"
 
   const recoveryFocus =
     primaryInstability === "sourcefield-phase"
@@ -77,6 +102,7 @@ export function generateCrossEquationConsensus(
   return {
     equationConsensusState,
     dominantEquationLane,
+    dominantEquationStatus: dominantStatus,
     primaryInstability,
     stableLaneCount: stableLanes.length,
     partialLaneCount: partialLanes.length,
