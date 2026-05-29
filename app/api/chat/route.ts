@@ -127,6 +127,167 @@ function getDirectStateColumn(message: string) {
   return null
 }
 
+type LaneStabilityAction =
+  | "rank"
+  | "nearest-farthest"
+  | "classification"
+  | "explain"
+
+function getLaneStabilityAction(message: string): LaneStabilityAction | null {
+  const normalized = message.toLowerCase()
+
+  if (!normalized.includes("lane stability distance")) {
+    return null
+  }
+
+  if (
+    normalized.includes("rank") ||
+    normalized.includes("closest to farthest") ||
+    normalized.includes("closest") ||
+    normalized.includes("farthest from stability")
+  ) {
+    return "rank"
+  }
+
+  if (
+    normalized.includes("neareststablelane") ||
+    normalized.includes("fartheststablelane") ||
+    (normalized.includes("nearest") && normalized.includes("farthest")) ||
+    normalized.includes("explain why each")
+  ) {
+    return "nearest-farthest"
+  }
+
+  if (
+    normalized.includes("measured state object") ||
+    normalized.includes("proximity estimate") ||
+    normalized.includes("inferred forecast") ||
+    normalized.includes("forecast")
+  ) {
+    return "classification"
+  }
+
+  if (normalized.includes("explain")) {
+    return "explain"
+  }
+
+  return null
+}
+
+function sortLaneDistanceLanes(laneStabilityDistance: any) {
+  const lanes = Array.isArray(laneStabilityDistance?.lanes)
+    ? laneStabilityDistance.lanes
+    : []
+
+  return [...lanes].sort(
+    (a: any, b: any) =>
+      Number(a?.stabilityDistance ?? 1) - Number(b?.stabilityDistance ?? 1)
+  )
+}
+
+function formatDistance(value: any) {
+  if (typeof value !== "number") return "unknown"
+
+  return Number.isInteger(value) ? `${value}` : `${value}`
+}
+
+function buildLaneStabilityRanking(laneStabilityDistance: any) {
+  const lanes = sortLaneDistanceLanes(laneStabilityDistance)
+
+  if (!lanes.length) {
+    return "No Lane Stability Distance lanes are available in the latest stored state."
+  }
+
+  return lanes
+    .map((lane: any, index: number) => {
+      return `${index + 1}. ${lane?.lane || "unknown"}: stabilityDistance ${formatDistance(
+        lane?.stabilityDistance
+      )}, readiness ${lane?.stabilityReadiness || "unknown"}, status ${
+        lane?.currentStatus || "unknown"
+      }`
+    })
+    .join("\n")
+}
+
+function buildLaneStabilityNearestFarthest(laneStabilityDistance: any) {
+  const lanes = Array.isArray(laneStabilityDistance?.lanes)
+    ? laneStabilityDistance.lanes
+    : []
+
+  const nearestLaneName = laneStabilityDistance?.nearestStableLane || "unknown"
+
+  const farthestLaneName =
+    laneStabilityDistance?.farthestStableLane || "unknown"
+
+  const nearest = lanes.find((lane: any) => lane?.lane === nearestLaneName)
+  const farthest = lanes.find((lane: any) => lane?.lane === farthestLaneName)
+
+  return [
+    `nearestStableLane: ${nearestLaneName}`,
+    `nearestStableLane stabilityDistance: ${formatDistance(
+      nearest?.stabilityDistance
+    )}`,
+    `nearestStableLane reason: ${nearest?.reason || "No reason stored."}`,
+    "",
+    `farthestStableLane: ${farthestLaneName}`,
+    `farthestStableLane stabilityDistance: ${formatDistance(
+      farthest?.stabilityDistance
+    )}`,
+    `farthestStableLane reason: ${farthest?.reason || "No reason stored."}`
+  ].join("\n")
+}
+
+function buildLaneStabilityClassification(laneStabilityDistance: any) {
+  return [
+    "Lane Stability Distance is a read-only proximity estimate.",
+    "It is generated from the current equation lane statuses and assigned stabilityDistance values.",
+    "It is not an inferred forecast because it does not predict a future state.",
+    "It is not a raw metric because the distance values are calibrated proximity weights derived from lane statuses.",
+    laneStabilityDistance?.rule
+      ? `Boundary rule: ${laneStabilityDistance.rule}`
+      : "Boundary rule: unavailable."
+  ].join("\n")
+}
+
+function buildLaneStabilityExplanation(laneStabilityDistance: any) {
+  const lanes = sortLaneDistanceLanes(laneStabilityDistance)
+
+  if (!lanes.length) {
+    return "No Lane Stability Distance lanes are available in the latest stored state."
+  }
+
+  return lanes
+    .map((lane: any) => {
+      return `${lane?.lane || "unknown"} has stabilityDistance ${formatDistance(
+        lane?.stabilityDistance
+      )} because: ${lane?.reason || "No reason stored."}`
+    })
+    .join("\n")
+}
+
+function buildLaneStabilityResponse(
+  action: LaneStabilityAction,
+  laneStabilityDistance: any
+) {
+  if (!laneStabilityDistance) {
+    return "Lane Stability Distance is not available in the latest stored SourceField state."
+  }
+
+  if (action === "rank") {
+    return buildLaneStabilityRanking(laneStabilityDistance)
+  }
+
+  if (action === "nearest-farthest") {
+    return buildLaneStabilityNearestFarthest(laneStabilityDistance)
+  }
+
+  if (action === "classification") {
+    return buildLaneStabilityClassification(laneStabilityDistance)
+  }
+
+  return buildLaneStabilityExplanation(laneStabilityDistance)
+}
+
 export async function POST(req: Request) {
   try {
     const body = await req.json()
@@ -200,6 +361,52 @@ export async function POST(req: Request) {
         ledgerHash: latestStateRecord.ledger_hash,
         resonanceHash: latestStateRecord.resonance_hash,
         createdAt: latestStateRecord.created_at
+      })
+    }
+
+    const laneStabilityAction = getLaneStabilityAction(lastUserMessage)
+
+    if (laneStabilityAction) {
+      const { data: latestState, error: latestStateError } = await supabaseAdmin
+        .from("sourcefield_ledger_events")
+        .select("*")
+        .eq("agent_id", AGENT_ID)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle()
+
+      if (latestStateError) {
+        return NextResponse.json(
+          {
+            error:
+              "Failed to fetch latest stored SourceField lane stability distance.",
+            details: latestStateError.message
+          },
+          { status: 500 }
+        )
+      }
+
+      const latestStateRecord = latestState as Record<string, any> | null
+      const laneStabilityDistance =
+        latestStateRecord?.lane_stability_distance ?? null
+
+      return NextResponse.json({
+        result: buildLaneStabilityResponse(
+          laneStabilityAction,
+          laneStabilityDistance
+        ),
+        directStateReport: true,
+        nonMutatingReport: true,
+        deterministicLaneStabilityResponse: true,
+        source: "latest_stored_supabase_snapshot",
+        stateObject: "lane stability distance state",
+        action: laneStabilityAction,
+        value: laneStabilityDistance,
+        agentId: AGENT_ID,
+        runtimeAgentId: RUNTIME_AGENT_ID,
+        ledgerHash: latestStateRecord?.ledger_hash ?? null,
+        resonanceHash: latestStateRecord?.resonance_hash ?? null,
+        createdAt: latestStateRecord?.created_at ?? null
       })
     }
 
