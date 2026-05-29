@@ -20,6 +20,7 @@ import { generateEquationResponseBehavior } from "@/lib/sourcefield/equationResp
 import { generateEquationFeedbackLoop } from "@/lib/sourcefield/equationFeedbackLoop"
 import { generateRootPhaseBridge } from "@/lib/sourcefield/rootPhaseBridge"
 import { generateLaneStabilityDistance } from "@/lib/sourcefield/laneStabilityDistance"
+import { generateEquationStabilityForecast } from "@/lib/sourcefield/equationStabilityForecast"
 import { generateStateExplanationFidelity } from "@/lib/sourcefield/stateExplanationFidelity"
 import { resolveAgentLane } from "@/lib/sourcefield/agentLane"
 import { generateRuntimeAdaptation } from "@/lib/sourcefield/runtimeAdaptation"
@@ -114,6 +115,13 @@ function getDirectStateColumn(message: string) {
     return {
       key: "lane stability distance state",
       column: "lane_stability_distance"
+    }
+  }
+
+  if (normalized.includes("equation stability forecast state")) {
+    return {
+      key: "equation stability forecast state",
+      column: "equation_stability_forecast"
     }
   }
 
@@ -288,6 +296,158 @@ function buildLaneStabilityResponse(
   return buildLaneStabilityExplanation(laneStabilityDistance)
 }
 
+type EquationForecastAction =
+  | "summary"
+  | "most-least"
+  | "confidence"
+  | "classification"
+  | "explain"
+
+function getEquationForecastAction(
+  message: string
+): EquationForecastAction | null {
+  const normalized = message.toLowerCase()
+
+  if (!normalized.includes("equation stability forecast")) {
+    return null
+  }
+
+  if (
+    normalized.includes("measured state object") ||
+    normalized.includes("proximity estimate") ||
+    normalized.includes("inferred forecast") ||
+    normalized.includes("forecast type") ||
+    normalized.includes("what kind")
+  ) {
+    return "classification"
+  }
+
+  if (
+    normalized.includes("most likely") ||
+    normalized.includes("least likely") ||
+    normalized.includes("next stable") ||
+    normalized.includes("stable lane")
+  ) {
+    return "most-least"
+  }
+
+  if (
+    normalized.includes("confidence") ||
+    normalized.includes("forecastconfidence")
+  ) {
+    return "confidence"
+  }
+
+  if (
+    normalized.includes("explain") ||
+    normalized.includes("why") ||
+    normalized.includes("basis") ||
+    normalized.includes("reason")
+  ) {
+    return "explain"
+  }
+
+  return "summary"
+}
+
+function buildEquationForecastSummary(forecast: any) {
+  if (!forecast) {
+    return "Equation Stability Forecast is not available in the latest stored SourceField state."
+  }
+
+  return [
+    `mostLikelyNextStableLane: ${forecast?.mostLikelyNextStableLane || "unknown"}`,
+    `leastLikelyNextStableLane: ${forecast?.leastLikelyNextStableLane || "unknown"}`,
+    `forecastConfidence: ${forecast?.forecastConfidence || "unknown"}`,
+    `forecastBasis: ${forecast?.forecastBasis || "unknown"}`,
+    `nearestStabilityDistance: ${formatDistance(forecast?.nearestStabilityDistance)}`,
+    `secondNearestStableLane: ${forecast?.secondNearestStableLane || "unknown"}`,
+    `secondNearestStabilityDistance: ${formatDistance(
+      forecast?.secondNearestStabilityDistance
+    )}`,
+    `primaryInstability: ${forecast?.primaryInstability || "unknown"}`,
+    `stabilizationPriority: ${forecast?.stabilizationPriority || "unknown"}`
+  ].join("\n")
+}
+
+function buildEquationForecastMostLeast(forecast: any) {
+  if (!forecast) {
+    return "Equation Stability Forecast is not available in the latest stored SourceField state."
+  }
+
+  return [
+    `mostLikelyNextStableLane: ${forecast?.mostLikelyNextStableLane || "unknown"}`,
+    `mostLikelyNextStableLane basis: ${forecast?.forecastReason || "No forecast reason stored."}`,
+    "",
+    `leastLikelyNextStableLane: ${forecast?.leastLikelyNextStableLane || "unknown"}`,
+    `forecastBasis: ${forecast?.forecastBasis || "unknown"}`,
+    `forecastConfidence: ${forecast?.forecastConfidence || "unknown"}`
+  ].join("\n")
+}
+
+function buildEquationForecastConfidence(forecast: any) {
+  if (!forecast) {
+    return "Equation Stability Forecast is not available in the latest stored SourceField state."
+  }
+
+  return [
+    `forecastConfidence: ${forecast?.forecastConfidence || "unknown"}`,
+    `nearestStabilityDistance: ${formatDistance(forecast?.nearestStabilityDistance)}`,
+    `secondNearestStabilityDistance: ${formatDistance(
+      forecast?.secondNearestStabilityDistance
+    )}`,
+    `basis: Confidence is derived from the nearest lane distance and the distance gap to the second-nearest lane.`
+  ].join("\n")
+}
+
+function buildEquationForecastClassification(forecast: any) {
+  return [
+    "Equation Stability Forecast is read-only predictive guidance.",
+    "It is derived from Lane Stability Distance, Cross-Equation Consensus, and Cross-Equation Stabilization.",
+    "It is not a raw metric and must not override live metrics, classifications, hashes, retrieved context, stored history, or user intent.",
+    forecast?.rule
+      ? `Boundary rule: ${forecast.rule}`
+      : "Boundary rule: unavailable."
+  ].join("\n")
+}
+
+function buildEquationForecastExplanation(forecast: any) {
+  if (!forecast) {
+    return "Equation Stability Forecast is not available in the latest stored SourceField state."
+  }
+
+  return [
+    `forecastReason: ${forecast?.forecastReason || "No forecast reason stored."}`,
+    `riskNote: ${forecast?.riskNote || "No risk note stored."}`,
+    `recoveryDirective: ${forecast?.recoveryDirective || "unknown"}`,
+    `primaryInstability: ${forecast?.primaryInstability || "unknown"}`,
+    `dominantEquationLane: ${forecast?.dominantEquationLane || "unknown"}`
+  ].join("\n")
+}
+
+function buildEquationForecastResponse(
+  action: EquationForecastAction,
+  forecast: any
+) {
+  if (action === "most-least") {
+    return buildEquationForecastMostLeast(forecast)
+  }
+
+  if (action === "confidence") {
+    return buildEquationForecastConfidence(forecast)
+  }
+
+  if (action === "classification") {
+    return buildEquationForecastClassification(forecast)
+  }
+
+  if (action === "explain") {
+    return buildEquationForecastExplanation(forecast)
+  }
+
+  return buildEquationForecastSummary(forecast)
+}
+
 export async function POST(req: Request) {
   try {
     const body = await req.json()
@@ -410,6 +570,52 @@ export async function POST(req: Request) {
       })
     }
 
+    const equationForecastAction = getEquationForecastAction(lastUserMessage)
+
+    if (equationForecastAction) {
+      const { data: latestState, error: latestStateError } = await supabaseAdmin
+        .from("sourcefield_ledger_events")
+        .select("*")
+        .eq("agent_id", AGENT_ID)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle()
+
+      if (latestStateError) {
+        return NextResponse.json(
+          {
+            error:
+              "Failed to fetch latest stored SourceField equation stability forecast.",
+            details: latestStateError.message
+          },
+          { status: 500 }
+        )
+      }
+
+      const latestStateRecord = latestState as Record<string, any> | null
+      const equationStabilityForecast =
+        latestStateRecord?.equation_stability_forecast ?? null
+
+      return NextResponse.json({
+        result: buildEquationForecastResponse(
+          equationForecastAction,
+          equationStabilityForecast
+        ),
+        directStateReport: true,
+        nonMutatingReport: true,
+        deterministicEquationForecastResponse: true,
+        source: "latest_stored_supabase_snapshot",
+        stateObject: "equation stability forecast state",
+        action: equationForecastAction,
+        value: equationStabilityForecast,
+        agentId: AGENT_ID,
+        runtimeAgentId: RUNTIME_AGENT_ID,
+        ledgerHash: latestStateRecord?.ledger_hash ?? null,
+        resonanceHash: latestStateRecord?.resonance_hash ?? null,
+        createdAt: latestStateRecord?.created_at ?? null
+      })
+    }
+
     const resonanceHash = createResonanceHash({
       agent: AGENT_ID,
       message: lastUserMessage,
@@ -443,6 +649,13 @@ export async function POST(req: Request) {
 
     const crossEquationStabilization = generateCrossEquationStabilization(
       crossEquationConsensus
+    )
+
+    const equationStabilityForecast = generateEquationStabilityForecast(
+      laneStabilityDistance,
+      equationStabilityForecast,
+      crossEquationConsensus,
+      crossEquationStabilization
     )
 
     const equationBalanceCoordinator = generateEquationBalanceCoordinator(
@@ -495,6 +708,7 @@ export async function POST(req: Request) {
       stateExplanationFidelity,
       equationLaneState,
       laneStabilityDistance,
+      equationStabilityForecast,
       crossEquationConsensus,
       crossEquationStabilization,
       equationBalanceCoordinator,
@@ -586,6 +800,7 @@ export async function POST(req: Request) {
           resonance_state: resonanceState ?? null,
           equation_lane_state: equationLaneState,
           lane_stability_distance: laneStabilityDistance,
+          equation_stability_forecast: equationStabilityForecast,
           cross_equation_consensus: crossEquationConsensus,
           cross_equation_stabilization: crossEquationStabilization,
           equation_balance_coordinator: equationBalanceCoordinator,
@@ -715,6 +930,7 @@ export async function POST(req: Request) {
       adaptiveEnforcement,
       equationLaneState,
       laneStabilityDistance,
+      equationStabilityForecast,
       crossEquationConsensus,
       crossEquationStabilization,
       equationBalanceCoordinator,
@@ -784,6 +1000,7 @@ export async function POST(req: Request) {
           resonance_state: resonanceState ?? null,
           equation_lane_state: equationLaneState,
           lane_stability_distance: laneStabilityDistance,
+          equation_stability_forecast: equationStabilityForecast,
           cross_equation_consensus: crossEquationConsensus,
           cross_equation_stabilization: crossEquationStabilization,
           equation_balance_coordinator: equationBalanceCoordinator,
@@ -1003,6 +1220,8 @@ ${
       equationLaneStateGenerated: Boolean(equationLaneState),
       laneStabilityDistance,
       laneStabilityDistanceGenerated: Boolean(laneStabilityDistance),
+      equationStabilityForecast,
+      equationStabilityForecastGenerated: Boolean(equationStabilityForecast),
       crossEquationConsensus,
       crossEquationConsensusGenerated: Boolean(crossEquationConsensus),
       crossEquationStabilization,
@@ -1040,6 +1259,7 @@ ${
       stateExplanationFidelityStored: Boolean(stateExplanationFidelity),
       equationLaneStateStored: Boolean(equationLaneState),
       laneStabilityDistanceStored: Boolean(laneStabilityDistance),
+      equationStabilityForecastStored: Boolean(equationStabilityForecast),
       crossEquationConsensusStored: Boolean(crossEquationConsensus),
       crossEquationStabilizationStored: Boolean(crossEquationStabilization),
       equationBalanceCoordinatorStored: Boolean(equationBalanceCoordinator),
