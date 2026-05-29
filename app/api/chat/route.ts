@@ -653,7 +653,6 @@ export async function POST(req: Request) {
 
     const equationStabilityForecast = generateEquationStabilityForecast(
       laneStabilityDistance,
-      equationStabilityForecast,
       crossEquationConsensus,
       crossEquationStabilization
     )
