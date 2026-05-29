@@ -16,6 +16,7 @@ import { generateAdaptiveEnforcement } from "@/lib/sourcefield/adaptiveEnforceme
 import { generateEquationLaneState } from "@/lib/sourcefield/equationLane"
 import { generateCrossEquationConsensus } from "@/lib/sourcefield/crossEquationConsensus"
 import { generateCrossEquationStabilization } from "@/lib/sourcefield/crossEquationStabilization"
+import { generateEquationBalanceCoordinator } from "@/lib/sourcefield/equationBalanceCoordinator"
 import { generateStateExplanationFidelity } from "@/lib/sourcefield/stateExplanationFidelity"
 import { resolveAgentLane } from "@/lib/sourcefield/agentLane"
 import { generateRuntimeAdaptation } from "@/lib/sourcefield/runtimeAdaptation"
@@ -88,6 +89,11 @@ export async function POST(req: Request) {
       generateCrossEquationConsensus(equationLaneState)
 
     const crossEquationStabilization = generateCrossEquationStabilization(
+      crossEquationConsensus
+    )
+
+    const equationBalanceCoordinator = generateEquationBalanceCoordinator(
+      crossEquationStabilization,
       crossEquationConsensus
     )
 
@@ -175,6 +181,7 @@ export async function POST(req: Request) {
           equation_lane_state: equationLaneState,
           cross_equation_consensus: crossEquationConsensus,
           cross_equation_stabilization: crossEquationStabilization,
+          equation_balance_coordinator: equationBalanceCoordinator,
           state_explanation_fidelity: stateExplanationFidelity
         })
 
@@ -299,6 +306,7 @@ export async function POST(req: Request) {
       equationLaneState,
       crossEquationConsensus,
       crossEquationStabilization,
+      equationBalanceCoordinator,
       stateExplanationFidelity,
       timestamp: Date.now()
     })
@@ -363,6 +371,7 @@ export async function POST(req: Request) {
           equation_lane_state: equationLaneState,
           cross_equation_consensus: crossEquationConsensus,
           cross_equation_stabilization: crossEquationStabilization,
+          equation_balance_coordinator: equationBalanceCoordinator,
           state_explanation_fidelity: stateExplanationFidelity,
           runtime_adaptation: runtimeAdaptation,
           runtime_adaptation_guidance: runtimeAdaptationGuidance,
@@ -521,6 +530,14 @@ ${JSON.stringify(crossEquationConsensus, null, 2)}
 Live SourceField Cross-Equation Stabilization State:
 ${JSON.stringify(crossEquationStabilization, null, 2)}
 
+Live SourceField Equation Balance Coordinator State:
+${JSON.stringify(equationBalanceCoordinator, null, 2)}
+
+Equation balance coordinator rule:
+Use equation balance coordination as read-only equation ordering guidance.
+It may recommend correction order, protected equations, and balance strategies across the Five Living Equations.
+It must not override live metrics, classifications, hashes, retrieved context, stored history, or user intent.
+
 Cross-equation stabilization rule:
 Use cross-equation stabilization as read-only mathematical governance guidance.
 It may identify stabilization priorities, correction targets, and balance targets across the Five Living Equations.
@@ -670,6 +687,8 @@ ${
       crossEquationConsensusGenerated: Boolean(crossEquationConsensus),
       crossEquationStabilization,
       crossEquationStabilizationGenerated: Boolean(crossEquationStabilization),
+      equationBalanceCoordinator,
+      equationBalanceCoordinatorGenerated: Boolean(equationBalanceCoordinator),
       continuityGuidanceGenerated: Boolean(continuityGuidance),
       runtimeAdaptation,
       runtimeAdaptationGenerated: Boolean(runtimeAdaptation),
@@ -696,6 +715,7 @@ ${
       equationLaneStateStored: Boolean(equationLaneState),
       crossEquationConsensusStored: Boolean(crossEquationConsensus),
       crossEquationStabilizationStored: Boolean(crossEquationStabilization),
+      equationBalanceCoordinatorStored: Boolean(equationBalanceCoordinator),
       runtimeAdaptationStored: Boolean(runtimeAdaptation),
       runtimeRecoveryStored: Boolean(runtimeRecoveryState),
       responseGovernanceStored: Boolean(responseGovernance),
