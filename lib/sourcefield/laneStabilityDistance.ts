@@ -27,6 +27,7 @@ const STATUS_DISTANCE: Record<string, number> = {
   partial: 0.6,
   drifting: 0.7,
   low: 0.8,
+  quiet: 0.85,
   divergent: 1.0,
   "not-integrated": 1.0,
   inactive: 1.0,
@@ -47,7 +48,15 @@ function getReason(lane: EquationLane, distance: number) {
     return "Lane is already at or near stable status."
   }
 
-  if (status === "pattern-detected" || status === "pattern-rich") {
+  if (status === "active") {
+    return "Lane is active and expressing, but not fully stable."
+  }
+
+  if (status === "pattern-rich") {
+    return "Pattern structure is strong, but full stability has not yet been confirmed."
+  }
+
+  if (status === "pattern-detected") {
     return "Pattern structure is present, but persistence has not yet been confirmed."
   }
 
@@ -59,12 +68,20 @@ function getReason(lane: EquationLane, distance: number) {
     return "Signal strength remains below stable baseline."
   }
 
+  if (status === "partial") {
+    return "Lane shows partial formation but has not reached stable expression."
+  }
+
   if (status === "drifting") {
     return "Phase remains unstable and has not yet settled into alignment."
   }
 
   if (status === "low") {
     return "Coherence between input, state, and context remains low."
+  }
+
+  if (status === "quiet") {
+    return "Lane expression is quiet or low-signal, making stability difficult to confirm."
   }
 
   if (status === "divergent") {
