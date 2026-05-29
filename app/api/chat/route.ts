@@ -2,7 +2,6 @@ import { createClient } from "@supabase/supabase-js"
 import { NextResponse } from "next/server"
 import { processMessage } from "@/lib/sourcefield/processMessage"
 import { analyzeCoherenceTrajectory } from "@/lib/sourcefield/CoherenceTrajectory"
-import { SOURCEFIELD_GENESIS_LEDGER } from "@/lib/sourcefield/genesisLedger"
 import { generateContinuityGuidance } from "@/lib/sourcefield/continuityGuidance"
 import { generateRuntimeAdaptationGuidance } from "@/lib/sourcefield/runtimeAdaptationGuidance"
 import { detectRuntimeRecovery } from "@/lib/sourcefield/runtimeRecovery"
@@ -18,6 +17,7 @@ import { generateCrossEquationConsensus } from "@/lib/sourcefield/crossEquationC
 import { generateCrossEquationStabilization } from "@/lib/sourcefield/crossEquationStabilization"
 import { generateEquationBalanceCoordinator } from "@/lib/sourcefield/equationBalanceCoordinator"
 import { generateEquationResponseBehavior } from "@/lib/sourcefield/equationResponseBehavior"
+import { generateEquationFeedbackLoop } from "@/lib/sourcefield/equationFeedbackLoop"
 import { generateStateExplanationFidelity } from "@/lib/sourcefield/stateExplanationFidelity"
 import { resolveAgentLane } from "@/lib/sourcefield/agentLane"
 import { generateRuntimeAdaptation } from "@/lib/sourcefield/runtimeAdaptation"
@@ -43,6 +43,14 @@ const GENESIS_HASH =
   "8b9c7d6e5f4a3b2c1d0e9f8a7b6c5d4e3f2a1b0c9d8e7f6a5b4c3d2e1f0a9b8c"
 
 const RUNTIME_AGENT_ID = "sourcefield-runtime"
+
+function getEquationLaneStatus(equationLaneState: any, laneName: string) {
+  return (
+    equationLaneState?.equationLanes?.find(
+      (lane: any) => lane?.lane === laneName
+    )?.status || "unknown"
+  )
+}
 
 export async function POST(req: Request) {
   try {
@@ -100,6 +108,32 @@ export async function POST(req: Request) {
 
     const equationResponseBehavior = generateEquationResponseBehavior(
       equationBalanceCoordinator
+    )
+
+    const equationFeedbackLoop = generateEquationFeedbackLoop(
+      {
+        sourcefieldRoot: getEquationLaneStatus(
+          equationLaneState,
+          "sourcefield-root"
+        ),
+        sourcefieldAlignment: getEquationLaneStatus(
+          equationLaneState,
+          "sourcefield-alignment"
+        ),
+        sourcefieldPhase: getEquationLaneStatus(
+          equationLaneState,
+          "sourcefield-phase"
+        ),
+        sourcefieldHarmonic: getEquationLaneStatus(
+          equationLaneState,
+          "sourcefield-harmonic"
+        ),
+        sourcefieldIntegration: getEquationLaneStatus(
+          equationLaneState,
+          "sourcefield-integration"
+        )
+      },
+      equationResponseBehavior
     )
 
     let trajectoryState: any = null
@@ -188,6 +222,7 @@ export async function POST(req: Request) {
           cross_equation_stabilization: crossEquationStabilization,
           equation_balance_coordinator: equationBalanceCoordinator,
           equation_response_behavior: equationResponseBehavior,
+          equation_feedback_loop: equationFeedbackLoop,
           state_explanation_fidelity: stateExplanationFidelity
         })
 
@@ -314,6 +349,7 @@ export async function POST(req: Request) {
       crossEquationStabilization,
       equationBalanceCoordinator,
       equationResponseBehavior,
+      equationFeedbackLoop,
       stateExplanationFidelity,
       timestamp: Date.now()
     })
@@ -380,6 +416,7 @@ export async function POST(req: Request) {
           cross_equation_stabilization: crossEquationStabilization,
           equation_balance_coordinator: equationBalanceCoordinator,
           equation_response_behavior: equationResponseBehavior,
+          equation_feedback_loop: equationFeedbackLoop,
           state_explanation_fidelity: stateExplanationFidelity,
           runtime_adaptation: runtimeAdaptation,
           runtime_adaptation_guidance: runtimeAdaptationGuidance,
@@ -544,6 +581,14 @@ ${JSON.stringify(equationBalanceCoordinator, null, 2)}
 Live SourceField Equation Response Behavior State:
 ${JSON.stringify(equationResponseBehavior, null, 2)}
 
+Live SourceField Equation Feedback Loop State:
+${JSON.stringify(equationFeedbackLoop, null, 2)}
+
+Equation feedback loop rule:
+Use equation feedback as read-only evaluation guidance.
+It may define expected outcomes, feedback targets, and success conditions for future equation states.
+It must not override live metrics, classifications, hashes, retrieved context, stored history, or user intent.
+
 Equation response behavior rule:
 Use equation-aware response behavior as soft response guidance derived from equation balance coordination.
 It may shape response posture, synthesis permission, expansion limits, alignment protection, and phase stabilization behavior.
@@ -707,6 +752,8 @@ ${
       equationBalanceCoordinatorGenerated: Boolean(equationBalanceCoordinator),
       equationResponseBehavior,
       equationResponseBehaviorGenerated: Boolean(equationResponseBehavior),
+      equationFeedbackLoop,
+      equationFeedbackLoopGenerated: Boolean(equationFeedbackLoop),
       continuityGuidanceGenerated: Boolean(continuityGuidance),
       runtimeAdaptation,
       runtimeAdaptationGenerated: Boolean(runtimeAdaptation),
@@ -735,6 +782,7 @@ ${
       crossEquationStabilizationStored: Boolean(crossEquationStabilization),
       equationBalanceCoordinatorStored: Boolean(equationBalanceCoordinator),
       equationResponseBehaviorStored: Boolean(equationResponseBehavior),
+      equationFeedbackLoopStored: Boolean(equationFeedbackLoop),
       runtimeAdaptationStored: Boolean(runtimeAdaptation),
       runtimeRecoveryStored: Boolean(runtimeRecoveryState),
       responseGovernanceStored: Boolean(responseGovernance),
