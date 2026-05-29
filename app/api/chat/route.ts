@@ -143,6 +143,42 @@ export async function POST(req: Request) {
       equationFeedbackLoop
     )
 
+    const normalizedRequest = lastUserMessage.toLowerCase()
+
+    const directStateReports: Record<string, any> = {
+      "equation lane state": equationLaneState,
+      "cross-equation consensus state": crossEquationConsensus,
+      "cross-equation stabilization state": crossEquationStabilization,
+      "equation balance coordinator state": equationBalanceCoordinator,
+      "equation response behavior state": equationResponseBehavior,
+      "equation feedback loop state": equationFeedbackLoop,
+      "root-phase bridge state": rootPhaseBridge,
+      "state explanation fidelity state": stateExplanationFidelity
+    }
+
+    const requestedDirectStateKey = Object.keys(directStateReports).find(key =>
+      normalizedRequest.includes(key)
+    )
+
+    if (
+      requestedDirectStateKey &&
+      normalizedRequest.includes("report") &&
+      normalizedRequest.includes("json")
+    ) {
+      return NextResponse.json({
+        result: JSON.stringify(
+          directStateReports[requestedDirectStateKey],
+          null,
+          2
+        ),
+        directStateReport: true,
+        stateObject: requestedDirectStateKey,
+        value: directStateReports[requestedDirectStateKey],
+        agentId: AGENT_ID,
+        runtimeAgentId: RUNTIME_AGENT_ID
+      })
+    }
+
     const authoritativeLiveState = {
       ledgerHashState: {
         genesisMerkleRoot: GENESIS_HASH,
