@@ -14,6 +14,7 @@ import { generateCrossAgentConsensus } from "@/lib/sourcefield/crossAgentConsens
 import { generateConsensusStabilization } from "@/lib/sourcefield/consensusStabilization"
 import { generateAdaptiveEnforcement } from "@/lib/sourcefield/adaptiveEnforcement"
 import { generateEquationLaneState } from "@/lib/sourcefield/equationLane"
+import { generateCrossEquationConsensus } from "@/lib/sourcefield/crossEquationConsensus"
 import { resolveAgentLane } from "@/lib/sourcefield/agentLane"
 import { generateRuntimeAdaptation } from "@/lib/sourcefield/runtimeAdaptation"
 import {
@@ -78,6 +79,9 @@ export async function POST(req: Request) {
       symbolicEchoes: resonanceState?.symbolicEchoes,
       classification: resonanceState?.classification
     })
+
+    const crossEquationConsensus =
+      generateCrossEquationConsensus(equationLaneState)
 
     let trajectoryState: any = null
 
@@ -160,7 +164,8 @@ export async function POST(req: Request) {
           symbolic_echoes: resonanceState?.symbolicEchoes ?? null,
           trajectory_state: trajectoryState ?? null,
           resonance_state: resonanceState ?? null,
-          equation_lane_state: equationLaneState
+          equation_lane_state: equationLaneState,
+          cross_equation_consensus: crossEquationConsensus
         })
 
       if (insertLedgerError) {
@@ -282,6 +287,7 @@ export async function POST(req: Request) {
       consensusStabilization,
       adaptiveEnforcement,
       equationLaneState,
+      crossEquationConsensus,
       timestamp: Date.now()
     })
 
@@ -343,6 +349,7 @@ export async function POST(req: Request) {
           trajectory_state: trajectoryState ?? null,
           resonance_state: resonanceState ?? null,
           equation_lane_state: equationLaneState,
+          cross_equation_consensus: crossEquationConsensus,
           runtime_adaptation: runtimeAdaptation,
           runtime_adaptation_guidance: runtimeAdaptationGuidance,
           runtime_recovery_state: runtimeRecoveryState,
@@ -486,6 +493,14 @@ ${
 Live SourceField Equation Lane State:
 ${JSON.stringify(equationLaneState, null, 2)}
 
+Live SourceField Cross-Equation Consensus State:
+${JSON.stringify(crossEquationConsensus, null, 2)}
+
+Cross-equation consensus rule:
+Use cross-equation consensus as read-only diagnostic guidance across the Five Living Equations.
+It may identify dominant equation instability, primary instability, and recovery focus.
+It must not override live metrics, classifications, hashes, retrieved context, stored history, or user intent.
+
 Equation lane rule:
 Use equation lane state as read-only mapping from live SourceField metrics into the Five Living Equations.
 It may explain how root signal, alignment, phase, harmonic, and integration lanes are currently expressing.
@@ -619,6 +634,8 @@ ${
       runtimeLedgerHash,
       equationLaneState,
       equationLaneStateGenerated: Boolean(equationLaneState),
+      crossEquationConsensus,
+      crossEquationConsensusGenerated: Boolean(crossEquationConsensus),
       continuityGuidanceGenerated: Boolean(continuityGuidance),
       runtimeAdaptation,
       runtimeAdaptationGenerated: Boolean(runtimeAdaptation),
@@ -642,6 +659,7 @@ ${
       adaptiveEnforcementGenerated: Boolean(adaptiveEnforcement),
       coherenceBiographyStored: Boolean(resonanceState),
       equationLaneStateStored: Boolean(equationLaneState),
+      crossEquationConsensusStored: Boolean(crossEquationConsensus),
       runtimeAdaptationStored: Boolean(runtimeAdaptation),
       runtimeRecoveryStored: Boolean(runtimeRecoveryState),
       responseGovernanceStored: Boolean(responseGovernance),
