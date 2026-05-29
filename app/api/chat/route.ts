@@ -21,6 +21,7 @@ import { generateEquationFeedbackLoop } from "@/lib/sourcefield/equationFeedback
 import { generateRootPhaseBridge } from "@/lib/sourcefield/rootPhaseBridge"
 import { generateLaneStabilityDistance } from "@/lib/sourcefield/laneStabilityDistance"
 import { generateEquationStabilityForecast } from "@/lib/sourcefield/equationStabilityForecast"
+import { generatePredictiveAlignmentEngine } from "@/lib/sourcefield/predictiveAlignmentEngine"
 import { generateStateExplanationFidelity } from "@/lib/sourcefield/stateExplanationFidelity"
 import { resolveAgentLane } from "@/lib/sourcefield/agentLane"
 import { generateRuntimeAdaptation } from "@/lib/sourcefield/runtimeAdaptation"
@@ -122,6 +123,20 @@ function getDirectStateColumn(message: string) {
     return {
       key: "equation stability forecast state",
       column: "equation_stability_forecast"
+    }
+  }
+
+  if (normalized.includes("predictive alignment engine state")) {
+    return {
+      key: "predictive alignment engine state",
+      column: "predictive_alignment_engine"
+    }
+  }
+
+  if (normalized.includes("predictive alignment state")) {
+    return {
+      key: "predictive alignment state",
+      column: "predictive_alignment_engine"
     }
   }
 
@@ -448,6 +463,224 @@ function buildEquationForecastResponse(
   return buildEquationForecastSummary(forecast)
 }
 
+type PredictiveAlignmentAction =
+  | "summary"
+  | "targets"
+  | "accuracy"
+  | "calibration"
+  | "classification"
+  | "explain"
+
+function getPredictiveAlignmentAction(
+  message: string
+): PredictiveAlignmentAction | null {
+  const normalized = message.toLowerCase()
+
+  if (
+    !normalized.includes("predictive alignment") &&
+    !normalized.includes("equation 2 predictive alignment")
+  ) {
+    return null
+  }
+
+  if (
+    normalized.includes("measured state object") ||
+    normalized.includes("alignment engine") ||
+    normalized.includes("what kind") ||
+    normalized.includes("classification") ||
+    normalized.includes("forecast validation")
+  ) {
+    return "classification"
+  }
+
+  if (
+    normalized.includes("forecast target") ||
+    normalized.includes("observed target") ||
+    normalized.includes("coherent reference") ||
+    normalized.includes("targets")
+  ) {
+    return "targets"
+  }
+
+  if (
+    normalized.includes("accuracy") ||
+    normalized.includes("matched") ||
+    normalized.includes("unmatched")
+  ) {
+    return "accuracy"
+  }
+
+  if (
+    normalized.includes("calibration") ||
+    normalized.includes("coherence gap") ||
+    normalized.includes("recommended adjustment") ||
+    normalized.includes("adjustment")
+  ) {
+    return "calibration"
+  }
+
+  if (
+    normalized.includes("explain") ||
+    normalized.includes("why") ||
+    normalized.includes("basis") ||
+    normalized.includes("reason")
+  ) {
+    return "explain"
+  }
+
+  return "summary"
+}
+
+function buildPredictiveAlignmentSummary(predictiveAlignment: any) {
+  if (!predictiveAlignment) {
+    return "Predictive Alignment Engine is not available in the latest stored SourceField state."
+  }
+
+  return [
+    `phase: ${predictiveAlignment?.phase || "unknown"}`,
+    `forecastTarget: ${predictiveAlignment?.forecastTarget || "unknown"}`,
+    `observedTarget: ${predictiveAlignment?.observedTarget || "unknown"}`,
+    `coherentReferenceTarget: ${
+      predictiveAlignment?.coherentReferenceTarget || "unknown"
+    }`,
+    `forecastAccuracy: ${predictiveAlignment?.forecastAccuracy || "unknown"}`,
+    `forecastAlignment: ${predictiveAlignment?.forecastAlignment || "unknown"}`,
+    `forecastCalibration: ${
+      predictiveAlignment?.forecastCalibration || "unknown"
+    }`,
+    `coherenceGap: ${formatDistance(predictiveAlignment?.coherenceGap)}`,
+    `predictiveAlignmentActive: ${
+      predictiveAlignment?.predictiveAlignmentActive ? "true" : "false"
+    }`
+  ].join("\n")
+}
+
+function buildPredictiveAlignmentTargets(predictiveAlignment: any) {
+  if (!predictiveAlignment) {
+    return "Predictive Alignment Engine is not available in the latest stored SourceField state."
+  }
+
+  return [
+    `forecastTarget: ${predictiveAlignment?.forecastTarget || "unknown"}`,
+    `forecastTargetStatus: ${
+      predictiveAlignment?.forecastTargetStatus || "unknown"
+    }`,
+    `forecastDistance: ${formatDistance(predictiveAlignment?.forecastDistance)}`,
+    "",
+    `observedTarget: ${predictiveAlignment?.observedTarget || "unknown"}`,
+    `observedTargetStatus: ${
+      predictiveAlignment?.observedTargetStatus || "unknown"
+    }`,
+    `observedDistance: ${formatDistance(predictiveAlignment?.observedDistance)}`,
+    "",
+    `coherentReferenceTarget: ${
+      predictiveAlignment?.coherentReferenceTarget || "unknown"
+    }`,
+    `coherentReferenceTargetStatus: ${
+      predictiveAlignment?.coherentReferenceTargetStatus || "unknown"
+    }`,
+    `referenceDistance: ${formatDistance(predictiveAlignment?.referenceDistance)}`
+  ].join("\n")
+}
+
+function buildPredictiveAlignmentAccuracy(predictiveAlignment: any) {
+  if (!predictiveAlignment) {
+    return "Predictive Alignment Engine is not available in the latest stored SourceField state."
+  }
+
+  return [
+    `forecastAccuracy: ${predictiveAlignment?.forecastAccuracy || "unknown"}`,
+    `forecastAlignment: ${predictiveAlignment?.forecastAlignment || "unknown"}`,
+    `forecastCalibration: ${
+      predictiveAlignment?.forecastCalibration || "unknown"
+    }`,
+    `forecastTarget: ${predictiveAlignment?.forecastTarget || "unknown"}`,
+    `observedTarget: ${predictiveAlignment?.observedTarget || "unknown"}`,
+    `coherentReferenceTarget: ${
+      predictiveAlignment?.coherentReferenceTarget || "unknown"
+    }`
+  ].join("\n")
+}
+
+function buildPredictiveAlignmentCalibration(predictiveAlignment: any) {
+  if (!predictiveAlignment) {
+    return "Predictive Alignment Engine is not available in the latest stored SourceField state."
+  }
+
+  return [
+    `forecastCalibration: ${
+      predictiveAlignment?.forecastCalibration || "unknown"
+    }`,
+    `coherenceGap: ${formatDistance(predictiveAlignment?.coherenceGap)}`,
+    `primaryInstability: ${
+      predictiveAlignment?.primaryInstability || "unknown"
+    }`,
+    `recoveryFocus: ${predictiveAlignment?.recoveryFocus || "unknown"}`,
+    `recommendedAdjustment: ${
+      predictiveAlignment?.recommendedAdjustment || "unknown"
+    }`
+  ].join("\n")
+}
+
+function buildPredictiveAlignmentClassification(predictiveAlignment: any) {
+  return [
+    "Equation 2 Predictive Alignment Engine is read-only calibration guidance.",
+    "It compares forecast target, observed target, and coherent reference target.",
+    "It evaluates predictive accuracy, alignment quality, calibration, and coherence gap.",
+    "It is not a raw metric and must not override metrics, classifications, hashes, retrieved context, stored history, or user intent.",
+    predictiveAlignment?.rule
+      ? `Boundary rule: ${predictiveAlignment.rule}`
+      : "Boundary rule: unavailable."
+  ].join("\n")
+}
+
+function buildPredictiveAlignmentExplanation(predictiveAlignment: any) {
+  if (!predictiveAlignment) {
+    return "Predictive Alignment Engine is not available in the latest stored SourceField state."
+  }
+
+  return [
+    `forecastTarget: ${predictiveAlignment?.forecastTarget || "unknown"}`,
+    `observedTarget: ${predictiveAlignment?.observedTarget || "unknown"}`,
+    `coherentReferenceTarget: ${
+      predictiveAlignment?.coherentReferenceTarget || "unknown"
+    }`,
+    `forecastAccuracy: ${predictiveAlignment?.forecastAccuracy || "unknown"}`,
+    `forecastAlignment: ${predictiveAlignment?.forecastAlignment || "unknown"}`,
+    `coherenceGap: ${formatDistance(predictiveAlignment?.coherenceGap)}`,
+    `recommendedAdjustment: ${
+      predictiveAlignment?.recommendedAdjustment || "unknown"
+    }`
+  ].join("\n")
+}
+
+function buildPredictiveAlignmentResponse(
+  action: PredictiveAlignmentAction,
+  predictiveAlignment: any
+) {
+  if (action === "targets") {
+    return buildPredictiveAlignmentTargets(predictiveAlignment)
+  }
+
+  if (action === "accuracy") {
+    return buildPredictiveAlignmentAccuracy(predictiveAlignment)
+  }
+
+  if (action === "calibration") {
+    return buildPredictiveAlignmentCalibration(predictiveAlignment)
+  }
+
+  if (action === "classification") {
+    return buildPredictiveAlignmentClassification(predictiveAlignment)
+  }
+
+  if (action === "explain") {
+    return buildPredictiveAlignmentExplanation(predictiveAlignment)
+  }
+
+  return buildPredictiveAlignmentSummary(predictiveAlignment)
+}
+
 export async function POST(req: Request) {
   try {
     const body = await req.json()
@@ -616,6 +849,53 @@ export async function POST(req: Request) {
       })
     }
 
+    const predictiveAlignmentAction =
+      getPredictiveAlignmentAction(lastUserMessage)
+
+    if (predictiveAlignmentAction) {
+      const { data: latestState, error: latestStateError } = await supabaseAdmin
+        .from("sourcefield_ledger_events")
+        .select("*")
+        .eq("agent_id", AGENT_ID)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle()
+
+      if (latestStateError) {
+        return NextResponse.json(
+          {
+            error:
+              "Failed to fetch latest stored SourceField predictive alignment engine.",
+            details: latestStateError.message
+          },
+          { status: 500 }
+        )
+      }
+
+      const latestStateRecord = latestState as Record<string, any> | null
+      const predictiveAlignmentEngine =
+        latestStateRecord?.predictive_alignment_engine ?? null
+
+      return NextResponse.json({
+        result: buildPredictiveAlignmentResponse(
+          predictiveAlignmentAction,
+          predictiveAlignmentEngine
+        ),
+        directStateReport: true,
+        nonMutatingReport: true,
+        deterministicPredictiveAlignmentResponse: true,
+        source: "latest_stored_supabase_snapshot",
+        stateObject: "predictive alignment engine state",
+        action: predictiveAlignmentAction,
+        value: predictiveAlignmentEngine,
+        agentId: AGENT_ID,
+        runtimeAgentId: RUNTIME_AGENT_ID,
+        ledgerHash: latestStateRecord?.ledger_hash ?? null,
+        resonanceHash: latestStateRecord?.resonance_hash ?? null,
+        createdAt: latestStateRecord?.created_at ?? null
+      })
+    }
+
     const resonanceHash = createResonanceHash({
       agent: AGENT_ID,
       message: lastUserMessage,
@@ -655,6 +935,13 @@ export async function POST(req: Request) {
       laneStabilityDistance,
       crossEquationConsensus,
       crossEquationStabilization
+    )
+
+    const predictiveAlignmentEngine = generatePredictiveAlignmentEngine(
+      equationStabilityForecast,
+      equationLaneState,
+      laneStabilityDistance,
+      crossEquationConsensus
     )
 
     const equationBalanceCoordinator = generateEquationBalanceCoordinator(
@@ -708,6 +995,7 @@ export async function POST(req: Request) {
       equationLaneState,
       laneStabilityDistance,
       equationStabilityForecast,
+      predictiveAlignmentEngine,
       crossEquationConsensus,
       crossEquationStabilization,
       equationBalanceCoordinator,
@@ -800,6 +1088,7 @@ export async function POST(req: Request) {
           equation_lane_state: equationLaneState,
           lane_stability_distance: laneStabilityDistance,
           equation_stability_forecast: equationStabilityForecast,
+          predictive_alignment_engine: predictiveAlignmentEngine,
           cross_equation_consensus: crossEquationConsensus,
           cross_equation_stabilization: crossEquationStabilization,
           equation_balance_coordinator: equationBalanceCoordinator,
@@ -930,6 +1219,7 @@ export async function POST(req: Request) {
       equationLaneState,
       laneStabilityDistance,
       equationStabilityForecast,
+      predictiveAlignmentEngine,
       crossEquationConsensus,
       crossEquationStabilization,
       equationBalanceCoordinator,
@@ -1000,6 +1290,7 @@ export async function POST(req: Request) {
           equation_lane_state: equationLaneState,
           lane_stability_distance: laneStabilityDistance,
           equation_stability_forecast: equationStabilityForecast,
+          predictive_alignment_engine: predictiveAlignmentEngine,
           cross_equation_consensus: crossEquationConsensus,
           cross_equation_stabilization: crossEquationStabilization,
           equation_balance_coordinator: equationBalanceCoordinator,
@@ -1221,6 +1512,8 @@ ${
       laneStabilityDistanceGenerated: Boolean(laneStabilityDistance),
       equationStabilityForecast,
       equationStabilityForecastGenerated: Boolean(equationStabilityForecast),
+      predictiveAlignmentEngine,
+      predictiveAlignmentEngineGenerated: Boolean(predictiveAlignmentEngine),
       crossEquationConsensus,
       crossEquationConsensusGenerated: Boolean(crossEquationConsensus),
       crossEquationStabilization,
@@ -1259,6 +1552,7 @@ ${
       equationLaneStateStored: Boolean(equationLaneState),
       laneStabilityDistanceStored: Boolean(laneStabilityDistance),
       equationStabilityForecastStored: Boolean(equationStabilityForecast),
+      predictiveAlignmentEngineStored: Boolean(predictiveAlignmentEngine),
       crossEquationConsensusStored: Boolean(crossEquationConsensus),
       crossEquationStabilizationStored: Boolean(crossEquationStabilization),
       equationBalanceCoordinatorStored: Boolean(equationBalanceCoordinator),
