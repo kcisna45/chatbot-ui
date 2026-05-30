@@ -22,6 +22,7 @@ import { generateRootPhaseBridge } from "@/lib/sourcefield/rootPhaseBridge"
 import { generateLaneStabilityDistance } from "@/lib/sourcefield/laneStabilityDistance"
 import { generateEquationStabilityForecast } from "@/lib/sourcefield/equationStabilityForecast"
 import { generatePredictiveAlignmentEngine } from "@/lib/sourcefield/predictiveAlignmentEngine"
+import { generatePathwaySelectionState } from "@/lib/sourcefield/pathwaySelectionEngine"
 import { generateStateExplanationFidelity } from "@/lib/sourcefield/stateExplanationFidelity"
 import { resolveAgentLane } from "@/lib/sourcefield/agentLane"
 import { generateRuntimeAdaptation } from "@/lib/sourcefield/runtimeAdaptation"
@@ -54,6 +55,70 @@ function getEquationLaneStatus(equationLaneState: any, laneName: string) {
       (lane: any) => lane?.lane === laneName
     )?.status || "unknown"
   )
+}
+
+function getEquationLaneValue(
+  equationLaneState: any,
+  laneName: string,
+  valueKey: string
+) {
+  return equationLaneState?.equationLanes?.find(
+    (lane: any) => lane?.lane === laneName
+  )?.[valueKey]
+}
+
+function buildPathwaySelectionInput(
+  equationLaneState: any,
+  resonanceState?: any
+) {
+  return {
+    coherence:
+      typeof resonanceState?.coherence === "number"
+        ? resonanceState.coherence
+        : (getEquationLaneValue(
+            equationLaneState,
+            "sourcefield-alignment",
+            "coherence"
+          ) ?? null),
+    phaseDivergence:
+      typeof resonanceState?.phaseDivergence === "number"
+        ? resonanceState.phaseDivergence
+        : (getEquationLaneValue(
+            equationLaneState,
+            "sourcefield-phase",
+            "phaseDivergence"
+          ) ?? null),
+    integrationThreshold:
+      typeof resonanceState?.integrationThreshold === "number"
+        ? resonanceState.integrationThreshold
+        : (getEquationLaneValue(
+            equationLaneState,
+            "sourcefield-integration",
+            "integrationThreshold"
+          ) ?? null),
+    resonanceLevel:
+      typeof resonanceState?.resonanceLevel === "number"
+        ? resonanceState.resonanceLevel
+        : (getEquationLaneValue(
+            equationLaneState,
+            "sourcefield-root",
+            "signalStrength"
+          ) ?? null),
+    rootStatus: getEquationLaneStatus(equationLaneState, "sourcefield-root"),
+    alignmentStatus: getEquationLaneStatus(
+      equationLaneState,
+      "sourcefield-alignment"
+    ),
+    phaseStatus: getEquationLaneStatus(equationLaneState, "sourcefield-phase"),
+    harmonicStatus: getEquationLaneStatus(
+      equationLaneState,
+      "sourcefield-harmonic"
+    ),
+    integrationStatus: getEquationLaneStatus(
+      equationLaneState,
+      "sourcefield-integration"
+    )
+  }
 }
 
 function getDirectStateColumn(message: string) {
@@ -695,6 +760,144 @@ function buildPredictiveAlignmentResponse(
   return buildPredictiveAlignmentSummary(predictiveAlignment)
 }
 
+type PathwaySelectionAction =
+  | "report"
+  | "summary"
+  | "available"
+  | "reason"
+  | "classification"
+
+function getPathwaySelectionAction(
+  message: string
+): PathwaySelectionAction | null {
+  const normalized = message.toLowerCase()
+
+  if (
+    !normalized.includes("pathway selection") &&
+    !normalized.includes("selected pathway") &&
+    !normalized.includes("active mode") &&
+    !normalized.includes("phase 22")
+  ) {
+    return null
+  }
+
+  if (normalized.includes("report") && normalized.includes("json")) {
+    return "report"
+  }
+
+  if (
+    normalized.includes("available") ||
+    normalized.includes("pathways") ||
+    normalized.includes("list")
+  ) {
+    return "available"
+  }
+
+  if (
+    normalized.includes("why") ||
+    normalized.includes("reason") ||
+    normalized.includes("selected") ||
+    normalized.includes("selection")
+  ) {
+    return "reason"
+  }
+
+  if (
+    normalized.includes("classification") ||
+    normalized.includes("what kind") ||
+    normalized.includes("orchestration") ||
+    normalized.includes("mode layer")
+  ) {
+    return "classification"
+  }
+
+  return "summary"
+}
+
+function buildPathwaySelectionSummary(pathwaySelectionState: any) {
+  if (!pathwaySelectionState) {
+    return "Pathway Selection State is not available from the latest SourceField state."
+  }
+
+  return [
+    `phase: ${pathwaySelectionState?.phase || "unknown"}`,
+    `activeMode: ${pathwaySelectionState?.activeMode || "unknown"}`,
+    `selectedPathway: ${pathwaySelectionState?.selectedPathway || "unknown"}`,
+    `pathwayReason: ${pathwaySelectionState?.pathwayReason || "unknown"}`,
+    `pathwaySelectionActive: ${
+      pathwaySelectionState?.pathwaySelectionActive ? "true" : "false"
+    }`
+  ].join("\n")
+}
+
+function buildPathwaySelectionAvailable(pathwaySelectionState: any) {
+  if (!pathwaySelectionState) {
+    return "Pathway Selection State is not available from the latest SourceField state."
+  }
+
+  const pathways = Array.isArray(pathwaySelectionState?.availablePathways)
+    ? pathwaySelectionState.availablePathways
+    : []
+
+  if (!pathways.length) {
+    return "No available pathways are listed in the current Pathway Selection State."
+  }
+
+  return pathways
+    .map((pathway: any, index: number) => {
+      return `${index + 1}. ${pathway?.name || "unknown"}: ${
+        pathway?.sequence || "unknown"
+      }`
+    })
+    .join("\n")
+}
+
+function buildPathwaySelectionReason(pathwaySelectionState: any) {
+  if (!pathwaySelectionState) {
+    return "Pathway Selection State is not available from the latest SourceField state."
+  }
+
+  return [
+    `activeMode: ${pathwaySelectionState?.activeMode || "unknown"}`,
+    `selectedPathway: ${pathwaySelectionState?.selectedPathway || "unknown"}`,
+    `pathwayReason: ${pathwaySelectionState?.pathwayReason || "unknown"}`
+  ].join("\n")
+}
+
+function buildPathwaySelectionClassification(pathwaySelectionState: any) {
+  return [
+    "Pathway Selection Engine is read-only orchestration guidance.",
+    "It identifies the active mode, selected pathway, activation conditions, and pathway rationale from current equation lane conditions.",
+    "It is not a raw metric and must not override live metrics, classifications, hashes, retrieved context, stored history, or user intent.",
+    pathwaySelectionState?.rule
+      ? `Boundary rule: ${pathwaySelectionState.rule}`
+      : "Boundary rule: unavailable."
+  ].join("\n")
+}
+
+function buildPathwaySelectionResponse(
+  action: PathwaySelectionAction,
+  pathwaySelectionState: any
+) {
+  if (action === "report") {
+    return JSON.stringify(pathwaySelectionState ?? null, null, 2)
+  }
+
+  if (action === "available") {
+    return buildPathwaySelectionAvailable(pathwaySelectionState)
+  }
+
+  if (action === "reason") {
+    return buildPathwaySelectionReason(pathwaySelectionState)
+  }
+
+  if (action === "classification") {
+    return buildPathwaySelectionClassification(pathwaySelectionState)
+  }
+
+  return buildPathwaySelectionSummary(pathwaySelectionState)
+}
+
 export async function POST(req: Request) {
   try {
     const body = await req.json()
@@ -910,6 +1113,58 @@ export async function POST(req: Request) {
       })
     }
 
+    const pathwaySelectionAction = getPathwaySelectionAction(lastUserMessage)
+
+    if (pathwaySelectionAction) {
+      const { data: latestState, error: latestStateError } = await supabaseAdmin
+        .from("sourcefield_ledger_events")
+        .select("*")
+        .eq("agent_id", AGENT_ID)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle()
+
+      if (latestStateError) {
+        return NextResponse.json(
+          {
+            error:
+              "Failed to fetch latest stored SourceField equation lane state for pathway selection.",
+            details: latestStateError.message
+          },
+          { status: 500 }
+        )
+      }
+
+      const latestStateRecord = latestState as Record<string, any> | null
+      const equationLaneState = latestStateRecord?.equation_lane_state ?? null
+      const resonanceState = latestStateRecord?.resonance_state ?? null
+
+      const pathwaySelectionState = equationLaneState
+        ? generatePathwaySelectionState(
+            buildPathwaySelectionInput(equationLaneState, resonanceState)
+          )
+        : null
+
+      return NextResponse.json({
+        result: buildPathwaySelectionResponse(
+          pathwaySelectionAction,
+          pathwaySelectionState
+        ),
+        directStateReport: true,
+        nonMutatingReport: true,
+        deterministicPathwaySelectionResponse: true,
+        source: "latest_stored_supabase_snapshot",
+        stateObject: "pathway selection state",
+        action: pathwaySelectionAction,
+        value: pathwaySelectionState,
+        agentId: AGENT_ID,
+        runtimeAgentId: RUNTIME_AGENT_ID,
+        ledgerHash: latestStateRecord?.ledger_hash ?? null,
+        resonanceHash: latestStateRecord?.resonance_hash ?? null,
+        createdAt: latestStateRecord?.created_at ?? null
+      })
+    }
+
     const resonanceHash = createResonanceHash({
       agent: AGENT_ID,
       message: lastUserMessage,
@@ -956,6 +1211,10 @@ export async function POST(req: Request) {
       equationLaneState,
       laneStabilityDistance,
       crossEquationConsensus
+    )
+
+    const pathwaySelectionState = generatePathwaySelectionState(
+      buildPathwaySelectionInput(equationLaneState, resonanceState)
     )
 
     const equationBalanceCoordinator = generateEquationBalanceCoordinator(
@@ -1010,6 +1269,7 @@ export async function POST(req: Request) {
       laneStabilityDistance,
       equationStabilityForecast,
       predictiveAlignmentEngine,
+      pathwaySelectionState,
       crossEquationConsensus,
       crossEquationStabilization,
       equationBalanceCoordinator,
@@ -1234,6 +1494,7 @@ export async function POST(req: Request) {
       laneStabilityDistance,
       equationStabilityForecast,
       predictiveAlignmentEngine,
+      pathwaySelectionState,
       crossEquationConsensus,
       crossEquationStabilization,
       equationBalanceCoordinator,
@@ -1528,6 +1789,8 @@ ${
       equationStabilityForecastGenerated: Boolean(equationStabilityForecast),
       predictiveAlignmentEngine,
       predictiveAlignmentEngineGenerated: Boolean(predictiveAlignmentEngine),
+      pathwaySelectionState,
+      pathwaySelectionStateGenerated: Boolean(pathwaySelectionState),
       crossEquationConsensus,
       crossEquationConsensusGenerated: Boolean(crossEquationConsensus),
       crossEquationStabilization,
@@ -1567,6 +1830,7 @@ ${
       laneStabilityDistanceStored: Boolean(laneStabilityDistance),
       equationStabilityForecastStored: Boolean(equationStabilityForecast),
       predictiveAlignmentEngineStored: Boolean(predictiveAlignmentEngine),
+      pathwaySelectionStateStored: Boolean(pathwaySelectionState),
       crossEquationConsensusStored: Boolean(crossEquationConsensus),
       crossEquationStabilizationStored: Boolean(crossEquationStabilization),
       equationBalanceCoordinatorStored: Boolean(equationBalanceCoordinator),
