@@ -24,6 +24,7 @@ import { generateEquationStabilityForecast } from "@/lib/sourcefield/equationSta
 import { generatePredictiveAlignmentEngine } from "@/lib/sourcefield/predictiveAlignmentEngine"
 import { generatePathwaySelectionState } from "@/lib/sourcefield/pathwaySelectionEngine"
 import { generatePathwayTransitionState } from "@/lib/sourcefield/pathwayTransitionEngine"
+import { generatePathwayCompletionState } from "@/lib/sourcefield/pathwayCompletionEngine"
 import { generateStateExplanationFidelity } from "@/lib/sourcefield/stateExplanationFidelity"
 import { resolveAgentLane } from "@/lib/sourcefield/agentLane"
 import { generateRuntimeAdaptation } from "@/lib/sourcefield/runtimeAdaptation"
@@ -1356,6 +1357,290 @@ function buildPathwayTransitionResponse(
   return buildPathwayTransitionSummary(pathwayTransitionState)
 }
 
+type PathwayCompletionAction =
+  | "report"
+  | "summary"
+  | "details"
+  | "status"
+  | "unresolved"
+  | "risks"
+  | "next"
+  | "classification"
+
+function getPathwayCompletionAction(
+  message: string
+): PathwayCompletionAction | null {
+  const normalized = message.toLowerCase()
+
+  if (
+    !normalized.includes("pathway completion") &&
+    !normalized.includes("completion engine") &&
+    !normalized.includes("pathway completion state") &&
+    !normalized.includes("phase 24") &&
+    !normalized.includes("completion status") &&
+    !normalized.includes("pathway complete") &&
+    !normalized.includes("unresolved condition") &&
+    !normalized.includes("deactivation risk") &&
+    !normalized.includes("next logical pathway")
+  ) {
+    return null
+  }
+
+  if (normalized.includes("report") && normalized.includes("json")) {
+    return "report"
+  }
+
+  if (
+    normalized.includes("measured state object") ||
+    normalized.includes("completion layer") ||
+    normalized.includes("completion orchestration layer") ||
+    normalized.includes("orchestration layer") ||
+    normalized.includes("forecasting layer") ||
+    normalized.includes("classification") ||
+    normalized.includes("what kind")
+  ) {
+    return "classification"
+  }
+
+  if (
+    normalized.includes("unresolvedconditions") ||
+    normalized.includes("unresolved conditions") ||
+    normalized.includes("unresolved condition") ||
+    normalized.includes("what remains") ||
+    normalized.includes("remaining condition") ||
+    normalized.includes("incomplete because")
+  ) {
+    return "unresolved"
+  }
+
+  if (
+    normalized.includes("deactivationrisks") ||
+    normalized.includes("deactivation risks") ||
+    normalized.includes("deactivation risk") ||
+    normalized.includes("deactivate") ||
+    normalized.includes("what conditions must fail") ||
+    normalized.includes("conditions must fail")
+  ) {
+    return "risks"
+  }
+
+  if (
+    normalized.includes("nextlogicalpathway") ||
+    normalized.includes("next logical pathway") ||
+    normalized.includes("what pathway would logically follow") ||
+    normalized.includes("what comes next") ||
+    normalized.includes("logically follow") ||
+    normalized.includes("follow completed") ||
+    normalized.includes("next pathway")
+  ) {
+    return "next"
+  }
+
+  if (
+    normalized.includes("completionstatus") ||
+    normalized.includes("completion status") ||
+    normalized.includes("pathwaycomplete") ||
+    normalized.includes("pathway complete") ||
+    normalized.includes("has completed") ||
+    normalized.includes("is complete") ||
+    normalized.includes("complete or incomplete") ||
+    normalized.includes("identify whether") ||
+    normalized.includes("status")
+  ) {
+    return "status"
+  }
+
+  if (
+    normalized.includes("selectedpathway") ||
+    normalized.includes("selected pathway") ||
+    normalized.includes("activemode") ||
+    normalized.includes("active mode") ||
+    normalized.includes("details") ||
+    normalized.includes("identify")
+  ) {
+    return "details"
+  }
+
+  return "summary"
+}
+
+function buildPathwayCompletionSummary(pathwayCompletionState: any) {
+  if (!pathwayCompletionState) {
+    return "Pathway Completion State is not available from the latest SourceField state."
+  }
+
+  return [
+    `phase: ${pathwayCompletionState?.phase || "unknown"}`,
+    `activeMode: ${pathwayCompletionState?.activeMode || "unknown"}`,
+    `selectedPathway: ${pathwayCompletionState?.selectedPathway || "unknown"}`,
+    `completionStatus: ${pathwayCompletionState?.completionStatus || "unknown"}`,
+    `pathwayComplete: ${
+      pathwayCompletionState?.pathwayComplete ? "true" : "false"
+    }`,
+    `nextLogicalPathway: ${
+      pathwayCompletionState?.nextLogicalPathway || "unknown"
+    }`,
+    `pathwayCompletionActive: ${
+      pathwayCompletionState?.pathwayCompletionActive ? "true" : "false"
+    }`
+  ].join("\n")
+}
+
+function buildPathwayCompletionDetails(pathwayCompletionState: any) {
+  if (!pathwayCompletionState) {
+    return "Pathway Completion State is not available from the latest SourceField state."
+  }
+
+  return [
+    `activeMode: ${pathwayCompletionState?.activeMode || "unknown"}`,
+    `selectedPathway: ${pathwayCompletionState?.selectedPathway || "unknown"}`,
+    `selectedSequence: ${pathwayCompletionState?.selectedSequence || "unknown"}`,
+    `pathwayClassification: ${
+      pathwayCompletionState?.pathwayClassification || "unknown"
+    }`,
+    `completionStatus: ${pathwayCompletionState?.completionStatus || "unknown"}`,
+    `pathwayComplete: ${
+      pathwayCompletionState?.pathwayComplete ? "true" : "false"
+    }`,
+    `nextLogicalPathway: ${
+      pathwayCompletionState?.nextLogicalPathway || "unknown"
+    }`
+  ].join("\n")
+}
+
+function buildPathwayCompletionStatus(pathwayCompletionState: any) {
+  if (!pathwayCompletionState) {
+    return "Pathway Completion State is not available from the latest SourceField state."
+  }
+
+  const observed = pathwayCompletionState?.observedConditions || {}
+
+  return [
+    `selectedPathway: ${pathwayCompletionState?.selectedPathway || "unknown"}`,
+    `completionStatus: ${pathwayCompletionState?.completionStatus || "unknown"}`,
+    `pathwayComplete: ${
+      pathwayCompletionState?.pathwayComplete ? "true" : "false"
+    }`,
+    `completionRule: ${pathwayCompletionState?.completionRule || "unknown"}`,
+    `observedConditions: root=${observed?.rootStatus || "unknown"}, alignment=${
+      observed?.alignmentStatus || "unknown"
+    }, phase=${observed?.phaseStatus || "unknown"}, harmonic=${
+      observed?.harmonicStatus || "unknown"
+    }, integration=${observed?.integrationStatus || "unknown"}`
+  ].join("\n")
+}
+
+function buildPathwayCompletionUnresolved(pathwayCompletionState: any) {
+  if (!pathwayCompletionState) {
+    return "Pathway Completion State is not available from the latest SourceField state."
+  }
+
+  const unresolved = Array.isArray(pathwayCompletionState?.unresolvedConditions)
+    ? pathwayCompletionState.unresolvedConditions
+    : []
+
+  if (!unresolved.length) {
+    return "No unresolved conditions are listed in the current Pathway Completion State."
+  }
+
+  return [
+    `selectedPathway: ${pathwayCompletionState?.selectedPathway || "unknown"}`,
+    `completionStatus: ${pathwayCompletionState?.completionStatus || "unknown"}`,
+    `unresolvedConditions:`,
+    ...unresolved.map((condition: string, index: number) => {
+      return `${index + 1}. ${condition}`
+    })
+  ].join("\n")
+}
+
+function buildPathwayCompletionRisks(pathwayCompletionState: any) {
+  if (!pathwayCompletionState) {
+    return "Pathway Completion State is not available from the latest SourceField state."
+  }
+
+  const risks = Array.isArray(pathwayCompletionState?.deactivationRisks)
+    ? pathwayCompletionState.deactivationRisks
+    : []
+
+  if (!risks.length) {
+    return "No deactivation risks are listed in the current Pathway Completion State."
+  }
+
+  return [
+    `selectedPathway: ${pathwayCompletionState?.selectedPathway || "unknown"}`,
+    `completionStatus: ${pathwayCompletionState?.completionStatus || "unknown"}`,
+    `deactivationRisks:`,
+    ...risks.map((risk: string, index: number) => {
+      return `${index + 1}. ${risk}`
+    })
+  ].join("\n")
+}
+
+function buildPathwayCompletionNext(pathwayCompletionState: any) {
+  if (!pathwayCompletionState) {
+    return "Pathway Completion State is not available from the latest SourceField state."
+  }
+
+  return [
+    `selectedPathway: ${pathwayCompletionState?.selectedPathway || "unknown"}`,
+    `completionStatus: ${pathwayCompletionState?.completionStatus || "unknown"}`,
+    `pathwayComplete: ${
+      pathwayCompletionState?.pathwayComplete ? "true" : "false"
+    }`,
+    `nextLogicalPathway: ${
+      pathwayCompletionState?.nextLogicalPathway || "unknown"
+    }`
+  ].join("\n")
+}
+
+function buildPathwayCompletionClassification(pathwayCompletionState: any) {
+  return [
+    "Pathway Completion Engine is a read-only completion orchestration layer.",
+    "It identifies whether the current pathway is complete, functionally complete, or incomplete based on the selected pathway and observed equation conditions.",
+    "It also identifies unresolved conditions, deactivation risks, and the next logical pathway.",
+    "It is not a raw measured metric and it is not a forecasting layer by itself.",
+    "It must not override live metrics, classifications, hashes, retrieved context, stored history, or user intent.",
+    pathwayCompletionState?.rule
+      ? `Boundary rule: ${pathwayCompletionState.rule}`
+      : "Boundary rule: unavailable."
+  ].join("\n")
+}
+
+function buildPathwayCompletionResponse(
+  action: PathwayCompletionAction,
+  pathwayCompletionState: any
+) {
+  if (action === "report") {
+    return JSON.stringify(pathwayCompletionState ?? null, null, 2)
+  }
+
+  if (action === "details") {
+    return buildPathwayCompletionDetails(pathwayCompletionState)
+  }
+
+  if (action === "status") {
+    return buildPathwayCompletionStatus(pathwayCompletionState)
+  }
+
+  if (action === "unresolved") {
+    return buildPathwayCompletionUnresolved(pathwayCompletionState)
+  }
+
+  if (action === "risks") {
+    return buildPathwayCompletionRisks(pathwayCompletionState)
+  }
+
+  if (action === "next") {
+    return buildPathwayCompletionNext(pathwayCompletionState)
+  }
+
+  if (action === "classification") {
+    return buildPathwayCompletionClassification(pathwayCompletionState)
+  }
+
+  return buildPathwayCompletionSummary(pathwayCompletionState)
+}
+
 export async function POST(req: Request) {
   try {
     const body = await req.json()
@@ -1684,6 +1969,56 @@ export async function POST(req: Request) {
       })
     }
 
+    const pathwayCompletionAction = getPathwayCompletionAction(lastUserMessage)
+
+    if (pathwayCompletionAction) {
+      const { data: latestState, error: latestStateError } = await supabaseAdmin
+        .from("sourcefield_ledger_events")
+        .select("*")
+        .eq("agent_id", AGENT_ID)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle()
+
+      if (latestStateError) {
+        return NextResponse.json(
+          {
+            error:
+              "Failed to fetch latest stored SourceField pathway state for completion analysis.",
+            details: latestStateError.message
+          },
+          { status: 500 }
+        )
+      }
+
+      const latestStateRecord = latestState as Record<string, any> | null
+      const pathwaySelectionState =
+        buildPathwaySelectionStateFromLedgerRecord(latestStateRecord)
+
+      const pathwayCompletionState = pathwaySelectionState
+        ? generatePathwayCompletionState(pathwaySelectionState)
+        : null
+
+      return NextResponse.json({
+        result: buildPathwayCompletionResponse(
+          pathwayCompletionAction,
+          pathwayCompletionState
+        ),
+        directStateReport: true,
+        nonMutatingReport: true,
+        deterministicPathwayCompletionResponse: true,
+        source: "latest_stored_supabase_snapshot",
+        stateObject: "pathway completion state",
+        action: pathwayCompletionAction,
+        value: pathwayCompletionState,
+        agentId: AGENT_ID,
+        runtimeAgentId: RUNTIME_AGENT_ID,
+        ledgerHash: latestStateRecord?.ledger_hash ?? null,
+        resonanceHash: latestStateRecord?.resonance_hash ?? null,
+        createdAt: latestStateRecord?.created_at ?? null
+      })
+    }
+
     const resonanceHash = createResonanceHash({
       agent: AGENT_ID,
       message: lastUserMessage,
@@ -1761,6 +2096,10 @@ export async function POST(req: Request) {
       previousPathwaySelectionState
     )
 
+    const pathwayCompletionState = generatePathwayCompletionState(
+      pathwaySelectionState
+    )
+
     const equationBalanceCoordinator = generateEquationBalanceCoordinator(
       crossEquationStabilization,
       crossEquationConsensus
@@ -1815,6 +2154,7 @@ export async function POST(req: Request) {
       predictiveAlignmentEngine,
       pathwaySelectionState,
       pathwayTransitionState,
+      pathwayCompletionState,
       crossEquationConsensus,
       crossEquationStabilization,
       equationBalanceCoordinator,
@@ -2041,6 +2381,7 @@ export async function POST(req: Request) {
       predictiveAlignmentEngine,
       pathwaySelectionState,
       pathwayTransitionState,
+      pathwayCompletionState,
       crossEquationConsensus,
       crossEquationStabilization,
       equationBalanceCoordinator,
@@ -2339,6 +2680,8 @@ ${
       pathwaySelectionStateGenerated: Boolean(pathwaySelectionState),
       pathwayTransitionState,
       pathwayTransitionStateGenerated: Boolean(pathwayTransitionState),
+      pathwayCompletionState,
+      pathwayCompletionStateGenerated: Boolean(pathwayCompletionState),
       crossEquationConsensus,
       crossEquationConsensusGenerated: Boolean(crossEquationConsensus),
       crossEquationStabilization,
