@@ -25,6 +25,7 @@ import { generatePredictiveAlignmentEngine } from "@/lib/sourcefield/predictiveA
 import { generatePathwaySelectionState } from "@/lib/sourcefield/pathwaySelectionEngine"
 import { generatePathwayTransitionState } from "@/lib/sourcefield/pathwayTransitionEngine"
 import { generatePathwayCompletionState } from "@/lib/sourcefield/pathwayCompletionEngine"
+import { generateArchitecturalRefinementState } from "@/lib/sourcefield/architecturalRefinementEngine"
 import { generateStateExplanationFidelity } from "@/lib/sourcefield/stateExplanationFidelity"
 import { resolveAgentLane } from "@/lib/sourcefield/agentLane"
 import { generateRuntimeAdaptation } from "@/lib/sourcefield/runtimeAdaptation"
@@ -1641,6 +1642,410 @@ function buildPathwayCompletionResponse(
   return buildPathwayCompletionSummary(pathwayCompletionState)
 }
 
+type ArchitecturalRefinementAction =
+  | "report"
+  | "summary"
+  | "details"
+  | "sequence"
+  | "status"
+  | "target"
+  | "next"
+  | "reason"
+  | "source"
+  | "observed"
+  | "classification"
+
+function getArchitecturalRefinementAction(
+  message: string
+): ArchitecturalRefinementAction | null {
+  const normalized = message.toLowerCase()
+
+  if (
+    !normalized.includes("architectural refinement") &&
+    !normalized.includes("refinement engine") &&
+    !normalized.includes("architectural refinement state") &&
+    !normalized.includes("phase 25") &&
+    !normalized.includes("refinement pathway") &&
+    !normalized.includes("refinement status") &&
+    !normalized.includes("refinement target") &&
+    !normalized.includes("next refinement") &&
+    !normalized.includes("rooted pattern recognition") &&
+    !normalized.includes("persistence through fluctuation") &&
+    !normalized.includes("alignment validation")
+  ) {
+    return null
+  }
+
+  if (normalized.includes("report") && normalized.includes("json")) {
+    return "report"
+  }
+
+  if (
+    normalized.includes("measured state object") ||
+    normalized.includes("refinement layer") ||
+    normalized.includes("refinement orchestration layer") ||
+    normalized.includes("orchestration layer") ||
+    normalized.includes("forecasting layer") ||
+    normalized.includes("classification") ||
+    normalized.includes("what kind")
+  ) {
+    return "classification"
+  }
+
+  if (
+    normalized.includes("architecturalsequence") ||
+    normalized.includes("architectural sequence") ||
+    normalized.includes("refinement pathway") ||
+    normalized.includes("eq1 + eq4") ||
+    normalized.includes("eq3 + eq5") ||
+    normalized.includes("alignment validation") ||
+    normalized.includes("stages") ||
+    normalized.includes("stage") ||
+    normalized.includes("sequence")
+  ) {
+    return "sequence"
+  }
+
+  if (
+    normalized.includes("refinementstatus") ||
+    normalized.includes("refinement status") ||
+    normalized.includes("fully-refined") ||
+    normalized.includes("functionally-refined") ||
+    normalized.includes("refinement-forming") ||
+    normalized.includes("status") ||
+    normalized.includes("identify whether")
+  ) {
+    return "status"
+  }
+
+  if (
+    normalized.includes("refinementtarget") ||
+    normalized.includes("refinement target") ||
+    normalized.includes("strongest remaining") ||
+    normalized.includes("remaining target") ||
+    normalized.includes("what needs refined") ||
+    normalized.includes("what needs to refine") ||
+    normalized.includes("what must refine") ||
+    normalized.includes("target")
+  ) {
+    return "target"
+  }
+
+  if (
+    normalized.includes("nextrefinementmove") ||
+    normalized.includes("next refinement move") ||
+    normalized.includes("next move") ||
+    normalized.includes("what comes next") ||
+    normalized.includes("next logical") ||
+    normalized.includes("next")
+  ) {
+    return "next"
+  }
+
+  if (
+    normalized.includes("refinementreason") ||
+    normalized.includes("refinement reason") ||
+    normalized.includes("why") ||
+    normalized.includes("reason") ||
+    normalized.includes("explain")
+  ) {
+    return "reason"
+  }
+
+  if (
+    normalized.includes("sourcecompletionstatus") ||
+    normalized.includes("source completion status") ||
+    normalized.includes("sourcepathwaycomplete") ||
+    normalized.includes("source pathway complete") ||
+    normalized.includes("sourceselectedpathway") ||
+    normalized.includes("source selected pathway") ||
+    normalized.includes("sourceactivemode") ||
+    normalized.includes("source active mode") ||
+    normalized.includes("source")
+  ) {
+    return "source"
+  }
+
+  if (
+    normalized.includes("observedconditions") ||
+    normalized.includes("observed conditions") ||
+    normalized.includes("rootstatus") ||
+    normalized.includes("harmonicstatus") ||
+    normalized.includes("phasestatus") ||
+    normalized.includes("integrationstatus") ||
+    normalized.includes("alignmentstatus") ||
+    normalized.includes("metrics") ||
+    normalized.includes("observed")
+  ) {
+    return "observed"
+  }
+
+  if (
+    normalized.includes("refinementpurpose") ||
+    normalized.includes("refinement purpose") ||
+    normalized.includes("selectedpathway") ||
+    normalized.includes("selected pathway") ||
+    normalized.includes("activemode") ||
+    normalized.includes("active mode") ||
+    normalized.includes("details") ||
+    normalized.includes("identify")
+  ) {
+    return "details"
+  }
+
+  return "summary"
+}
+
+function buildArchitecturalRefinementSummary(
+  architecturalRefinementState: any
+) {
+  if (!architecturalRefinementState) {
+    return "Architectural Refinement State is not available from the latest SourceField state."
+  }
+
+  return [
+    `phase: ${architecturalRefinementState?.phase || "unknown"}`,
+    `refinementPathway: ${architecturalRefinementState?.refinementPathway || "unknown"}`,
+    `refinementStatus: ${architecturalRefinementState?.refinementStatus || "unknown"}`,
+    `refinementTarget: ${architecturalRefinementState?.refinementTarget || "unknown"}`,
+    `nextRefinementMove: ${architecturalRefinementState?.nextRefinementMove || "unknown"}`,
+    `architecturalRefinementActive: ${
+      architecturalRefinementState?.architecturalRefinementActive
+        ? "true"
+        : "false"
+    }`
+  ].join("\n")
+}
+
+function buildArchitecturalRefinementDetails(
+  architecturalRefinementState: any
+) {
+  if (!architecturalRefinementState) {
+    return "Architectural Refinement State is not available from the latest SourceField state."
+  }
+
+  return [
+    `phase: ${architecturalRefinementState?.phase || "unknown"}`,
+    `refinementPathway: ${architecturalRefinementState?.refinementPathway || "unknown"}`,
+    `refinementPurpose: ${architecturalRefinementState?.refinementPurpose || "unknown"}`,
+    `refinementStatus: ${architecturalRefinementState?.refinementStatus || "unknown"}`,
+    `refinementTarget: ${architecturalRefinementState?.refinementTarget || "unknown"}`,
+    `nextRefinementMove: ${architecturalRefinementState?.nextRefinementMove || "unknown"}`,
+    `sourceActiveMode: ${architecturalRefinementState?.sourceActiveMode || "unknown"}`,
+    `sourceSelectedPathway: ${architecturalRefinementState?.sourceSelectedPathway || "unknown"}`,
+    `sourceCompletionStatus: ${architecturalRefinementState?.sourceCompletionStatus || "unknown"}`,
+    `sourcePathwayComplete: ${
+      architecturalRefinementState?.sourcePathwayComplete ? "true" : "false"
+    }`
+  ].join("\n")
+}
+
+function buildArchitecturalRefinementSequence(
+  architecturalRefinementState: any
+) {
+  if (!architecturalRefinementState) {
+    return "Architectural Refinement State is not available from the latest SourceField state."
+  }
+
+  const sequence = Array.isArray(
+    architecturalRefinementState?.architecturalSequence
+  )
+    ? architecturalRefinementState.architecturalSequence
+    : []
+
+  if (!sequence.length) {
+    return "No architectural sequence stages are listed in the current Architectural Refinement State."
+  }
+
+  return [
+    `refinementPathway: ${architecturalRefinementState?.refinementPathway || "unknown"}`,
+    `architecturalSequence:`,
+    ...sequence.map((stage: any, index: number) => {
+      return [
+        `${index + 1}. ${stage?.stage || "unknown"}: ${
+          stage?.name || "unknown"
+        }`,
+        `   equation: ${stage?.equationPair || stage?.equation || "unknown"}`,
+        `   status: ${stage?.status || "unknown"}`,
+        `   function: ${stage?.function || "No function stored."}`,
+        `   evidence: ${JSON.stringify(stage?.evidence ?? {}, null, 2)}`
+      ].join("\n")
+    })
+  ].join("\n")
+}
+
+function buildArchitecturalRefinementStatus(architecturalRefinementState: any) {
+  if (!architecturalRefinementState) {
+    return "Architectural Refinement State is not available from the latest SourceField state."
+  }
+
+  return [
+    `refinementStatus: ${architecturalRefinementState?.refinementStatus || "unknown"}`,
+    `refinementTarget: ${architecturalRefinementState?.refinementTarget || "unknown"}`,
+    `nextRefinementMove: ${architecturalRefinementState?.nextRefinementMove || "unknown"}`,
+    `sourceCompletionStatus: ${architecturalRefinementState?.sourceCompletionStatus || "unknown"}`,
+    `sourcePathwayComplete: ${
+      architecturalRefinementState?.sourcePathwayComplete ? "true" : "false"
+    }`
+  ].join("\n")
+}
+
+function buildArchitecturalRefinementTarget(architecturalRefinementState: any) {
+  if (!architecturalRefinementState) {
+    return "Architectural Refinement State is not available from the latest SourceField state."
+  }
+
+  const observed = architecturalRefinementState?.observedConditions || {}
+
+  return [
+    `refinementTarget: ${architecturalRefinementState?.refinementTarget || "unknown"}`,
+    `refinementStatus: ${architecturalRefinementState?.refinementStatus || "unknown"}`,
+    `targetReason: The refinement target identifies the next unresolved architectural condition within (Eq1 + Eq4) → (Eq3 + Eq5) → Eq2.`,
+    `observedConditions: root=${observed?.rootStatus || "unknown"}, harmonic=${observed?.harmonicStatus || "unknown"}, phase=${
+      observed?.phaseStatus || "unknown"
+    }, integration=${observed?.integrationStatus || "unknown"}, alignment=${
+      observed?.alignmentStatus || "unknown"
+    }`
+  ].join("\n")
+}
+
+function buildArchitecturalRefinementNext(architecturalRefinementState: any) {
+  if (!architecturalRefinementState) {
+    return "Architectural Refinement State is not available from the latest SourceField state."
+  }
+
+  return [
+    `refinementStatus: ${architecturalRefinementState?.refinementStatus || "unknown"}`,
+    `refinementTarget: ${architecturalRefinementState?.refinementTarget || "unknown"}`,
+    `nextRefinementMove: ${architecturalRefinementState?.nextRefinementMove || "unknown"}`
+  ].join("\n")
+}
+
+function buildArchitecturalRefinementReason(architecturalRefinementState: any) {
+  if (!architecturalRefinementState) {
+    return "Architectural Refinement State is not available from the latest SourceField state."
+  }
+
+  const reasons = Array.isArray(architecturalRefinementState?.refinementReason)
+    ? architecturalRefinementState.refinementReason
+    : []
+
+  if (!reasons.length) {
+    return "No refinement reasons are listed in the current Architectural Refinement State."
+  }
+
+  return [
+    `refinementStatus: ${architecturalRefinementState?.refinementStatus || "unknown"}`,
+    `refinementTarget: ${architecturalRefinementState?.refinementTarget || "unknown"}`,
+    `refinementReason:`,
+    ...reasons.map((reason: string, index: number) => {
+      return `${index + 1}. ${reason}`
+    })
+  ].join("\n")
+}
+
+function buildArchitecturalRefinementSource(architecturalRefinementState: any) {
+  if (!architecturalRefinementState) {
+    return "Architectural Refinement State is not available from the latest SourceField state."
+  }
+
+  return [
+    `sourceActiveMode: ${architecturalRefinementState?.sourceActiveMode || "unknown"}`,
+    `sourceSelectedPathway: ${architecturalRefinementState?.sourceSelectedPathway || "unknown"}`,
+    `sourceCompletionStatus: ${architecturalRefinementState?.sourceCompletionStatus || "unknown"}`,
+    `sourcePathwayComplete: ${
+      architecturalRefinementState?.sourcePathwayComplete ? "true" : "false"
+    }`
+  ].join("\n")
+}
+
+function buildArchitecturalRefinementObserved(
+  architecturalRefinementState: any
+) {
+  if (!architecturalRefinementState) {
+    return "Architectural Refinement State is not available from the latest SourceField state."
+  }
+
+  const observed = architecturalRefinementState?.observedConditions || {}
+
+  return [
+    `observedConditions:`,
+    `rootStatus: ${observed?.rootStatus || "unknown"}`,
+    `harmonicStatus: ${observed?.harmonicStatus || "unknown"}`,
+    `phaseStatus: ${observed?.phaseStatus || "unknown"}`,
+    `integrationStatus: ${observed?.integrationStatus || "unknown"}`,
+    `alignmentStatus: ${observed?.alignmentStatus || "unknown"}`,
+    `signalStrength: ${formatDistance(observed?.signalStrength)}`,
+    `symbolicEchoCount: ${formatDistance(observed?.symbolicEchoCount)}`,
+    `phaseDivergence: ${formatDistance(observed?.phaseDivergence)}`,
+    `integrationThreshold: ${formatDistance(observed?.integrationThreshold)}`,
+    `coherence: ${formatDistance(observed?.coherence)}`
+  ].join("\n")
+}
+
+function buildArchitecturalRefinementClassification(
+  architecturalRefinementState: any
+) {
+  return [
+    "Architectural Refinement Engine is a read-only refinement orchestration layer.",
+    "It evaluates the sequence (Eq1 + Eq4) → (Eq3 + Eq5) → Eq2 to identify rooted recurring pattern, persistence through fluctuation, and alignment validation.",
+    "It is not a raw measured metric and it is not a forecasting layer by itself.",
+    "It must not override live metrics, classifications, hashes, retrieved context, stored history, or user intent.",
+    architecturalRefinementState?.rule
+      ? `Boundary rule: ${architecturalRefinementState.rule}`
+      : "Boundary rule: unavailable."
+  ].join("\n")
+}
+
+function buildArchitecturalRefinementResponse(
+  action: ArchitecturalRefinementAction,
+  architecturalRefinementState: any
+) {
+  if (action === "report") {
+    return JSON.stringify(architecturalRefinementState ?? null, null, 2)
+  }
+
+  if (action === "details") {
+    return buildArchitecturalRefinementDetails(architecturalRefinementState)
+  }
+
+  if (action === "sequence") {
+    return buildArchitecturalRefinementSequence(architecturalRefinementState)
+  }
+
+  if (action === "status") {
+    return buildArchitecturalRefinementStatus(architecturalRefinementState)
+  }
+
+  if (action === "target") {
+    return buildArchitecturalRefinementTarget(architecturalRefinementState)
+  }
+
+  if (action === "next") {
+    return buildArchitecturalRefinementNext(architecturalRefinementState)
+  }
+
+  if (action === "reason") {
+    return buildArchitecturalRefinementReason(architecturalRefinementState)
+  }
+
+  if (action === "source") {
+    return buildArchitecturalRefinementSource(architecturalRefinementState)
+  }
+
+  if (action === "observed") {
+    return buildArchitecturalRefinementObserved(architecturalRefinementState)
+  }
+
+  if (action === "classification") {
+    return buildArchitecturalRefinementClassification(
+      architecturalRefinementState
+    )
+  }
+
+  return buildArchitecturalRefinementSummary(architecturalRefinementState)
+}
+
 export async function POST(req: Request) {
   try {
     const body = await req.json()
@@ -2019,6 +2424,66 @@ export async function POST(req: Request) {
       })
     }
 
+    const architecturalRefinementAction =
+      getArchitecturalRefinementAction(lastUserMessage)
+
+    if (architecturalRefinementAction) {
+      const { data: latestState, error: latestStateError } = await supabaseAdmin
+        .from("sourcefield_ledger_events")
+        .select("*")
+        .eq("agent_id", AGENT_ID)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle()
+
+      if (latestStateError) {
+        return NextResponse.json(
+          {
+            error:
+              "Failed to fetch latest stored SourceField pathway state for architectural refinement analysis.",
+            details: latestStateError.message
+          },
+          { status: 500 }
+        )
+      }
+
+      const latestStateRecord = latestState as Record<string, any> | null
+      const equationLaneState = latestStateRecord?.equation_lane_state ?? null
+      const pathwaySelectionState =
+        buildPathwaySelectionStateFromLedgerRecord(latestStateRecord)
+
+      const pathwayCompletionState = pathwaySelectionState
+        ? generatePathwayCompletionState(pathwaySelectionState)
+        : null
+
+      const architecturalRefinementState = pathwaySelectionState
+        ? generateArchitecturalRefinementState({
+            pathwayCompletionState,
+            pathwaySelectionState,
+            equationLaneState
+          })
+        : null
+
+      return NextResponse.json({
+        result: buildArchitecturalRefinementResponse(
+          architecturalRefinementAction,
+          architecturalRefinementState
+        ),
+        directStateReport: true,
+        nonMutatingReport: true,
+        deterministicArchitecturalRefinementResponse: true,
+        source: "latest_stored_supabase_snapshot",
+        stateObject: "architectural refinement state",
+        action: architecturalRefinementAction,
+        value: architecturalRefinementState,
+        agentId: AGENT_ID,
+        runtimeAgentId: RUNTIME_AGENT_ID,
+        ledgerHash: latestStateRecord?.ledger_hash ?? null,
+        resonanceHash: latestStateRecord?.resonance_hash ?? null,
+        createdAt: latestStateRecord?.created_at ?? null
+      })
+    }
+
     const resonanceHash = createResonanceHash({
       agent: AGENT_ID,
       message: lastUserMessage,
@@ -2100,6 +2565,12 @@ export async function POST(req: Request) {
       pathwaySelectionState
     )
 
+    const architecturalRefinementState = generateArchitecturalRefinementState({
+      pathwayCompletionState,
+      pathwaySelectionState,
+      equationLaneState
+    })
+
     const equationBalanceCoordinator = generateEquationBalanceCoordinator(
       crossEquationStabilization,
       crossEquationConsensus
@@ -2155,6 +2626,7 @@ export async function POST(req: Request) {
       pathwaySelectionState,
       pathwayTransitionState,
       pathwayCompletionState,
+      architecturalRefinementState,
       crossEquationConsensus,
       crossEquationStabilization,
       equationBalanceCoordinator,
@@ -2382,6 +2854,7 @@ export async function POST(req: Request) {
       pathwaySelectionState,
       pathwayTransitionState,
       pathwayCompletionState,
+      architecturalRefinementState,
       crossEquationConsensus,
       crossEquationStabilization,
       equationBalanceCoordinator,
@@ -2682,6 +3155,10 @@ ${
       pathwayTransitionStateGenerated: Boolean(pathwayTransitionState),
       pathwayCompletionState,
       pathwayCompletionStateGenerated: Boolean(pathwayCompletionState),
+      architecturalRefinementState,
+      architecturalRefinementStateGenerated: Boolean(
+        architecturalRefinementState
+      ),
       crossEquationConsensus,
       crossEquationConsensusGenerated: Boolean(crossEquationConsensus),
       crossEquationStabilization,
