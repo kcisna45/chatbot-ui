@@ -2056,6 +2056,11 @@ type PrincipleIntegrationAction =
   | "evidence"
   | "status"
   | "active-principle"
+  | "strongest"
+  | "weakest"
+  | "eq1-eq2"
+  | "improvement"
+  | "completion"
   | "integrated"
   | "target"
   | "next"
@@ -2075,7 +2080,16 @@ function getPrincipleIntegrationAction(
     !normalized.includes("integrated principle") &&
     !normalized.includes("principle pattern") &&
     !normalized.includes("harmonic validation") &&
-    !normalized.includes("principle reinforcement")
+    !normalized.includes("principle reinforcement") &&
+    !normalized.includes("strongest principle") &&
+    !normalized.includes("weakest principle") &&
+    !normalized.includes("most established") &&
+    !normalized.includes("requires the most integration") &&
+    !normalized.includes("eq1 and eq2") &&
+    !normalized.includes("eq1 + eq2") &&
+    !normalized.includes("observable condition") &&
+    !normalized.includes("improve principle") &&
+    !normalized.includes("principle completion")
   ) {
     return null
   }
@@ -2096,6 +2110,55 @@ function getPrincipleIntegrationAction(
     normalized.includes("what kind")
   ) {
     return "classification"
+  }
+
+  if (
+    normalized.includes("strongest principle") ||
+    normalized.includes("most established") ||
+    normalized.includes("currently strongest") ||
+    normalized.includes("why the strongest")
+  ) {
+    return "strongest"
+  }
+
+  if (
+    normalized.includes("weakest principle") ||
+    normalized.includes("requires the most integration") ||
+    normalized.includes("currently weakest") ||
+    normalized.includes("why the weakest")
+  ) {
+    return "weakest"
+  }
+
+  if (
+    normalized.includes("eq1 and eq2") ||
+    normalized.includes("eq1 + eq2") ||
+    normalized.includes("evaluated together") ||
+    normalized.includes("stable foundational pattern remains aligned")
+  ) {
+    return "eq1-eq2"
+  }
+
+  if (
+    normalized.includes("observable condition would improve") ||
+    normalized.includes("improve principle integration") ||
+    normalized.includes("would improve principle") ||
+    normalized.includes("improvement") ||
+    normalized.includes("improve integration")
+  ) {
+    return "improvement"
+  }
+
+  if (
+    normalized.includes(
+      "observable condition would indicate principle integration has completed"
+    ) ||
+    normalized.includes("principle integration has completed") ||
+    normalized.includes("principle completion") ||
+    normalized.includes("completion condition") ||
+    normalized.includes("indicate completion")
+  ) {
+    return "completion"
   }
 
   if (
@@ -2405,6 +2468,180 @@ function buildPrincipleIntegrationNext(principleIntegrationState: any) {
   ].join("\n")
 }
 
+function getPrincipleEvidenceLayers(principleIntegrationState: any) {
+  return Array.isArray(principleIntegrationState?.evidenceLayers)
+    ? principleIntegrationState.evidenceLayers
+    : []
+}
+
+function buildPrincipleIntegrationStrongestReason(
+  principleIntegrationState: any
+) {
+  if (!principleIntegrationState) {
+    return "Principle Integration State is not available from the latest SourceField state."
+  }
+
+  const activePrinciple = principleIntegrationState?.activePrinciple || {}
+  const evidenceLayers = getPrincipleEvidenceLayers(principleIntegrationState)
+  const harmonic = principleIntegrationState?.harmonicValidation || {}
+  const pattern = principleIntegrationState?.principlePattern || {}
+
+  const activeEvidence = evidenceLayers.filter(
+    (layer: any) => layer?.status === "active"
+  )
+
+  return [
+    `strongestPrinciple: ${activePrinciple?.equation || "unknown"} — ${
+      activePrinciple?.name || "unknown"
+    }`,
+    `principleText: ${activePrinciple?.principle || "unknown"}`,
+    `reason: This is the strongest principle because it is supported by the active principle selection, a ${
+      pattern?.principlePatternStatus || "unknown"
+    } from Eq1 + Eq2, and ${
+      harmonic?.harmonicValidation || "unknown"
+    } validation through Eq4.`,
+    `crossLayerEvidenceCount: ${formatDistance(harmonic?.evidenceLayerCount)}`,
+    `uniquePrincipleSignalCount: ${formatDistance(
+      harmonic?.uniquePrincipleSignalCount
+    )}`,
+    `activeEvidenceLayers:`,
+    ...activeEvidence.map((layer: any, index: number) => {
+      return `${index + 1}. ${layer?.layer || "unknown"}: ${
+        layer?.principleSignal || "unknown"
+      } — ${layer?.evidence || "No evidence stored."}`
+    })
+  ].join("\n")
+}
+
+function buildPrincipleIntegrationWeakestReason(
+  principleIntegrationState: any
+) {
+  if (!principleIntegrationState) {
+    return "Principle Integration State is not available from the latest SourceField state."
+  }
+
+  const activePrinciple = principleIntegrationState?.activePrinciple || {}
+  const pattern = principleIntegrationState?.principlePattern || {}
+  const harmonic = principleIntegrationState?.harmonicValidation || {}
+  const target =
+    principleIntegrationState?.principleReinforcementTarget || "unknown"
+
+  if (principleIntegrationState?.principleIntegrationStatus === "integrated") {
+    return [
+      `weakestPrinciple: no separately identified weakest principle in the current Principle Integration State`,
+      `activePrinciple: ${activePrinciple?.equation || "unknown"} — ${
+        activePrinciple?.name || "unknown"
+      }`,
+      `reason: The current state marks the active principle as integrated because Eq1 + Eq2 produced ${
+        pattern?.principlePatternStatus || "unknown"
+      } and Eq4 produced ${harmonic?.harmonicValidation || "unknown"}.`,
+      `remainingRisk: The weakest area is not a different principle; it is preservation pressure — the integrated principle must remain stable across future pathway selection, transition, completion, and refinement states.`,
+      `reinforcementTarget: ${target}`
+    ].join("\n")
+  }
+
+  return [
+    `weakestPrinciple: principle integration is not fully resolved`,
+    `principleIntegrationStatus: ${
+      principleIntegrationState?.principleIntegrationStatus || "unknown"
+    }`,
+    `principlePatternStatus: ${pattern?.principlePatternStatus || "unknown"}`,
+    `harmonicValidation: ${harmonic?.harmonicValidation || "unknown"}`,
+    `reason: The weakest area is whichever side of (Eq1 + Eq2) → Eq4 has not yet reached stable aligned patterning or cross-layer harmonic validation.`,
+    `reinforcementTarget: ${target}`
+  ].join("\n")
+}
+
+function buildPrincipleIntegrationEq1Eq2Explanation(
+  principleIntegrationState: any
+) {
+  if (!principleIntegrationState) {
+    return "Principle Integration State is not available from the latest SourceField state."
+  }
+
+  const pattern = principleIntegrationState?.principlePattern || {}
+  const evidence = pattern?.evidence || {}
+
+  return [
+    `equationPair: ${pattern?.equationPair || "Eq1 + Eq2"}`,
+    `function: ${pattern?.function || "unknown"}`,
+    `principlePatternStatus: ${pattern?.principlePatternStatus || "unknown"}`,
+    `Eq1 role: Eq1 contributes the stable foundational pattern. In the current state, rootStatus is ${
+      evidence?.rootStatus || "unknown"
+    } with signalStrength ${formatDistance(evidence?.signalStrength)}.`,
+    `Eq2 role: Eq2 tests whether that rooted pattern remains aligned over time. In the current state, alignmentStatus is ${
+      evidence?.alignmentStatus || "unknown"
+    } with coherence ${formatDistance(evidence?.coherence)}.`,
+    `combined meaning: Eq1 + Eq2 asks whether a principle is both rooted enough to hold and aligned enough to persist, which is why the current principlePatternStatus is ${
+      pattern?.principlePatternStatus || "unknown"
+    }.`
+  ].join("\n")
+}
+
+function buildPrincipleIntegrationImprovement(principleIntegrationState: any) {
+  if (!principleIntegrationState) {
+    return "Principle Integration State is not available from the latest SourceField state."
+  }
+
+  const pattern = principleIntegrationState?.principlePattern || {}
+  const harmonic = principleIntegrationState?.harmonicValidation || {}
+  const target =
+    principleIntegrationState?.principleReinforcementTarget || "unknown"
+
+  if (principleIntegrationState?.principleIntegrationStatus === "integrated") {
+    return [
+      `principleIntegrationStatus: integrated`,
+      `observableImprovementCondition: Maintain the integrated principle across future pathway selection, transition, completion, and refinement states without losing stable Eq1 + Eq2 patterning or Eq4 cross-layer validation.`,
+      `currentPatternCondition: ${pattern?.principlePatternStatus || "unknown"}`,
+      `currentHarmonicCondition: ${harmonic?.harmonicValidation || "unknown"}`,
+      `reinforcementTarget: ${target}`
+    ].join("\n")
+  }
+
+  return [
+    `principleIntegrationStatus: ${
+      principleIntegrationState?.principleIntegrationStatus || "unknown"
+    }`,
+    `observableImprovementCondition: Principle integration improves when Eq1 + Eq2 reaches stable-aligned-pattern and Eq4 reaches cross-layer-repeating validation.`,
+    `currentPatternCondition: ${pattern?.principlePatternStatus || "unknown"}`,
+    `currentHarmonicCondition: ${harmonic?.harmonicValidation || "unknown"}`,
+    `reinforcementTarget: ${target}`
+  ].join("\n")
+}
+
+function buildPrincipleIntegrationCompletion(principleIntegrationState: any) {
+  if (!principleIntegrationState) {
+    return "Principle Integration State is not available from the latest SourceField state."
+  }
+
+  const activePrinciple = principleIntegrationState?.activePrinciple || {}
+  const pattern = principleIntegrationState?.principlePattern || {}
+  const harmonic = principleIntegrationState?.harmonicValidation || {}
+  const integrated = Array.isArray(
+    principleIntegrationState?.integratedPrinciples
+  )
+    ? principleIntegrationState.integratedPrinciples
+    : []
+
+  return [
+    `completionCondition: Principle integration is complete when Eq1 + Eq2 produces stable-aligned-pattern, Eq4 produces cross-layer-repeating validation, and the active principle appears in integratedPrinciples.`,
+    `currentPrincipleIntegrationStatus: ${
+      principleIntegrationState?.principleIntegrationStatus || "unknown"
+    }`,
+    `currentActivePrinciple: ${activePrinciple?.equation || "unknown"} — ${
+      activePrinciple?.name || "unknown"
+    }`,
+    `currentPatternCondition: ${pattern?.principlePatternStatus || "unknown"}`,
+    `currentHarmonicCondition: ${harmonic?.harmonicValidation || "unknown"}`,
+    `integratedPrincipleCount: ${formatDistance(integrated.length)}`,
+    `completionAssessment: ${
+      principleIntegrationState?.principleIntegrationStatus === "integrated"
+        ? "complete for the current active principle; preserve it across future states"
+        : "not complete; continue strengthening the reinforcement target"
+    }`
+  ].join("\n")
+}
+
 function buildPrincipleIntegrationClassification(
   principleIntegrationState: any
 ) {
@@ -2449,6 +2686,26 @@ function buildPrincipleIntegrationResponse(
 
   if (action === "active-principle") {
     return buildPrincipleIntegrationActivePrinciple(principleIntegrationState)
+  }
+
+  if (action === "strongest") {
+    return buildPrincipleIntegrationStrongestReason(principleIntegrationState)
+  }
+
+  if (action === "weakest") {
+    return buildPrincipleIntegrationWeakestReason(principleIntegrationState)
+  }
+
+  if (action === "eq1-eq2") {
+    return buildPrincipleIntegrationEq1Eq2Explanation(principleIntegrationState)
+  }
+
+  if (action === "improvement") {
+    return buildPrincipleIntegrationImprovement(principleIntegrationState)
+  }
+
+  if (action === "completion") {
+    return buildPrincipleIntegrationCompletion(principleIntegrationState)
   }
 
   if (action === "integrated") {
