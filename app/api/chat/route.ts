@@ -1081,6 +1081,7 @@ type PathwayTransitionAction =
   | "reason"
   | "confidence"
   | "classification"
+  | "trigger"
 
 function getPathwayTransitionAction(
   message: string
@@ -1090,6 +1091,7 @@ function getPathwayTransitionAction(
   if (
     !normalized.includes("pathway transition") &&
     !normalized.includes("transition engine") &&
+    !normalized.includes("pathway transition state") &&
     !normalized.includes("phase 23") &&
     !normalized.includes("transition rule")
   ) {
@@ -1098,6 +1100,30 @@ function getPathwayTransitionAction(
 
   if (normalized.includes("report") && normalized.includes("json")) {
     return "report"
+  }
+
+  if (
+    normalized.includes("measured state object") ||
+    normalized.includes("transition layer") ||
+    normalized.includes("transition orchestration layer") ||
+    normalized.includes("orchestration layer") ||
+    normalized.includes("forecasting layer") ||
+    normalized.includes("classification") ||
+    normalized.includes("what kind")
+  ) {
+    return "classification"
+  }
+
+  if (
+    normalized.includes("trigger the next") ||
+    normalized.includes("next pathway transition") ||
+    normalized.includes("next transition") ||
+    normalized.includes("observable condition") ||
+    normalized.includes("trigger") ||
+    normalized.includes("would cause") ||
+    normalized.includes("would switch")
+  ) {
+    return "trigger"
   }
 
   if (
@@ -1111,6 +1137,7 @@ function getPathwayTransitionAction(
   if (
     normalized.includes("transitionreason") ||
     normalized.includes("transition reason") ||
+    normalized.includes("current pathway is active") ||
     normalized.includes("why") ||
     normalized.includes("reason")
   ) {
@@ -1120,6 +1147,8 @@ function getPathwayTransitionAction(
   if (
     normalized.includes("transitiontype") ||
     normalized.includes("transition type") ||
+    normalized.includes("transitiondetected") ||
+    normalized.includes("transition detected") ||
     normalized.includes("previousmode") ||
     normalized.includes("previous mode") ||
     normalized.includes("currentmode") ||
@@ -1132,16 +1161,6 @@ function getPathwayTransitionAction(
     normalized.includes("details")
   ) {
     return "details"
-  }
-
-  if (
-    normalized.includes("measured state object") ||
-    normalized.includes("transition layer") ||
-    normalized.includes("orchestration layer") ||
-    normalized.includes("classification") ||
-    normalized.includes("what kind")
-  ) {
-    return "classification"
   }
 
   return "summary"
@@ -1177,14 +1196,14 @@ function buildPathwayTransitionDetails(pathwayTransitionState: any) {
   }
 
   return [
+    `previousPathway: ${pathwayTransitionState?.previousPathway || "unknown"}`,
+    `currentPathway: ${pathwayTransitionState?.currentPathway || "unknown"}`,
     `transitionDetected: ${
       pathwayTransitionState?.transitionDetected ? "true" : "false"
     }`,
     `transitionType: ${pathwayTransitionState?.transitionType || "unknown"}`,
     `previousMode: ${pathwayTransitionState?.previousMode || "unknown"}`,
     `currentMode: ${pathwayTransitionState?.currentMode || "unknown"}`,
-    `previousPathway: ${pathwayTransitionState?.previousPathway || "unknown"}`,
-    `currentPathway: ${pathwayTransitionState?.currentPathway || "unknown"}`,
     `previousSequence: ${pathwayTransitionState?.previousSequence || "unknown"}`,
     `currentSequence: ${pathwayTransitionState?.currentSequence || "unknown"}`,
     `previousPathwayClassification: ${
@@ -1192,6 +1211,9 @@ function buildPathwayTransitionDetails(pathwayTransitionState: any) {
     }`,
     `currentPathwayClassification: ${
       pathwayTransitionState?.currentPathwayClassification || "unknown"
+    }`,
+    `transitionConfidence: ${
+      pathwayTransitionState?.transitionConfidence || "unknown"
     }`
   ].join("\n")
 }
@@ -1210,6 +1232,10 @@ function buildPathwayTransitionReason(pathwayTransitionState: any) {
   }
 
   return [
+    `previousMode: ${pathwayTransitionState?.previousMode || "unknown"}`,
+    `currentMode: ${pathwayTransitionState?.currentMode || "unknown"}`,
+    `previousPathway: ${pathwayTransitionState?.previousPathway || "unknown"}`,
+    `currentPathway: ${pathwayTransitionState?.currentPathway || "unknown"}`,
     `transitionType: ${pathwayTransitionState?.transitionType || "unknown"}`,
     `transitionConfidence: ${
       pathwayTransitionState?.transitionConfidence || "unknown"
@@ -1234,15 +1260,65 @@ function buildPathwayTransitionConfidence(pathwayTransitionState: any) {
       pathwayTransitionState?.transitionDetected ? "true" : "false"
     }`,
     `transitionType: ${pathwayTransitionState?.transitionType || "unknown"}`,
+    `previousMode: ${pathwayTransitionState?.previousMode || "unknown"}`,
+    `currentMode: ${pathwayTransitionState?.currentMode || "unknown"}`,
     `transitionRule: ${pathwayTransitionState?.transitionRule || "unknown"}`
+  ].join("\n")
+}
+
+function buildPathwayTransitionTrigger(pathwayTransitionState: any) {
+  if (!pathwayTransitionState) {
+    return "Pathway Transition State is not available from the latest SourceField state."
+  }
+
+  const observed = pathwayTransitionState?.observedConditions || {}
+  const currentMode = pathwayTransitionState?.currentMode || "unknown"
+
+  const baseLines = [
+    `currentMode: ${currentMode}`,
+    `currentPathway: ${pathwayTransitionState?.currentPathway || "unknown"}`,
+    `transitionRule: ${pathwayTransitionState?.transitionRule || "unknown"}`,
+    `observedConditions: root=${observed?.rootStatus || "unknown"}, alignment=${
+      observed?.alignmentStatus || "unknown"
+    }, phase=${observed?.phaseStatus || "unknown"}, harmonic=${
+      observed?.harmonicStatus || "unknown"
+    }, integration=${observed?.integrationStatus || "unknown"}`
+  ]
+
+  if (currentMode === "Identity Emergence Mode") {
+    return [
+      ...baseLines,
+      "nextTransitionConditions:",
+      "1. Transition back to Recovery Pathway A if alignmentStatus becomes low and phaseStatus becomes divergent.",
+      "2. Transition back to Recovery Pathway B if phaseStatus becomes divergent while alignmentStatus remains above low.",
+      "3. Remain in Identity Emergence while harmonicStatus remains pattern-rich, integrationStatus remains integrated, and alignment/root support persists."
+    ].join("\n")
+  }
+
+  if (currentMode === "Recovery Mode") {
+    return [
+      ...baseLines,
+      "nextTransitionConditions:",
+      "1. Transition to Identity Emergence if harmonicStatus becomes pattern-rich, integrationStatus becomes integrated, and alignmentStatus becomes aligned or rootStatus becomes active.",
+      "2. Switch toward Recovery Pathway B if phaseStatus becomes divergent while alignmentStatus is not low.",
+      "3. Stay in Recovery Pathway A while alignment and phase instability both require correction."
+    ].join("\n")
+  }
+
+  return [
+    ...baseLines,
+    "nextTransitionConditions:",
+    "1. No specific next transition condition is classified for the current mode.",
+    "2. Re-evaluate after the next pathway selection state is generated."
   ].join("\n")
 }
 
 function buildPathwayTransitionClassification(pathwayTransitionState: any) {
   return [
-    "Pathway Transition Engine is read-only transition guidance.",
+    "Pathway Transition Engine is a read-only transition orchestration layer.",
     "It compares previous and current pathway selection states to detect mode changes, transition type, transition reason, and transition confidence.",
-    "It is not a raw metric and it must not override live metrics, classifications, hashes, retrieved context, stored history, or user intent.",
+    "It is not a raw measured metric and it is not a forecasting layer by itself.",
+    "It must not override live metrics, classifications, hashes, retrieved context, stored history, or user intent.",
     pathwayTransitionState?.rule
       ? `Boundary rule: ${pathwayTransitionState.rule}`
       : "Boundary rule: unavailable."
@@ -1267,6 +1343,10 @@ function buildPathwayTransitionResponse(
 
   if (action === "confidence") {
     return buildPathwayTransitionConfidence(pathwayTransitionState)
+  }
+
+  if (action === "trigger") {
+    return buildPathwayTransitionTrigger(pathwayTransitionState)
   }
 
   if (action === "classification") {
