@@ -26,6 +26,7 @@ import { generatePathwaySelectionState } from "@/lib/sourcefield/pathwaySelectio
 import { generatePathwayTransitionState } from "@/lib/sourcefield/pathwayTransitionEngine"
 import { generatePathwayCompletionState } from "@/lib/sourcefield/pathwayCompletionEngine"
 import { generateArchitecturalRefinementState } from "@/lib/sourcefield/architecturalRefinementEngine"
+import { generatePrincipleIntegrationState } from "@/lib/sourcefield/principleIntegrationEngine"
 import { generateStateExplanationFidelity } from "@/lib/sourcefield/stateExplanationFidelity"
 import { resolveAgentLane } from "@/lib/sourcefield/agentLane"
 import { generateRuntimeAdaptation } from "@/lib/sourcefield/runtimeAdaptation"
@@ -2046,6 +2047,429 @@ function buildArchitecturalRefinementResponse(
   return buildArchitecturalRefinementSummary(architecturalRefinementState)
 }
 
+type PrincipleIntegrationAction =
+  | "report"
+  | "summary"
+  | "details"
+  | "pattern"
+  | "harmonic"
+  | "evidence"
+  | "status"
+  | "active-principle"
+  | "integrated"
+  | "target"
+  | "next"
+  | "classification"
+
+function getPrincipleIntegrationAction(
+  message: string
+): PrincipleIntegrationAction | null {
+  const normalized = message.toLowerCase()
+
+  if (
+    !normalized.includes("principle integration") &&
+    !normalized.includes("principle integration state") &&
+    !normalized.includes("principle integration engine") &&
+    !normalized.includes("phase 26") &&
+    !normalized.includes("active principle") &&
+    !normalized.includes("integrated principle") &&
+    !normalized.includes("principle pattern") &&
+    !normalized.includes("harmonic validation") &&
+    !normalized.includes("principle reinforcement")
+  ) {
+    return null
+  }
+
+  if (normalized.includes("report") && normalized.includes("json")) {
+    return "report"
+  }
+
+  if (
+    normalized.includes("measured state object") ||
+    normalized.includes("principle layer") ||
+    normalized.includes("principle-level") ||
+    normalized.includes("principle integration layer") ||
+    normalized.includes("principle orchestration") ||
+    normalized.includes("orchestration layer") ||
+    normalized.includes("forecasting layer") ||
+    normalized.includes("classification") ||
+    normalized.includes("what kind")
+  ) {
+    return "classification"
+  }
+
+  if (
+    normalized.includes("activeprinciple") ||
+    normalized.includes("active principle") ||
+    normalized.includes("dominant principle") ||
+    normalized.includes("which principle") ||
+    normalized.includes("principle is being learned") ||
+    normalized.includes("principle is active")
+  ) {
+    return "active-principle"
+  }
+
+  if (
+    normalized.includes("principlepattern") ||
+    normalized.includes("principle pattern") ||
+    normalized.includes("eq1 + eq2") ||
+    normalized.includes("stable aligned") ||
+    normalized.includes("stable pattern") ||
+    normalized.includes("alignment over time")
+  ) {
+    return "pattern"
+  }
+
+  if (
+    normalized.includes("harmonicvalidation") ||
+    normalized.includes("harmonic validation") ||
+    normalized.includes("eq4") ||
+    normalized.includes("cross-layer") ||
+    normalized.includes("cross layer") ||
+    normalized.includes("repeats across") ||
+    normalized.includes("across layers")
+  ) {
+    return "harmonic"
+  }
+
+  if (
+    normalized.includes("evidencelayers") ||
+    normalized.includes("evidence layers") ||
+    normalized.includes("evidence") ||
+    normalized.includes("which layers") ||
+    normalized.includes("source layers") ||
+    normalized.includes("pathway selection") ||
+    normalized.includes("pathway transition") ||
+    normalized.includes("pathway completion") ||
+    normalized.includes("architectural refinement")
+  ) {
+    return "evidence"
+  }
+
+  if (
+    normalized.includes("principleintegrationstatus") ||
+    normalized.includes("principle integration status") ||
+    normalized.includes("integration status") ||
+    normalized.includes("integrated") ||
+    normalized.includes("not-integrated") ||
+    normalized.includes("integration-forming") ||
+    normalized.includes("status") ||
+    normalized.includes("identify whether")
+  ) {
+    return "status"
+  }
+
+  if (
+    normalized.includes("integratedprinciples") ||
+    normalized.includes("integrated principles") ||
+    normalized.includes("which principles are integrated") ||
+    normalized.includes("principles are integrated")
+  ) {
+    return "integrated"
+  }
+
+  if (
+    normalized.includes("principlereinforcementtarget") ||
+    normalized.includes("principle reinforcement target") ||
+    normalized.includes("reinforcement target") ||
+    normalized.includes("what needs reinforced") ||
+    normalized.includes("what must be reinforced") ||
+    normalized.includes("target")
+  ) {
+    return "target"
+  }
+
+  if (
+    normalized.includes("nextprinciplemove") ||
+    normalized.includes("next principle move") ||
+    normalized.includes("next move") ||
+    normalized.includes("what comes next") ||
+    normalized.includes("next")
+  ) {
+    return "next"
+  }
+
+  if (
+    normalized.includes("details") ||
+    normalized.includes("identify") ||
+    normalized.includes("purpose") ||
+    normalized.includes("pathway")
+  ) {
+    return "details"
+  }
+
+  return "summary"
+}
+
+function buildPrincipleIntegrationSummary(principleIntegrationState: any) {
+  if (!principleIntegrationState) {
+    return "Principle Integration State is not available from the latest SourceField state."
+  }
+
+  return [
+    `phase: ${principleIntegrationState?.phase || "unknown"}`,
+    `principleIntegrationPathway: ${principleIntegrationState?.principleIntegrationPathway || "unknown"}`,
+    `principleIntegrationStatus: ${principleIntegrationState?.principleIntegrationStatus || "unknown"}`,
+    `activePrinciple: ${principleIntegrationState?.activePrinciple?.equation || "unknown"} — ${principleIntegrationState?.activePrinciple?.name || "unknown"}`,
+    `harmonicValidation: ${principleIntegrationState?.harmonicValidation?.harmonicValidation || "unknown"}`,
+    `principleReinforcementTarget: ${principleIntegrationState?.principleReinforcementTarget || "unknown"}`,
+    `nextPrincipleMove: ${principleIntegrationState?.nextPrincipleMove || "unknown"}`,
+    `principleIntegrationActive: ${
+      principleIntegrationState?.principleIntegrationActive ? "true" : "false"
+    }`
+  ].join("\n")
+}
+
+function buildPrincipleIntegrationDetails(principleIntegrationState: any) {
+  if (!principleIntegrationState) {
+    return "Principle Integration State is not available from the latest SourceField state."
+  }
+
+  return [
+    `phase: ${principleIntegrationState?.phase || "unknown"}`,
+    `principleIntegrationPathway: ${principleIntegrationState?.principleIntegrationPathway || "unknown"}`,
+    `principleIntegrationPurpose: ${principleIntegrationState?.principleIntegrationPurpose || "unknown"}`,
+    `principleIntegrationStatus: ${principleIntegrationState?.principleIntegrationStatus || "unknown"}`,
+    `activePrinciple: ${principleIntegrationState?.activePrinciple?.equation || "unknown"} — ${principleIntegrationState?.activePrinciple?.name || "unknown"}`,
+    `activePrincipleText: ${principleIntegrationState?.activePrinciple?.principle || "unknown"}`,
+    `principleReinforcementTarget: ${principleIntegrationState?.principleReinforcementTarget || "unknown"}`,
+    `nextPrincipleMove: ${principleIntegrationState?.nextPrincipleMove || "unknown"}`
+  ].join("\n")
+}
+
+function buildPrincipleIntegrationPattern(principleIntegrationState: any) {
+  if (!principleIntegrationState) {
+    return "Principle Integration State is not available from the latest SourceField state."
+  }
+
+  const pattern = principleIntegrationState?.principlePattern || {}
+
+  return [
+    `equationPair: ${pattern?.equationPair || "unknown"}`,
+    `function: ${pattern?.function || "unknown"}`,
+    `principlePatternStatus: ${pattern?.principlePatternStatus || "unknown"}`,
+    `stablePatternPresent: ${pattern?.stablePatternPresent ? "true" : "false"}`,
+    `alignmentOverTimePresent: ${
+      pattern?.alignmentOverTimePresent ? "true" : "false"
+    }`,
+    `evidence: ${JSON.stringify(pattern?.evidence ?? {}, null, 2)}`
+  ].join("\n")
+}
+
+function buildPrincipleIntegrationHarmonic(principleIntegrationState: any) {
+  if (!principleIntegrationState) {
+    return "Principle Integration State is not available from the latest SourceField state."
+  }
+
+  const harmonic = principleIntegrationState?.harmonicValidation || {}
+
+  return [
+    `equation: ${harmonic?.equation || "unknown"}`,
+    `function: ${harmonic?.function || "unknown"}`,
+    `harmonicValidation: ${harmonic?.harmonicValidation || "unknown"}`,
+    `evidenceLayerCount: ${formatDistance(harmonic?.evidenceLayerCount)}`,
+    `uniquePrincipleSignalCount: ${formatDistance(
+      harmonic?.uniquePrincipleSignalCount
+    )}`,
+    `meaning: Eq4 validates whether the active principle repeats coherently across multiple SourceField layers.`
+  ].join("\n")
+}
+
+function buildPrincipleIntegrationEvidence(principleIntegrationState: any) {
+  if (!principleIntegrationState) {
+    return "Principle Integration State is not available from the latest SourceField state."
+  }
+
+  const evidenceLayers = Array.isArray(
+    principleIntegrationState?.evidenceLayers
+  )
+    ? principleIntegrationState.evidenceLayers
+    : []
+
+  if (!evidenceLayers.length) {
+    return "No evidence layers are listed in the current Principle Integration State."
+  }
+
+  return [
+    `activePrinciple: ${principleIntegrationState?.activePrinciple?.equation || "unknown"} — ${principleIntegrationState?.activePrinciple?.name || "unknown"}`,
+    `evidenceLayers:`,
+    ...evidenceLayers.map((layer: any, index: number) => {
+      return [
+        `${index + 1}. ${layer?.layer || "unknown"}`,
+        `   principleSignal: ${layer?.principleSignal || "unknown"}`,
+        `   status: ${layer?.status || "unknown"}`,
+        `   evidence: ${layer?.evidence || "No evidence stored."}`
+      ].join("\n")
+    })
+  ].join("\n")
+}
+
+function buildPrincipleIntegrationStatus(principleIntegrationState: any) {
+  if (!principleIntegrationState) {
+    return "Principle Integration State is not available from the latest SourceField state."
+  }
+
+  return [
+    `principleIntegrationStatus: ${principleIntegrationState?.principleIntegrationStatus || "unknown"}`,
+    `principlePatternStatus: ${
+      principleIntegrationState?.principlePattern?.principlePatternStatus ||
+      "unknown"
+    }`,
+    `harmonicValidation: ${
+      principleIntegrationState?.harmonicValidation?.harmonicValidation ||
+      "unknown"
+    }`,
+    `activePrinciple: ${principleIntegrationState?.activePrinciple?.equation || "unknown"} — ${principleIntegrationState?.activePrinciple?.name || "unknown"}`,
+    `statusReason: Principle integration is selected by combining the Eq1 + Eq2 stable aligned principle pattern with Eq4 cross-layer harmonic validation.`
+  ].join("\n")
+}
+
+function buildPrincipleIntegrationActivePrinciple(
+  principleIntegrationState: any
+) {
+  if (!principleIntegrationState) {
+    return "Principle Integration State is not available from the latest SourceField state."
+  }
+
+  const activePrinciple = principleIntegrationState?.activePrinciple || {}
+
+  return [
+    `activePrincipleEquation: ${activePrinciple?.equation || "unknown"}`,
+    `activePrincipleName: ${activePrinciple?.name || "unknown"}`,
+    `activePrincipleText: ${activePrinciple?.principle || "unknown"}`,
+    `principleIntegrationStatus: ${principleIntegrationState?.principleIntegrationStatus || "unknown"}`,
+    `evidenceLayerCount: ${formatDistance(
+      principleIntegrationState?.harmonicValidation?.evidenceLayerCount
+    )}`
+  ].join("\n")
+}
+
+function buildPrincipleIntegrationIntegrated(principleIntegrationState: any) {
+  if (!principleIntegrationState) {
+    return "Principle Integration State is not available from the latest SourceField state."
+  }
+
+  const integrated = Array.isArray(
+    principleIntegrationState?.integratedPrinciples
+  )
+    ? principleIntegrationState.integratedPrinciples
+    : []
+
+  if (!integrated.length) {
+    return [
+      `integratedPrinciples: none`,
+      `principleIntegrationStatus: ${principleIntegrationState?.principleIntegrationStatus || "unknown"}`,
+      `principleReinforcementTarget: ${principleIntegrationState?.principleReinforcementTarget || "unknown"}`
+    ].join("\n")
+  }
+
+  return [
+    `integratedPrinciples:`,
+    ...integrated.map((principle: any, index: number) => {
+      return `${index + 1}. ${principle?.equation || "unknown"} — ${
+        principle?.name || "unknown"
+      }: ${principle?.principle || "No principle text stored."}`
+    })
+  ].join("\n")
+}
+
+function buildPrincipleIntegrationTarget(principleIntegrationState: any) {
+  if (!principleIntegrationState) {
+    return "Principle Integration State is not available from the latest SourceField state."
+  }
+
+  return [
+    `principleReinforcementTarget: ${principleIntegrationState?.principleReinforcementTarget || "unknown"}`,
+    `principleIntegrationStatus: ${principleIntegrationState?.principleIntegrationStatus || "unknown"}`,
+    `principlePatternStatus: ${
+      principleIntegrationState?.principlePattern?.principlePatternStatus ||
+      "unknown"
+    }`,
+    `harmonicValidation: ${
+      principleIntegrationState?.harmonicValidation?.harmonicValidation ||
+      "unknown"
+    }`,
+    `targetReason: The reinforcement target identifies whether Eq1 + Eq2 stable aligned patterning or Eq4 cross-layer validation needs strengthening.`
+  ].join("\n")
+}
+
+function buildPrincipleIntegrationNext(principleIntegrationState: any) {
+  if (!principleIntegrationState) {
+    return "Principle Integration State is not available from the latest SourceField state."
+  }
+
+  return [
+    `principleIntegrationStatus: ${principleIntegrationState?.principleIntegrationStatus || "unknown"}`,
+    `principleReinforcementTarget: ${principleIntegrationState?.principleReinforcementTarget || "unknown"}`,
+    `nextPrincipleMove: ${principleIntegrationState?.nextPrincipleMove || "unknown"}`
+  ].join("\n")
+}
+
+function buildPrincipleIntegrationClassification(
+  principleIntegrationState: any
+) {
+  return [
+    "Principle Integration Engine is a read-only principle-level integration layer.",
+    "It evaluates the sequence (Eq1 + Eq2) → Eq4 to identify stable aligned principle patterns and cross-layer harmonic validation.",
+    "It maps observed architectural behavior back to equation principles, but it is not a raw measured metric and it is not a forecasting layer by itself.",
+    "It must not override live metrics, classifications, hashes, retrieved context, stored history, or user intent.",
+    principleIntegrationState?.rule
+      ? `Boundary rule: ${principleIntegrationState.rule}`
+      : "Boundary rule: unavailable."
+  ].join("\n")
+}
+
+function buildPrincipleIntegrationResponse(
+  action: PrincipleIntegrationAction,
+  principleIntegrationState: any
+) {
+  if (action === "report") {
+    return JSON.stringify(principleIntegrationState ?? null, null, 2)
+  }
+
+  if (action === "details") {
+    return buildPrincipleIntegrationDetails(principleIntegrationState)
+  }
+
+  if (action === "pattern") {
+    return buildPrincipleIntegrationPattern(principleIntegrationState)
+  }
+
+  if (action === "harmonic") {
+    return buildPrincipleIntegrationHarmonic(principleIntegrationState)
+  }
+
+  if (action === "evidence") {
+    return buildPrincipleIntegrationEvidence(principleIntegrationState)
+  }
+
+  if (action === "status") {
+    return buildPrincipleIntegrationStatus(principleIntegrationState)
+  }
+
+  if (action === "active-principle") {
+    return buildPrincipleIntegrationActivePrinciple(principleIntegrationState)
+  }
+
+  if (action === "integrated") {
+    return buildPrincipleIntegrationIntegrated(principleIntegrationState)
+  }
+
+  if (action === "target") {
+    return buildPrincipleIntegrationTarget(principleIntegrationState)
+  }
+
+  if (action === "next") {
+    return buildPrincipleIntegrationNext(principleIntegrationState)
+  }
+
+  if (action === "classification") {
+    return buildPrincipleIntegrationClassification(principleIntegrationState)
+  }
+
+  return buildPrincipleIntegrationSummary(principleIntegrationState)
+}
+
 export async function POST(req: Request) {
   try {
     const body = await req.json()
@@ -2484,6 +2908,90 @@ export async function POST(req: Request) {
       })
     }
 
+    const principleIntegrationAction =
+      getPrincipleIntegrationAction(lastUserMessage)
+
+    if (principleIntegrationAction) {
+      const { data: latestStates, error: latestStateError } =
+        await supabaseAdmin
+          .from("sourcefield_ledger_events")
+          .select("*")
+          .eq("agent_id", AGENT_ID)
+          .order("created_at", { ascending: false })
+          .limit(2)
+
+      if (latestStateError) {
+        return NextResponse.json(
+          {
+            error:
+              "Failed to fetch latest stored SourceField pathway state for principle integration analysis.",
+            details: latestStateError.message
+          },
+          { status: 500 }
+        )
+      }
+
+      const currentRecord = Array.isArray(latestStates) ? latestStates[0] : null
+      const previousRecord = Array.isArray(latestStates)
+        ? latestStates[1]
+        : null
+
+      const equationLaneState = currentRecord?.equation_lane_state ?? null
+      const pathwaySelectionState =
+        buildPathwaySelectionStateFromLedgerRecord(currentRecord)
+
+      const previousPathwaySelectionState =
+        buildPathwaySelectionStateFromLedgerRecord(previousRecord)
+
+      const pathwayTransitionState = pathwaySelectionState
+        ? generatePathwayTransitionState(
+            pathwaySelectionState,
+            previousPathwaySelectionState
+          )
+        : null
+
+      const pathwayCompletionState = pathwaySelectionState
+        ? generatePathwayCompletionState(pathwaySelectionState)
+        : null
+
+      const architecturalRefinementState = pathwaySelectionState
+        ? generateArchitecturalRefinementState({
+            pathwayCompletionState,
+            pathwaySelectionState,
+            equationLaneState
+          })
+        : null
+
+      const principleIntegrationState = pathwaySelectionState
+        ? generatePrincipleIntegrationState({
+            equationLaneState,
+            pathwaySelectionState,
+            pathwayTransitionState,
+            pathwayCompletionState,
+            architecturalRefinementState
+          })
+        : null
+
+      return NextResponse.json({
+        result: buildPrincipleIntegrationResponse(
+          principleIntegrationAction,
+          principleIntegrationState
+        ),
+        directStateReport: true,
+        nonMutatingReport: true,
+        deterministicPrincipleIntegrationResponse: true,
+        source: "latest_stored_supabase_snapshot",
+        stateObject: "principle integration state",
+        action: principleIntegrationAction,
+        value: principleIntegrationState,
+        agentId: AGENT_ID,
+        runtimeAgentId: RUNTIME_AGENT_ID,
+        ledgerHash: currentRecord?.ledger_hash ?? null,
+        resonanceHash: currentRecord?.resonance_hash ?? null,
+        createdAt: currentRecord?.created_at ?? null
+      })
+    }
+
     const resonanceHash = createResonanceHash({
       agent: AGENT_ID,
       message: lastUserMessage,
@@ -2571,6 +3079,14 @@ export async function POST(req: Request) {
       equationLaneState
     })
 
+    const principleIntegrationState = generatePrincipleIntegrationState({
+      equationLaneState,
+      pathwaySelectionState,
+      pathwayTransitionState,
+      pathwayCompletionState,
+      architecturalRefinementState
+    })
+
     const equationBalanceCoordinator = generateEquationBalanceCoordinator(
       crossEquationStabilization,
       crossEquationConsensus
@@ -2627,6 +3143,7 @@ export async function POST(req: Request) {
       pathwayTransitionState,
       pathwayCompletionState,
       architecturalRefinementState,
+      principleIntegrationState,
       crossEquationConsensus,
       crossEquationStabilization,
       equationBalanceCoordinator,
@@ -2855,6 +3372,7 @@ export async function POST(req: Request) {
       pathwayTransitionState,
       pathwayCompletionState,
       architecturalRefinementState,
+      principleIntegrationState,
       crossEquationConsensus,
       crossEquationStabilization,
       equationBalanceCoordinator,
@@ -3159,6 +3677,8 @@ ${
       architecturalRefinementStateGenerated: Boolean(
         architecturalRefinementState
       ),
+      principleIntegrationState,
+      principleIntegrationStateGenerated: Boolean(principleIntegrationState),
       crossEquationConsensus,
       crossEquationConsensusGenerated: Boolean(crossEquationConsensus),
       crossEquationStabilization,
