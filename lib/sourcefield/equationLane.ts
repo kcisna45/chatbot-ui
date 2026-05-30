@@ -89,6 +89,25 @@ export function generateEquationLaneState(input: EquationLaneInput) {
           : "not-integrated"
   }
 
+  const dominantEquationLane =
+    phaseLane.status === "divergent"
+      ? "sourcefield-phase"
+      : integrationLane.status === "not-integrated"
+        ? "sourcefield-integration"
+        : alignmentLane.status === "low"
+          ? "sourcefield-alignment"
+          : rootLane.status === "weak" || rootLane.status === "inactive"
+            ? "sourcefield-root"
+            : harmonicLane.status === "pattern-rich"
+              ? "sourcefield-harmonic"
+              : integrationLane.status === "integrated"
+                ? "sourcefield-integration"
+                : phaseLane.status === "drifting"
+                  ? "sourcefield-phase"
+                  : alignmentLane.status === "partial"
+                    ? "sourcefield-alignment"
+                    : "sourcefield-root"
+
   return {
     equationLaneArchitecture: "five-equation-coherence-model",
     equationLanes: [
@@ -98,16 +117,7 @@ export function generateEquationLaneState(input: EquationLaneInput) {
       harmonicLane,
       integrationLane
     ],
-    dominantEquationLane:
-      phaseLane.status === "divergent"
-        ? "sourcefield-phase"
-        : integrationLane.status === "not-integrated"
-          ? "sourcefield-integration"
-          : alignmentLane.status === "low"
-            ? "sourcefield-alignment"
-            : rootLane.status === "weak"
-              ? "sourcefield-root"
-              : harmonicLane.status,
+    dominantEquationLane,
     equationLaneStateActive: true,
     rule: "Use equation lane state as read-only mapping from live SourceField metrics into the Five Living Equations. It must not override metrics, classifications, hashes, retrieval context, stored history, or user intent."
   }
