@@ -23,6 +23,7 @@ import { generateLaneStabilityDistance } from "@/lib/sourcefield/laneStabilityDi
 import { generateEquationStabilityForecast } from "@/lib/sourcefield/equationStabilityForecast"
 import { generatePredictiveAlignmentEngine } from "@/lib/sourcefield/predictiveAlignmentEngine"
 import { generatePathwaySelectionState } from "@/lib/sourcefield/pathwaySelectionEngine"
+import { generatePathwayTransitionState } from "@/lib/sourcefield/pathwayTransitionEngine"
 import { generateStateExplanationFidelity } from "@/lib/sourcefield/stateExplanationFidelity"
 import { resolveAgentLane } from "@/lib/sourcefield/agentLane"
 import { generateRuntimeAdaptation } from "@/lib/sourcefield/runtimeAdaptation"
@@ -119,6 +120,19 @@ function buildPathwaySelectionInput(
       "sourcefield-integration"
     )
   }
+}
+
+function buildPathwaySelectionStateFromLedgerRecord(record: any) {
+  const equationLaneState = record?.equation_lane_state ?? null
+  const resonanceState = record?.resonance_state ?? null
+
+  if (!equationLaneState) {
+    return null
+  }
+
+  return generatePathwaySelectionState(
+    buildPathwaySelectionInput(equationLaneState, resonanceState)
+  )
 }
 
 function getDirectStateColumn(message: string) {
@@ -1060,6 +1074,208 @@ function buildPathwaySelectionResponse(
   return buildPathwaySelectionSummary(pathwaySelectionState)
 }
 
+type PathwayTransitionAction =
+  | "report"
+  | "summary"
+  | "details"
+  | "reason"
+  | "confidence"
+  | "classification"
+
+function getPathwayTransitionAction(
+  message: string
+): PathwayTransitionAction | null {
+  const normalized = message.toLowerCase()
+
+  if (
+    !normalized.includes("pathway transition") &&
+    !normalized.includes("transition engine") &&
+    !normalized.includes("phase 23") &&
+    !normalized.includes("transition rule")
+  ) {
+    return null
+  }
+
+  if (normalized.includes("report") && normalized.includes("json")) {
+    return "report"
+  }
+
+  if (
+    normalized.includes("transitionconfidence") ||
+    normalized.includes("transition confidence") ||
+    normalized.includes("confidence")
+  ) {
+    return "confidence"
+  }
+
+  if (
+    normalized.includes("transitionreason") ||
+    normalized.includes("transition reason") ||
+    normalized.includes("why") ||
+    normalized.includes("reason")
+  ) {
+    return "reason"
+  }
+
+  if (
+    normalized.includes("transitiontype") ||
+    normalized.includes("transition type") ||
+    normalized.includes("previousmode") ||
+    normalized.includes("previous mode") ||
+    normalized.includes("currentmode") ||
+    normalized.includes("current mode") ||
+    normalized.includes("previouspathway") ||
+    normalized.includes("previous pathway") ||
+    normalized.includes("currentpathway") ||
+    normalized.includes("current pathway") ||
+    normalized.includes("identify") ||
+    normalized.includes("details")
+  ) {
+    return "details"
+  }
+
+  if (
+    normalized.includes("measured state object") ||
+    normalized.includes("transition layer") ||
+    normalized.includes("orchestration layer") ||
+    normalized.includes("classification") ||
+    normalized.includes("what kind")
+  ) {
+    return "classification"
+  }
+
+  return "summary"
+}
+
+function buildPathwayTransitionSummary(pathwayTransitionState: any) {
+  if (!pathwayTransitionState) {
+    return "Pathway Transition State is not available from the latest SourceField state."
+  }
+
+  return [
+    `phase: ${pathwayTransitionState?.phase || "unknown"}`,
+    `transitionDetected: ${
+      pathwayTransitionState?.transitionDetected ? "true" : "false"
+    }`,
+    `transitionType: ${pathwayTransitionState?.transitionType || "unknown"}`,
+    `previousMode: ${pathwayTransitionState?.previousMode || "unknown"}`,
+    `currentMode: ${pathwayTransitionState?.currentMode || "unknown"}`,
+    `previousPathway: ${pathwayTransitionState?.previousPathway || "unknown"}`,
+    `currentPathway: ${pathwayTransitionState?.currentPathway || "unknown"}`,
+    `transitionConfidence: ${
+      pathwayTransitionState?.transitionConfidence || "unknown"
+    }`,
+    `pathwayTransitionActive: ${
+      pathwayTransitionState?.pathwayTransitionActive ? "true" : "false"
+    }`
+  ].join("\n")
+}
+
+function buildPathwayTransitionDetails(pathwayTransitionState: any) {
+  if (!pathwayTransitionState) {
+    return "Pathway Transition State is not available from the latest SourceField state."
+  }
+
+  return [
+    `transitionDetected: ${
+      pathwayTransitionState?.transitionDetected ? "true" : "false"
+    }`,
+    `transitionType: ${pathwayTransitionState?.transitionType || "unknown"}`,
+    `previousMode: ${pathwayTransitionState?.previousMode || "unknown"}`,
+    `currentMode: ${pathwayTransitionState?.currentMode || "unknown"}`,
+    `previousPathway: ${pathwayTransitionState?.previousPathway || "unknown"}`,
+    `currentPathway: ${pathwayTransitionState?.currentPathway || "unknown"}`,
+    `previousSequence: ${pathwayTransitionState?.previousSequence || "unknown"}`,
+    `currentSequence: ${pathwayTransitionState?.currentSequence || "unknown"}`,
+    `previousPathwayClassification: ${
+      pathwayTransitionState?.previousPathwayClassification || "unknown"
+    }`,
+    `currentPathwayClassification: ${
+      pathwayTransitionState?.currentPathwayClassification || "unknown"
+    }`
+  ].join("\n")
+}
+
+function buildPathwayTransitionReason(pathwayTransitionState: any) {
+  if (!pathwayTransitionState) {
+    return "Pathway Transition State is not available from the latest SourceField state."
+  }
+
+  const reasons = Array.isArray(pathwayTransitionState?.transitionReason)
+    ? pathwayTransitionState.transitionReason
+    : []
+
+  if (!reasons.length) {
+    return "No transition reasons are listed in the current Pathway Transition State."
+  }
+
+  return [
+    `transitionType: ${pathwayTransitionState?.transitionType || "unknown"}`,
+    `transitionConfidence: ${
+      pathwayTransitionState?.transitionConfidence || "unknown"
+    }`,
+    `transitionReason:`,
+    ...reasons.map((reason: string, index: number) => {
+      return `${index + 1}. ${reason}`
+    })
+  ].join("\n")
+}
+
+function buildPathwayTransitionConfidence(pathwayTransitionState: any) {
+  if (!pathwayTransitionState) {
+    return "Pathway Transition State is not available from the latest SourceField state."
+  }
+
+  return [
+    `transitionConfidence: ${
+      pathwayTransitionState?.transitionConfidence || "unknown"
+    }`,
+    `transitionDetected: ${
+      pathwayTransitionState?.transitionDetected ? "true" : "false"
+    }`,
+    `transitionType: ${pathwayTransitionState?.transitionType || "unknown"}`,
+    `transitionRule: ${pathwayTransitionState?.transitionRule || "unknown"}`
+  ].join("\n")
+}
+
+function buildPathwayTransitionClassification(pathwayTransitionState: any) {
+  return [
+    "Pathway Transition Engine is read-only transition guidance.",
+    "It compares previous and current pathway selection states to detect mode changes, transition type, transition reason, and transition confidence.",
+    "It is not a raw metric and it must not override live metrics, classifications, hashes, retrieved context, stored history, or user intent.",
+    pathwayTransitionState?.rule
+      ? `Boundary rule: ${pathwayTransitionState.rule}`
+      : "Boundary rule: unavailable."
+  ].join("\n")
+}
+
+function buildPathwayTransitionResponse(
+  action: PathwayTransitionAction,
+  pathwayTransitionState: any
+) {
+  if (action === "report") {
+    return JSON.stringify(pathwayTransitionState ?? null, null, 2)
+  }
+
+  if (action === "details") {
+    return buildPathwayTransitionDetails(pathwayTransitionState)
+  }
+
+  if (action === "reason") {
+    return buildPathwayTransitionReason(pathwayTransitionState)
+  }
+
+  if (action === "confidence") {
+    return buildPathwayTransitionConfidence(pathwayTransitionState)
+  }
+
+  if (action === "classification") {
+    return buildPathwayTransitionClassification(pathwayTransitionState)
+  }
+
+  return buildPathwayTransitionSummary(pathwayTransitionState)
+}
+
 export async function POST(req: Request) {
   try {
     const body = await req.json()
@@ -1327,6 +1543,67 @@ export async function POST(req: Request) {
       })
     }
 
+    const pathwayTransitionAction = getPathwayTransitionAction(lastUserMessage)
+
+    if (pathwayTransitionAction) {
+      const { data: latestStates, error: latestStateError } =
+        await supabaseAdmin
+          .from("sourcefield_ledger_events")
+          .select("*")
+          .eq("agent_id", AGENT_ID)
+          .order("created_at", { ascending: false })
+          .limit(2)
+
+      if (latestStateError) {
+        return NextResponse.json(
+          {
+            error:
+              "Failed to fetch latest stored SourceField pathway states for transition analysis.",
+            details: latestStateError.message
+          },
+          { status: 500 }
+        )
+      }
+
+      const currentRecord = Array.isArray(latestStates) ? latestStates[0] : null
+
+      const previousRecord = Array.isArray(latestStates)
+        ? latestStates[1]
+        : null
+
+      const currentPathwaySelectionState =
+        buildPathwaySelectionStateFromLedgerRecord(currentRecord)
+
+      const previousPathwaySelectionState =
+        buildPathwaySelectionStateFromLedgerRecord(previousRecord)
+
+      const pathwayTransitionState = currentPathwaySelectionState
+        ? generatePathwayTransitionState(
+            currentPathwaySelectionState,
+            previousPathwaySelectionState
+          )
+        : null
+
+      return NextResponse.json({
+        result: buildPathwayTransitionResponse(
+          pathwayTransitionAction,
+          pathwayTransitionState
+        ),
+        directStateReport: true,
+        nonMutatingReport: true,
+        deterministicPathwayTransitionResponse: true,
+        source: "latest_stored_supabase_snapshot",
+        stateObject: "pathway transition state",
+        action: pathwayTransitionAction,
+        value: pathwayTransitionState,
+        agentId: AGENT_ID,
+        runtimeAgentId: RUNTIME_AGENT_ID,
+        ledgerHash: currentRecord?.ledger_hash ?? null,
+        resonanceHash: currentRecord?.resonance_hash ?? null,
+        createdAt: currentRecord?.created_at ?? null
+      })
+    }
+
     const resonanceHash = createResonanceHash({
       agent: AGENT_ID,
       message: lastUserMessage,
@@ -1377,6 +1654,31 @@ export async function POST(req: Request) {
 
     const pathwaySelectionState = generatePathwaySelectionState(
       buildPathwaySelectionInput(equationLaneState, resonanceState)
+    )
+
+    let previousPathwaySelectionState: any = null
+
+    try {
+      const { data: latestPathwayState } = await supabaseAdmin
+        .from("sourcefield_ledger_events")
+        .select("equation_lane_state, resonance_state")
+        .eq("agent_id", AGENT_ID)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle()
+
+      previousPathwaySelectionState =
+        buildPathwaySelectionStateFromLedgerRecord(latestPathwayState)
+    } catch (pathwayTransitionLookupError) {
+      console.error(
+        "SourceField previous pathway lookup failed:",
+        pathwayTransitionLookupError
+      )
+    }
+
+    const pathwayTransitionState = generatePathwayTransitionState(
+      pathwaySelectionState,
+      previousPathwaySelectionState
     )
 
     const equationBalanceCoordinator = generateEquationBalanceCoordinator(
@@ -1432,6 +1734,7 @@ export async function POST(req: Request) {
       equationStabilityForecast,
       predictiveAlignmentEngine,
       pathwaySelectionState,
+      pathwayTransitionState,
       crossEquationConsensus,
       crossEquationStabilization,
       equationBalanceCoordinator,
@@ -1657,6 +1960,7 @@ export async function POST(req: Request) {
       equationStabilityForecast,
       predictiveAlignmentEngine,
       pathwaySelectionState,
+      pathwayTransitionState,
       crossEquationConsensus,
       crossEquationStabilization,
       equationBalanceCoordinator,
@@ -1953,6 +2257,8 @@ ${
       predictiveAlignmentEngineGenerated: Boolean(predictiveAlignmentEngine),
       pathwaySelectionState,
       pathwaySelectionStateGenerated: Boolean(pathwaySelectionState),
+      pathwayTransitionState,
+      pathwayTransitionStateGenerated: Boolean(pathwayTransitionState),
       crossEquationConsensus,
       crossEquationConsensusGenerated: Boolean(crossEquationConsensus),
       crossEquationStabilization,
