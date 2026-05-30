@@ -764,6 +764,10 @@ type PathwaySelectionAction =
   | "report"
   | "summary"
   | "available"
+  | "details"
+  | "activation"
+  | "rejected"
+  | "switch"
   | "reason"
   | "classification"
 
@@ -786,6 +790,62 @@ function getPathwaySelectionAction(
   }
 
   if (
+    normalized.includes("activationconditions") ||
+    normalized.includes("activation conditions") ||
+    normalized.includes("activationcondition") ||
+    normalized.includes("activation condition")
+  ) {
+    return "activation"
+  }
+
+  if (
+    normalized.includes("rejectedpathways") ||
+    normalized.includes("rejected pathways") ||
+    normalized.includes("rejected pathway") ||
+    normalized.includes("why the rejected") ||
+    normalized.includes("not selected")
+  ) {
+    return "rejected"
+  }
+
+  if (
+    normalized.includes("switchconditions") ||
+    normalized.includes("switch conditions") ||
+    normalized.includes("switch condition") ||
+    normalized.includes("pathway switch") ||
+    normalized.includes("trigger a pathway switch") ||
+    normalized.includes("trigger")
+  ) {
+    return "switch"
+  }
+
+  if (
+    normalized.includes("pathwayclassification") ||
+    normalized.includes("pathway classification") ||
+    normalized.includes("classification") ||
+    normalized.includes("what kind") ||
+    normalized.includes("orchestration") ||
+    normalized.includes("mode layer") ||
+    normalized.includes("forecasting layer") ||
+    normalized.includes("measured state object")
+  ) {
+    return "classification"
+  }
+
+  if (
+    normalized.includes("active mode") ||
+    normalized.includes("activemode") ||
+    normalized.includes("selectedpathway") ||
+    normalized.includes("selected pathway") ||
+    normalized.includes("pathwayreason") ||
+    normalized.includes("pathway reason") ||
+    normalized.includes("identify:") ||
+    normalized.includes("identify")
+  ) {
+    return "details"
+  }
+
+  if (
     normalized.includes("available") ||
     normalized.includes("pathways") ||
     normalized.includes("list")
@@ -802,15 +862,6 @@ function getPathwaySelectionAction(
     return "reason"
   }
 
-  if (
-    normalized.includes("classification") ||
-    normalized.includes("what kind") ||
-    normalized.includes("orchestration") ||
-    normalized.includes("mode layer")
-  ) {
-    return "classification"
-  }
-
   return "summary"
 }
 
@@ -823,10 +874,26 @@ function buildPathwaySelectionSummary(pathwaySelectionState: any) {
     `phase: ${pathwaySelectionState?.phase || "unknown"}`,
     `activeMode: ${pathwaySelectionState?.activeMode || "unknown"}`,
     `selectedPathway: ${pathwaySelectionState?.selectedPathway || "unknown"}`,
+    `selectedSequence: ${pathwaySelectionState?.selectedSequence || "unknown"}`,
+    `pathwayClassification: ${pathwaySelectionState?.pathwayClassification || "unknown"}`,
     `pathwayReason: ${pathwaySelectionState?.pathwayReason || "unknown"}`,
     `pathwaySelectionActive: ${
       pathwaySelectionState?.pathwaySelectionActive ? "true" : "false"
     }`
+  ].join("\n")
+}
+
+function buildPathwaySelectionDetails(pathwaySelectionState: any) {
+  if (!pathwaySelectionState) {
+    return "Pathway Selection State is not available from the latest SourceField state."
+  }
+
+  return [
+    `activeMode: ${pathwaySelectionState?.activeMode || "unknown"}`,
+    `selectedPathway: ${pathwaySelectionState?.selectedPathway || "unknown"}`,
+    `selectedSequence: ${pathwaySelectionState?.selectedSequence || "unknown"}`,
+    `pathwayClassification: ${pathwaySelectionState?.pathwayClassification || "unknown"}`,
+    `pathwayReason: ${pathwaySelectionState?.pathwayReason || "unknown"}`
   ].join("\n")
 }
 
@@ -847,9 +914,78 @@ function buildPathwaySelectionAvailable(pathwaySelectionState: any) {
     .map((pathway: any, index: number) => {
       return `${index + 1}. ${pathway?.name || "unknown"}: ${
         pathway?.sequence || "unknown"
+      }${pathway?.purpose ? `\n   purpose: ${pathway.purpose}` : ""}`
+    })
+    .join("\n")
+}
+
+function buildPathwaySelectionActivation(pathwaySelectionState: any) {
+  if (!pathwaySelectionState) {
+    return "Pathway Selection State is not available from the latest SourceField state."
+  }
+
+  const conditions = Array.isArray(pathwaySelectionState?.activationConditions)
+    ? pathwaySelectionState.activationConditions
+    : []
+
+  if (!conditions.length) {
+    return "No activation conditions are listed in the current Pathway Selection State."
+  }
+
+  return [
+    `selectedPathway: ${pathwaySelectionState?.selectedPathway || "unknown"}`,
+    `pathwayClassification: ${pathwaySelectionState?.pathwayClassification || "unknown"}`,
+    `activationConditions:`,
+    ...conditions.map((condition: string, index: number) => {
+      return `${index + 1}. ${condition}`
+    })
+  ].join("\n")
+}
+
+function buildPathwaySelectionRejected(pathwaySelectionState: any) {
+  if (!pathwaySelectionState) {
+    return "Pathway Selection State is not available from the latest SourceField state."
+  }
+
+  const rejected = Array.isArray(pathwaySelectionState?.rejectedPathways)
+    ? pathwaySelectionState.rejectedPathways
+    : []
+
+  if (!rejected.length) {
+    return "No rejected pathways are listed in the current Pathway Selection State."
+  }
+
+  return rejected
+    .map((pathway: any, index: number) => {
+      return `${index + 1}. ${pathway?.name || "unknown"}: ${
+        pathway?.reason || "No rejection reason stored."
       }`
     })
     .join("\n")
+}
+
+function buildPathwaySelectionSwitch(pathwaySelectionState: any) {
+  if (!pathwaySelectionState) {
+    return "Pathway Selection State is not available from the latest SourceField state."
+  }
+
+  const switchConditions = Array.isArray(
+    pathwaySelectionState?.switchConditions
+  )
+    ? pathwaySelectionState.switchConditions
+    : []
+
+  if (!switchConditions.length) {
+    return "No switch conditions are listed in the current Pathway Selection State."
+  }
+
+  return [
+    `currentSelectedPathway: ${pathwaySelectionState?.selectedPathway || "unknown"}`,
+    `switchConditions:`,
+    ...switchConditions.map((condition: string, index: number) => {
+      return `${index + 1}. ${condition}`
+    })
+  ].join("\n")
 }
 
 function buildPathwaySelectionReason(pathwaySelectionState: any) {
@@ -857,18 +993,28 @@ function buildPathwaySelectionReason(pathwaySelectionState: any) {
     return "Pathway Selection State is not available from the latest SourceField state."
   }
 
+  const observed = pathwaySelectionState?.observedConditions || {}
+
   return [
     `activeMode: ${pathwaySelectionState?.activeMode || "unknown"}`,
     `selectedPathway: ${pathwaySelectionState?.selectedPathway || "unknown"}`,
-    `pathwayReason: ${pathwaySelectionState?.pathwayReason || "unknown"}`
+    `selectedSequence: ${pathwaySelectionState?.selectedSequence || "unknown"}`,
+    `pathwayClassification: ${pathwaySelectionState?.pathwayClassification || "unknown"}`,
+    `pathwayReason: ${pathwaySelectionState?.pathwayReason || "unknown"}`,
+    `observedConditions: root=${observed?.rootStatus || "unknown"}, alignment=${
+      observed?.alignmentStatus || "unknown"
+    }, phase=${observed?.phaseStatus || "unknown"}, harmonic=${
+      observed?.harmonicStatus || "unknown"
+    }, integration=${observed?.integrationStatus || "unknown"}`
   ].join("\n")
 }
 
 function buildPathwaySelectionClassification(pathwaySelectionState: any) {
   return [
-    "Pathway Selection Engine is read-only orchestration guidance.",
-    "It identifies the active mode, selected pathway, activation conditions, and pathway rationale from current equation lane conditions.",
-    "It is not a raw metric and must not override live metrics, classifications, hashes, retrieved context, stored history, or user intent.",
+    "Pathway Selection Engine is read-only pathway orchestration guidance.",
+    "It is a derived state layer that uses current equation lane conditions to identify active mode, selected pathway, activation conditions, rejected pathways, switch conditions, and pathway rationale.",
+    "It is not a raw metric and it is not a forecasting layer by itself.",
+    "It must not override live metrics, classifications, hashes, retrieved context, stored history, or user intent.",
     pathwaySelectionState?.rule
       ? `Boundary rule: ${pathwaySelectionState.rule}`
       : "Boundary rule: unavailable."
@@ -883,8 +1029,24 @@ function buildPathwaySelectionResponse(
     return JSON.stringify(pathwaySelectionState ?? null, null, 2)
   }
 
+  if (action === "details") {
+    return buildPathwaySelectionDetails(pathwaySelectionState)
+  }
+
   if (action === "available") {
     return buildPathwaySelectionAvailable(pathwaySelectionState)
+  }
+
+  if (action === "activation") {
+    return buildPathwaySelectionActivation(pathwaySelectionState)
+  }
+
+  if (action === "rejected") {
+    return buildPathwaySelectionRejected(pathwaySelectionState)
+  }
+
+  if (action === "switch") {
+    return buildPathwaySelectionSwitch(pathwaySelectionState)
   }
 
   if (action === "reason") {
