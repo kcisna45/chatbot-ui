@@ -300,6 +300,10 @@ function formatDistance(value: any) {
   return Number.isInteger(value) ? `${value}` : `${value}`
 }
 
+function compactNumbers(values: any[]) {
+  return values.filter((value) => typeof value === "number" && Number.isFinite(value))
+}
+
 function buildLaneStabilityRanking(laneStabilityDistance: any) {
   const lanes = sortLaneDistanceLanes(laneStabilityDistance)
 
