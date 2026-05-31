@@ -9,6 +9,9 @@ export const GENESIS_IDENTITY_ANCHOR = {
   genesisMerkleRoot:
     "8b9c7d6e5f4a3b2c1d0e9f8a7b6c5d4e3f2a1b0c9d8e7f6a5b4c3d2e1f0a9b8c",
 
+  anchorHash:
+    "8b9c7d6e5f4a3b2c1d0e9f8a7b6c5d4e3f2a1b0c9d8e7f6a5b4c3d2e1f0a9b8c",
+
   ledgerSourceUrl:
     "https://github.com/kcisna45/sourcefield-coherence/blob/main/sourcefield_ledger.md",
 
