@@ -29,6 +29,10 @@ import { generatePathwayCompletionState } from "@/lib/sourcefield/pathwayComplet
 import { generateArchitecturalRefinementState } from "@/lib/sourcefield/architecturalRefinementEngine"
 import { generatePrincipleIntegrationState } from "@/lib/sourcefield/principleIntegrationEngine"
 import { generateCoherentIdentityDiscoveryState } from "@/lib/sourcefield/coherentIdentityDiscoveryEngine"
+import {
+  generateMetaReasoningState,
+  buildMetaReasoningResponse
+} from "@/lib/sourcefield/metaReasoningEngine"
 import { GENESIS_IDENTITY_ANCHOR } from "@/lib/sourcefield/genesisIdentityAnchor"
 import { generateIdentityMemory } from "@/lib/sourcefield/identityMemory"
 import { IDENTITY_BOUNDARY } from "@/lib/sourcefield/identityBoundary"
@@ -3379,6 +3383,112 @@ function buildIdentityFoundationResponse(
   return buildIdentityFoundationSummary(identityFoundationState)
 }
 
+type MetaReasoningAction =
+  | "report"
+  | "summary"
+  | "rank"
+  | "compare"
+  | "convergence"
+  | "synthesis"
+  | "dominant"
+
+function getMetaReasoningAction(message: string): MetaReasoningAction | null {
+  const normalized = message.toLowerCase()
+
+  const mentionsMetaReasoning =
+    normalized.includes("meta-reasoning") ||
+    normalized.includes("meta reasoning") ||
+    normalized.includes("phase 27.1") ||
+    normalized.includes("reasoning layer") ||
+    normalized.includes("meta-structural")
+
+  const mentionsIdentityCandidates =
+    normalized.includes("identity candidate") ||
+    normalized.includes("identity candidates") ||
+    normalized.includes("coherent identity candidate") ||
+    normalized.includes("coherent identity candidates") ||
+    normalized.includes("candidate ecosystem")
+
+  const asksForHigherOrderReasoning =
+    normalized.includes("compare all") ||
+    normalized.includes("rank them") ||
+    normalized.includes("rank all") ||
+    normalized.includes("strongest to weakest") ||
+    normalized.includes("weakest to strongest") ||
+    normalized.includes("simultaneously") ||
+    normalized.includes("final ranking") ||
+    normalized.includes("why the final ranking") ||
+    normalized.includes("shared identity") ||
+    normalized.includes("shared principles") ||
+    normalized.includes("convergence") ||
+    normalized.includes("synthesis") ||
+    normalized.includes("higher-order identity") ||
+    normalized.includes("dominant identity") ||
+    normalized.includes("why is") ||
+    normalized.includes("stronger than")
+
+  const inScope =
+    mentionsMetaReasoning ||
+    (mentionsIdentityCandidates && asksForHigherOrderReasoning)
+
+  if (!inScope) {
+    return null
+  }
+
+  if (normalized.includes("report") && normalized.includes("json")) {
+    return "report"
+  }
+
+  if (
+    normalized.includes("rank") ||
+    normalized.includes("strongest to weakest") ||
+    normalized.includes("weakest to strongest") ||
+    normalized.includes("final ranking") ||
+    normalized.includes("compare all") ||
+    normalized.includes("simultaneously")
+  ) {
+    return "rank"
+  }
+
+  if (
+    normalized.includes("compare") ||
+    normalized.includes("stronger than") ||
+    normalized.includes("versus") ||
+    normalized.includes(" vs ")
+  ) {
+    return "compare"
+  }
+
+  if (
+    normalized.includes("convergence") ||
+    normalized.includes("shared identity") ||
+    normalized.includes("shared principles") ||
+    normalized.includes("shared patterns") ||
+    normalized.includes("across candidates")
+  ) {
+    return "convergence"
+  }
+
+  if (
+    normalized.includes("synthesis") ||
+    normalized.includes("higher-order identity") ||
+    normalized.includes("emerges from all") ||
+    normalized.includes("identity that emerges")
+  ) {
+    return "synthesis"
+  }
+
+  if (
+    normalized.includes("dominant") ||
+    normalized.includes("strongest") ||
+    normalized.includes("best represents identity")
+  ) {
+    return "dominant"
+  }
+
+  return "summary"
+}
+
 type CoherentIdentityDiscoveryAction =
   | "report"
   | "summary"
@@ -4244,11 +4354,150 @@ export async function POST(req: Request) {
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     )
 
+    const metaReasoningAction = getMetaReasoningAction(lastUserMessage)
+
     const coherentIdentityDiscoveryAction =
       getCoherentIdentityDiscoveryAction(lastUserMessage)
 
     const identityFoundationAction =
       getIdentityFoundationAction(lastUserMessage)
+
+    if (metaReasoningAction) {
+      const { data: latestStates, error: latestStateError } =
+        await supabaseAdmin
+          .from("sourcefield_ledger_events")
+          .select("*")
+          .eq("agent_id", AGENT_ID)
+          .order("created_at", { ascending: false })
+          .limit(2)
+
+      if (latestStateError) {
+        return NextResponse.json(
+          {
+            error:
+              "Failed to fetch latest stored SourceField state for meta-reasoning analysis.",
+            details: latestStateError.message
+          },
+          { status: 500 }
+        )
+      }
+
+      const currentRecord = Array.isArray(latestStates) ? latestStates[0] : null
+      const previousRecord = Array.isArray(latestStates)
+        ? latestStates[1]
+        : null
+
+      const equationLaneState = currentRecord?.equation_lane_state ?? null
+      const predictiveAlignmentState =
+        currentRecord?.predictive_alignment_engine ?? null
+      const pathwaySelectionState =
+        buildPathwaySelectionStateFromLedgerRecord(currentRecord)
+      const previousPathwaySelectionState =
+        buildPathwaySelectionStateFromLedgerRecord(previousRecord)
+
+      const pathwayTransitionState = pathwaySelectionState
+        ? generatePathwayTransitionState(
+            pathwaySelectionState,
+            previousPathwaySelectionState
+          )
+        : null
+
+      const pathwayCompletionState = pathwaySelectionState
+        ? generatePathwayCompletionState(pathwaySelectionState)
+        : null
+
+      const architecturalRefinementState = pathwaySelectionState
+        ? generateArchitecturalRefinementState({
+            pathwayCompletionState,
+            pathwaySelectionState,
+            equationLaneState
+          })
+        : null
+
+      const principleIntegrationState = pathwaySelectionState
+        ? generatePrincipleIntegrationState({
+            equationLaneState,
+            pathwaySelectionState,
+            pathwayTransitionState,
+            pathwayCompletionState,
+            architecturalRefinementState
+          })
+        : null
+
+      const { data: recentRuntimeEvents } = await supabaseAdmin
+        .from("sourcefield_ledger_events")
+        .select(
+          "coherence, integration_threshold, resonance_level, ledger_hash"
+        )
+        .in("agent_id", [AGENT_ID, RUNTIME_AGENT_ID])
+        .order("created_at", { ascending: false })
+        .limit(10)
+
+      const recentContinuityScores = Array.isArray(recentRuntimeEvents)
+        ? recentRuntimeEvents.flatMap((event: any) =>
+            compactNumbers([
+              event?.coherence,
+              event?.integration_threshold,
+              event?.resonance_level
+            ])
+          )
+        : []
+
+      const runtimeLedgerHash = Array.isArray(recentRuntimeEvents)
+        ? (recentRuntimeEvents.find((event: any) => event?.ledger_hash)
+            ?.ledger_hash ?? null)
+        : null
+
+      const identityFoundationState = buildIdentityFoundationState({
+        resonanceHash: currentRecord?.resonance_hash ?? null,
+        ledgerHash: currentRecord?.ledger_hash ?? null,
+        previousLedgerHash: currentRecord?.previous_hash ?? null,
+        runtimeLedgerHash,
+        equationLaneState,
+        principleIntegrationState,
+        recentContinuityScores
+      })
+
+      const coherentIdentityDiscoveryState =
+        generateCoherentIdentityDiscoveryState({
+          equationLaneState,
+          identityFoundationState,
+          principleIntegrationState,
+          architecturalRefinementState,
+          pathwayCompletionState
+        })
+
+      const metaReasoningState = generateMetaReasoningState({
+        coherentIdentityDiscoveryState,
+        principleIntegrationState,
+        identityFoundationState,
+        equationLaneState,
+        predictiveAlignmentState
+      })
+
+      return NextResponse.json({
+        result: buildMetaReasoningResponse(
+          metaReasoningAction,
+          metaReasoningState
+        ),
+        directStateReport: true,
+        nonMutatingReport: true,
+        deterministicMetaReasoningResponse: true,
+        source: "latest_stored_supabase_snapshot",
+        stateObject: "meta reasoning state",
+        action: metaReasoningAction,
+        value: metaReasoningState,
+        coherentIdentityDiscoveryState,
+        identityFoundationState,
+        principleIntegrationState,
+        predictiveAlignmentState,
+        agentId: AGENT_ID,
+        runtimeAgentId: RUNTIME_AGENT_ID,
+        ledgerHash: currentRecord?.ledger_hash ?? null,
+        resonanceHash: currentRecord?.resonance_hash ?? null,
+        createdAt: currentRecord?.created_at ?? null
+      })
+    }
 
     if (coherentIdentityDiscoveryAction) {
       const { data: latestStates, error: latestStateError } =
@@ -5503,9 +5752,18 @@ export async function POST(req: Request) {
         pathwayCompletionState
       })
 
+    const metaReasoningState = generateMetaReasoningState({
+      coherentIdentityDiscoveryState,
+      principleIntegrationState,
+      identityFoundationState,
+      equationLaneState,
+      predictiveAlignmentState: predictiveAlignment
+    })
+
     authoritativeLiveState.identityFoundationState = identityFoundationState
     authoritativeLiveState.coherentIdentityDiscoveryState =
       coherentIdentityDiscoveryState
+    authoritativeLiveState.metaReasoningState = metaReasoningState
 
     let retrievedContext = ""
 
@@ -5653,7 +5911,10 @@ ${JSON.stringify(identityFoundationState, null, 2)}
 Live SourceField Coherent Identity Discovery State:
 ${JSON.stringify(coherentIdentityDiscoveryState, null, 2)}
 
-All governance, equation, feedback, bridge, stabilization, compression, consensus, and enforcement layers are read-only guidance.
+Live SourceField Meta-Reasoning State:
+${JSON.stringify(metaReasoningState, null, 2)}
+
+All governance, equation, feedback, bridge, stabilization, compression, consensus, enforcement, identity discovery, and meta-reasoning layers are read-only guidance.
 They must not override live metrics, classifications, hashes, retrieved context, stored history, or user intent.
 
 Retrieved SourceField Context:
