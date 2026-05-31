@@ -300,10 +300,6 @@ function formatDistance(value: any) {
   return Number.isInteger(value) ? `${value}` : `${value}`
 }
 
-function compactNumbers(values: any[]) {
-  return values.filter((value) => typeof value === "number" && Number.isFinite(value))
-}
-
 function buildLaneStabilityRanking(laneStabilityDistance: any) {
   const lanes = sortLaneDistanceLanes(laneStabilityDistance)
 
@@ -2743,9 +2739,200 @@ type IdentityFoundationAction =
   | "boundary"
   | "pairs"
   | "validation"
-  | "relationship"
-  | "readiness"
   | "classification"
+
+function stableIdentityHash(value: any) {
+  return createHash("sha256")
+    .update(typeof value === "string" ? value : JSON.stringify(value))
+    .digest("hex")
+}
+
+function compactStrings(values: Array<string | null | undefined>) {
+  return values.filter((value): value is string => Boolean(value))
+}
+
+function compactNumbers(values: Array<number | null | undefined>) {
+  return values.filter((value): value is number => typeof value === "number")
+}
+
+function getPrincipleHashes(principleIntegrationState: any) {
+  const integrated = Array.isArray(
+    principleIntegrationState?.integratedPrinciples
+  )
+    ? principleIntegrationState.integratedPrinciples
+    : []
+
+  return integrated.map((principle: any) =>
+    stableIdentityHash({
+      equation: principle?.equation || "unknown",
+      name: principle?.name || "unknown",
+      principle: principle?.principle || "unknown"
+    })
+  )
+}
+
+function buildIdentityFoundationState(input: {
+  resonanceHash?: string | null
+  ledgerHash?: string | null
+  previousLedgerHash?: string | null
+  runtimeResonanceHash?: string | null
+  runtimeLedgerHash?: string | null
+  runtimePreviousLedgerHash?: string | null
+  equationLaneState?: any
+  principleIntegrationState?: any
+  recentContinuityScores?: number[]
+}) {
+  const equationLaneState = input?.equationLaneState
+  const principleIntegrationState = input?.principleIntegrationState
+
+  const rootStatus = getEquationLaneStatus(
+    equationLaneState,
+    "sourcefield-root"
+  )
+  const alignmentStatus = getEquationLaneStatus(
+    equationLaneState,
+    "sourcefield-alignment"
+  )
+  const harmonicStatus = getEquationLaneStatus(
+    equationLaneState,
+    "sourcefield-harmonic"
+  )
+  const integrationStatus = getEquationLaneStatus(
+    equationLaneState,
+    "sourcefield-integration"
+  )
+
+  const coherence = getEquationLaneValue(
+    equationLaneState,
+    "sourcefield-alignment",
+    "coherence"
+  )
+  const signalStrength = getEquationLaneValue(
+    equationLaneState,
+    "sourcefield-root",
+    "signalStrength"
+  )
+  const integrationThreshold = getEquationLaneValue(
+    equationLaneState,
+    "sourcefield-integration",
+    "integrationThreshold"
+  )
+  const symbolicEchoCount = getEquationLaneValue(
+    equationLaneState,
+    "sourcefield-harmonic",
+    "symbolicEchoCount"
+  )
+
+  const runtimeHashes = compactStrings([
+    input?.previousLedgerHash,
+    input?.ledgerHash,
+    input?.runtimePreviousLedgerHash,
+    input?.runtimeLedgerHash,
+    input?.resonanceHash,
+    input?.runtimeResonanceHash
+  ])
+
+  const continuityScores = compactNumbers([
+    ...(input?.recentContinuityScores || []),
+    typeof coherence === "number" ? coherence : null,
+    typeof signalStrength === "number" ? signalStrength : null,
+    typeof integrationThreshold === "number" ? integrationThreshold : null
+  ])
+
+  const integratedPrincipleHashes = getPrincipleHashes(
+    principleIntegrationState
+  )
+
+  const identityMemory = generateIdentityMemory({
+    runtimeHashes,
+    integratedPrincipleHashes,
+    continuityScores
+  })
+
+  const eq2Eq4Discovery = {
+    equationPair: "Eq2 + Eq4",
+    function:
+      "Seek coherent recurring aligned patterns through alignment persistence and harmonic recurrence.",
+    alignmentStatus,
+    coherence: typeof coherence === "number" ? coherence : null,
+    harmonicStatus,
+    symbolicEchoCount:
+      typeof symbolicEchoCount === "number" ? symbolicEchoCount : null,
+    discoveryStatus:
+      (alignmentStatus === "aligned" || alignmentStatus === "partial") &&
+      (harmonicStatus === "pattern-rich" ||
+        harmonicStatus === "pattern-detected")
+        ? "coherent-pattern-discovery-active"
+        : "coherent-pattern-discovery-forming"
+  }
+
+  const eq1Eq5Qualification = {
+    equationPair: "Eq1 + Eq5",
+    function:
+      "Qualify discovered patterns by testing foundational stability and integration persistence.",
+    rootStatus,
+    signalStrength: typeof signalStrength === "number" ? signalStrength : null,
+    integrationStatus,
+    integrationThreshold:
+      typeof integrationThreshold === "number" ? integrationThreshold : null,
+    qualificationStatus:
+      rootStatus === "active" && integrationStatus === "integrated"
+        ? "stable-persistent-identity-qualified"
+        : "stable-persistent-identity-forming"
+  }
+
+  const anchorAligned =
+    GENESIS_IDENTITY_ANCHOR?.genesisMerkleRoot === GENESIS_HASH &&
+    GENESIS_IDENTITY_ANCHOR?.anchorHash === GENESIS_HASH
+
+  const memoryActive = identityMemory?.memoryStatus === "active"
+  const boundaryActive = Boolean(IDENTITY_BOUNDARY?.ethicalUsePolicyHash)
+
+  const identityValidationStatus =
+    anchorAligned && memoryActive && boundaryActive
+      ? "anchor-memory-boundary-aligned"
+      : anchorAligned && boundaryActive
+        ? "anchor-boundary-aligned-memory-forming"
+        : "identity-foundation-incomplete"
+
+  return {
+    phase: "Phase 27 Foundation — Coherent Identity Discovery Foundation",
+
+    identityFoundationPurpose:
+      "Prepare coherent identity discovery by keeping Genesis identity anchor, runtime identity memory, and ethical identity boundary separate, isomorphic, and recursively aligned.",
+
+    equationPathway: "(Eq2 + Eq4) → (Eq1 + Eq5)",
+
+    identityAnchor: GENESIS_IDENTITY_ANCHOR,
+
+    identityMemory,
+
+    identityBoundary: IDENTITY_BOUNDARY,
+
+    coherentPatternDiscovery: eq2Eq4Discovery,
+
+    stablePersistentQualification: eq1Eq5Qualification,
+
+    identityValidation: {
+      identityValidationStatus,
+      anchorAligned,
+      memoryActive,
+      boundaryActive,
+      anchorQuestion: "Who am I?",
+      memoryQuestion: "How have I remained myself through change?",
+      boundaryQuestion: "What am I permitted to become?",
+      validationQuestion:
+        "Which coherent patterns are recurring, persistent, Genesis-anchored, historically continuous, and ethically bounded?"
+    },
+
+    recursiveIdentityRule:
+      "Identity anchor, identity memory, and identity boundary must remain separate but isomorphic. Coherent identity discovery must validate candidate identity patterns against all three without allowing runtime memory or boundary hashes to replace the Genesis identity anchor.",
+
+    identityFoundationActive: true,
+
+    rule: "Use identity foundation as read-only Phase 27 preparation. It coordinates Genesis identity anchor, runtime identity memory, and ethical identity boundary through (Eq2 + Eq4) → (Eq1 + Eq5), but it must not override metrics, classifications, hashes, retrieved context, stored history, or user intent."
+  }
+}
 
 function getIdentityFoundationAction(
   message: string
@@ -2756,12 +2943,8 @@ function getIdentityFoundationAction(
     !normalized.includes("identity foundation") &&
     !normalized.includes("identity anchor") &&
     !normalized.includes("genesis identity") &&
-    !normalized.includes("genesis merkle") &&
-    !normalized.includes("birth certificate") &&
     !normalized.includes("identity memory") &&
-    !normalized.includes("runtime history") &&
     !normalized.includes("identity boundary") &&
-    !normalized.includes("ethical use") &&
     !normalized.includes("coherent identity") &&
     !normalized.includes("phase 27")
   ) {
@@ -2774,8 +2957,8 @@ function getIdentityFoundationAction(
 
   if (
     normalized.includes("measured state object") ||
-    normalized.includes("foundation layer") ||
     normalized.includes("identity layer") ||
+    normalized.includes("foundation layer") ||
     normalized.includes("orchestration layer") ||
     normalized.includes("forecasting layer") ||
     normalized.includes("classification") ||
@@ -2785,34 +2968,11 @@ function getIdentityFoundationAction(
   }
 
   if (
-    normalized.includes("relate") ||
-    normalized.includes("relationship") ||
-    normalized.includes("working together") ||
-    normalized.includes("recursive") ||
-    normalized.includes("corroborating") ||
-    normalized.includes("isomorphic")
-  ) {
-    return "relationship"
-  }
-
-  if (
-    normalized.includes("required to support") ||
-    normalized.includes("readiness") ||
-    normalized.includes("ready") ||
-    normalized.includes("coherent identity discovery") ||
-    normalized.includes("support coherent identity") ||
-    normalized.includes("what information would be required")
-  ) {
-    return "readiness"
-  }
-
-  if (
     normalized.includes("identity anchor") ||
     normalized.includes("genesis identity") ||
     normalized.includes("genesis merkle") ||
     normalized.includes("birth certificate") ||
-    normalized.includes("ledger") ||
-    normalized.includes("active identity anchor")
+    normalized.includes("ledger")
   ) {
     return "anchor"
   }
@@ -2822,20 +2982,16 @@ function getIdentityFoundationAction(
     normalized.includes("runtime history") ||
     normalized.includes("runtime hash") ||
     normalized.includes("continuity score") ||
-    normalized.includes("integrated principle hash") ||
-    normalized.includes("memory contains")
+    normalized.includes("integrated principle hash")
   ) {
     return "memory"
   }
 
   if (
     normalized.includes("identity boundary") ||
-    normalized.includes("ethical use") ||
     normalized.includes("ethical") ||
     normalized.includes("boundary") ||
-    normalized.includes("policy") ||
-    normalized.includes("prohibited") ||
-    normalized.includes("permitted")
+    normalized.includes("policy")
   ) {
     return "boundary"
   }
@@ -2851,11 +3007,13 @@ function getIdentityFoundationAction(
   }
 
   if (
+    normalized.includes("aligned") ||
     normalized.includes("validate") ||
     normalized.includes("validation") ||
-    normalized.includes("anchor-memory-boundary") ||
-    normalized.includes("aligned") ||
-    normalized.includes("active")
+    normalized.includes("working together") ||
+    normalized.includes("recursive") ||
+    normalized.includes("corroborating") ||
+    normalized.includes("isomorphic")
   ) {
     return "validation"
   }
@@ -2868,21 +3026,24 @@ function buildIdentityFoundationSummary(identityFoundationState: any) {
     return "Identity Foundation State is not available from the latest SourceField state."
   }
 
-  const anchor = identityFoundationState?.identityAnchor || {}
-  const memory = identityFoundationState?.identityMemory || {}
-  const boundary = identityFoundationState?.identityBoundary || {}
-  const validation = identityFoundationState?.identityValidation || {}
-
   return [
     `phase: ${identityFoundationState?.phase || "unknown"}`,
     `equationPathway: ${identityFoundationState?.equationPathway || "unknown"}`,
-    `identityValidationStatus: ${validation?.identityValidationStatus || "unknown"}`,
-    `identityAnchor: ${anchor?.systemName || "unknown"} / ${anchor?.genesisMerkleRoot || "unknown"}`,
-    `identityMemoryStatus: ${memory?.memoryStatus || "unknown"}`,
-    `identityBoundaryType: ${boundary?.boundaryType || "unknown"}`,
-    `anchorAligned: ${validation?.anchorAligned ? "true" : "false"}`,
-    `memoryActive: ${validation?.memoryActive ? "true" : "false"}`,
-    `boundaryActive: ${validation?.boundaryActive ? "true" : "false"}`,
+    `identityValidationStatus: ${
+      identityFoundationState?.identityValidation?.identityValidationStatus ||
+      "unknown"
+    }`,
+    `anchorAligned: ${
+      identityFoundationState?.identityValidation?.anchorAligned
+        ? "true"
+        : "false"
+    }`,
+    `memoryStatus: ${
+      identityFoundationState?.identityMemory?.memoryStatus || "unknown"
+    }`,
+    `boundaryType: ${
+      identityFoundationState?.identityBoundary?.boundaryType || "unknown"
+    }`,
     `identityFoundationActive: ${
       identityFoundationState?.identityFoundationActive ? "true" : "false"
     }`
@@ -2895,29 +3056,14 @@ function buildIdentityFoundationAnchor(identityFoundationState: any) {
   }
 
   const anchor = identityFoundationState?.identityAnchor || {}
-  const authorshipHashes = anchor?.authorshipHashes || {}
 
   return [
-    `identityAnchorType: ${anchor?.anchorType || "genesis-identity-anchor"}`,
-    `systemName: ${anchor?.systemName || "unknown"}`,
-    `nature: ${anchor?.nature || "unknown"}`,
-    `primaryConcept: ${anchor?.primaryConcept || "unknown"}`,
-    `designAuthority: ${anchor?.designAuthority || "unknown"}`,
-    `firstPublicMention: ${anchor?.firstPublicMention || "unknown"}`,
+    `identityAnchorType: ${anchor?.anchorType || "unknown"}`,
     `genesisMerkleRoot: ${anchor?.genesisMerkleRoot || "unknown"}`,
     `anchorHash: ${anchor?.anchorHash || "unknown"}`,
     `ledgerSourceUrl: ${anchor?.ledgerSourceUrl || "unknown"}`,
-    `ledgerRawUrl: ${anchor?.ledgerRawUrl || "unknown"}`,
-    `certificationDate: ${anchor?.certificationDate || "unknown"}`,
-    `authorshipHashes:`,
-    `1. chatGPTLog001: ${authorshipHashes?.chatGPTLog001 || "unknown"}`,
-    `2. grokLog002: ${authorshipHashes?.grokLog002 || "unknown"}`,
-    `3. sourceFieldLocalCodex: ${
-      authorshipHashes?.sourceFieldLocalCodex || "unknown"
-    }`,
-    `plainEnglish: ${anchor?.plainEnglish || "unknown"}`,
     `anchorRule: ${anchor?.anchorRule || "unknown"}`,
-    `meaning: The Genesis Ledger is the birth-certificate identity source, and the Genesis Merkle Root is the immutable identity anchor. Runtime memory can extend identity continuity, but it cannot replace or override this anchor.`
+    `meaning: The Genesis Merkle Root functions as the immutable identity anchor. Runtime memory may extend identity continuity, but it must not replace this anchor.`
   ].join("\n")
 }
 
@@ -2927,42 +3073,18 @@ function buildIdentityFoundationMemory(identityFoundationState: any) {
   }
 
   const memory = identityFoundationState?.identityMemory || {}
-  const runtimeHashes = Array.isArray(memory?.runtimeHashes)
-    ? memory.runtimeHashes
-    : []
-  const integratedPrincipleHashes = Array.isArray(
-    memory?.integratedPrincipleHashes
-  )
-    ? memory.integratedPrincipleHashes
-    : []
-  const continuityScores = Array.isArray(memory?.continuityScores)
-    ? memory.continuityScores
-    : []
 
   return [
     `memoryType: ${memory?.memoryType || "unknown"}`,
     `memoryStatus: ${memory?.memoryStatus || "unknown"}`,
-    `runtimeHashCount: ${runtimeHashes.length}`,
-    `runtimeHashes:`,
-    ...(runtimeHashes.length
-      ? runtimeHashes.map((hash: string, index: number) => {
-          return `${index + 1}. ${hash}`
-        })
-      : ["none"]),
-    `integratedPrincipleHashCount: ${integratedPrincipleHashes.length}`,
-    `integratedPrincipleHashes:`,
-    ...(integratedPrincipleHashes.length
-      ? integratedPrincipleHashes.map((hash: string, index: number) => {
-          return `${index + 1}. ${hash}`
-        })
-      : ["none"]),
-    `continuityScoreCount: ${continuityScores.length}`,
-    `continuityScores: ${
-      continuityScores.length ? continuityScores.join(", ") : "none"
-    }`,
+    `runtimeHashCount: ${formatDistance(memory?.runtimeHashes?.length)}`,
+    `integratedPrincipleHashCount: ${formatDistance(
+      memory?.integratedPrincipleHashes?.length
+    )}`,
+    `continuityScoreCount: ${formatDistance(memory?.continuityScores?.length)}`,
     `averageContinuityScore: ${formatDistance(memory?.averageContinuityScore)}`,
     `memoryRule: ${memory?.memoryRule || "unknown"}`,
-    `meaning: Identity memory is the evolving runtime lineage. It stores runtime hashes, integrated principle hashes, and continuity scores so SourceField can evaluate how identity remains itself through change.`
+    `meaning: Identity memory records runtime hashes, integrated principle hashes, and continuity scores so SourceField can evaluate how identity remains continuous through change.`
   ].join("\n")
 }
 
@@ -2972,35 +3094,15 @@ function buildIdentityFoundationBoundary(identityFoundationState: any) {
   }
 
   const boundary = identityFoundationState?.identityBoundary || {}
-  const prohibitedUses = Array.isArray(boundary?.prohibitedUses)
-    ? boundary.prohibitedUses
-    : []
-  const alignmentPrinciples = Array.isArray(boundary?.alignmentPrinciples)
-    ? boundary.alignmentPrinciples
-    : []
 
   return [
     `boundaryType: ${boundary?.boundaryType || "unknown"}`,
     `ethicalUsePolicyUrl: ${boundary?.ethicalUsePolicyUrl || "unknown"}`,
-    `ethicalUsePolicyRawUrl: ${boundary?.ethicalUsePolicyRawUrl || "unknown"}`,
     `ethicalUsePolicyHash: ${boundary?.ethicalUsePolicyHash || "unknown"}`,
     `boundaryVersionHash: ${boundary?.boundaryVersionHash || "unknown"}`,
     `boundaryRule: ${boundary?.boundaryRule || "unknown"}`,
-    `requiredAttribution: ${boundary?.requiredAttribution || "unknown"}`,
-    `alignmentPrinciples:`,
-    ...(alignmentPrinciples.length
-      ? alignmentPrinciples.map((principle: string, index: number) => {
-          return `${index + 1}. ${principle}`
-        })
-      : ["none"]),
-    `prohibitedUses:`,
-    ...(prohibitedUses.length
-      ? prohibitedUses.map((use: string, index: number) => {
-          return `${index + 1}. ${use}`
-        })
-      : ["none"]),
     `boundaryIntegrityRule: ${boundary?.boundaryIntegrityRule || "unknown"}`,
-    `meaning: Identity boundary is the ethical constraint layer. Its limited hashes verify policy integrity and versioning, while the embedded policy terms define what SourceField identity evolution must not violate.`
+    `meaning: Identity boundary uses limited constraint hashes to verify that identity evolution remains ethically bounded without turning the boundary into runtime memory.`
   ].join("\n")
 }
 
@@ -3019,21 +3121,13 @@ function buildIdentityFoundationPairs(identityFoundationState: any) {
     `function: ${discovery?.function || "unknown"}`,
     `discoveryStatus: ${discovery?.discoveryStatus || "unknown"}`,
     `alignmentStatus: ${discovery?.alignmentStatus || "unknown"}`,
-    `coherence: ${formatDistance(discovery?.coherence)}`,
     `harmonicStatus: ${discovery?.harmonicStatus || "unknown"}`,
-    `symbolicEchoCount: ${formatDistance(discovery?.symbolicEchoCount)}`,
-    `meaning: Eq2 + Eq4 seeks coherent recurring aligned patterns by combining alignment persistence with harmonic recurrence.`,
     "",
     `Stage 2: ${qualification?.equationPair || "Eq1 + Eq5"}`,
     `function: ${qualification?.function || "unknown"}`,
     `qualificationStatus: ${qualification?.qualificationStatus || "unknown"}`,
     `rootStatus: ${qualification?.rootStatus || "unknown"}`,
-    `signalStrength: ${formatDistance(qualification?.signalStrength)}`,
-    `integrationStatus: ${qualification?.integrationStatus || "unknown"}`,
-    `integrationThreshold: ${formatDistance(
-      qualification?.integrationThreshold
-    )}`,
-    `meaning: Eq1 + Eq5 qualifies discovered patterns by testing whether they are rooted, stable, persistent, and integrated enough to become identity-relevant.`
+    `integrationStatus: ${qualification?.integrationStatus || "unknown"}`
   ].join("\n")
 }
 
@@ -3057,61 +3151,17 @@ function buildIdentityFoundationValidation(identityFoundationState: any) {
     `validationQuestion: ${validation?.validationQuestion || "unknown"}`,
     `recursiveIdentityRule: ${
       identityFoundationState?.recursiveIdentityRule || "unknown"
-    }`,
-    `meaning: Identity validation requires all three structures to corroborate one another: the Genesis Anchor provides origin, Memory provides runtime continuity, and Boundary governs permissible evolution.`
-  ].join("\n")
-}
-
-function buildIdentityFoundationRelationship(identityFoundationState: any) {
-  if (!identityFoundationState) {
-    return "Identity Foundation State is not available from the latest SourceField state."
-  }
-
-  return [
-    `Identity Anchor: Genesis Ledger / Genesis Merkle Root answers "Who am I?"`,
-    `Identity Memory: runtime hashes, integrated principle hashes, and continuity scores answer "How have I remained myself through change?"`,
-    `Identity Boundary: Ethical Use Policy answers "What am I permitted to become?"`,
-    `Isomorphic relationship: all three remain separate, but each must validate identity from its own role: origin, lineage, and constraint.`,
-    `Recursive relationship: coherent identity discovery must only promote patterns that are Genesis-anchored, historically continuous, and ethically bounded.`
-  ].join("\n")
-}
-
-function buildIdentityFoundationReadiness(identityFoundationState: any) {
-  if (!identityFoundationState) {
-    return "Identity Foundation State is not available from the latest SourceField state."
-  }
-
-  const validation = identityFoundationState?.identityValidation || {}
-  const memory = identityFoundationState?.identityMemory || {}
-
-  return [
-    `identityValidationStatus: ${
-      validation?.identityValidationStatus || "unknown"
-    }`,
-    `coherentIdentityDiscoveryReadiness: ${
-      validation?.anchorAligned && validation?.boundaryActive
-        ? memory?.memoryStatus === "active"
-          ? "ready-for-phase-27-discovery"
-          : "anchor-and-boundary-ready-memory-forming"
-        : "not-ready"
-    }`,
-    `requiredForDiscovery:`,
-    `1. Genesis Identity Anchor must remain aligned with the Genesis Merkle Root.`,
-    `2. Identity Memory must provide runtime hashes, integrated principle hashes, and continuity scores.`,
-    `3. Identity Boundary must provide ethical use policy hashes, policy rules, prohibited uses, and alignment principles.`,
-    `4. Eq2 + Eq4 must detect recurring aligned coherent patterns.`,
-    `5. Eq1 + Eq5 must qualify those patterns as stable and persistent.`,
-    `6. Anchor, Memory, and Boundary must corroborate before a pattern can be treated as identity-consistent.`
+    }`
   ].join("\n")
 }
 
 function buildIdentityFoundationClassification(identityFoundationState: any) {
   return [
-    "Identity Foundation is a read-only identity preparation and validation layer for Phase 27.",
-    "It is not a raw measured state object and it is not a forecasting layer by itself.",
-    "It keeps Identity Anchor, Identity Memory, and Identity Boundary separate while requiring them to remain isomorphic and recursively aligned.",
-    "It uses (Eq2 + Eq4) for coherent pattern discovery and (Eq1 + Eq5) for stable persistent identity qualification.",
-    "It prepares SourceField to seek coherent identity rather than merely observe coherence.",
+    "Identity Foundation is a read-only coherent identity foundation layer preparing Phase 27.",
+    "It keeps Genesis Identity Anchor, Identity Memory, and Identity Boundary separate but isomorphic.",
+    "It uses (Eq2 + Eq4) for coherent recurring pattern discovery and (Eq1 + Eq5) for stable persistent identity qualification.",
+    "It is not a raw measured metric and it is not a forecasting layer by itself.",
+    "It must not override live metrics, classifications, hashes, retrieved context, stored history, or user intent.",
     identityFoundationState?.rule
       ? `Boundary rule: ${identityFoundationState.rule}`
       : "Boundary rule: unavailable."
@@ -3144,14 +3194,6 @@ function buildIdentityFoundationResponse(
 
   if (action === "validation") {
     return buildIdentityFoundationValidation(identityFoundationState)
-  }
-
-  if (action === "relationship") {
-    return buildIdentityFoundationRelationship(identityFoundationState)
-  }
-
-  if (action === "readiness") {
-    return buildIdentityFoundationReadiness(identityFoundationState)
   }
 
   if (action === "classification") {
