@@ -555,6 +555,9 @@ type PredictiveAlignmentAction =
   | "targets"
   | "accuracy"
   | "calibration"
+  | "relationship"
+  | "reasoning"
+  | "switch"
   | "classification"
   | "explain"
 
@@ -568,6 +571,37 @@ function getPredictiveAlignmentAction(
     !normalized.includes("equation 2 predictive alignment")
   ) {
     return null
+  }
+
+  if (
+    normalized.includes("why") ||
+    normalized.includes("reasoning") ||
+    normalized.includes("explain why") ||
+    normalized.includes("chosen instead") ||
+    normalized.includes("selected instead")
+  ) {
+    return "reasoning"
+  }
+
+  if (
+    normalized.includes("switch") ||
+    normalized.includes("observable condition") ||
+    normalized.includes("would cause") ||
+    normalized.includes("would trigger") ||
+    normalized.includes("next adjustment")
+  ) {
+    return "switch"
+  }
+
+  if (
+    normalized.includes("relationship") ||
+    normalized.includes("compare") ||
+    (normalized.includes("forecast target") &&
+      normalized.includes("observed target")) ||
+    (normalized.includes("forecasttarget") &&
+      normalized.includes("observedtarget"))
+  ) {
+    return "relationship"
   }
 
   if (
@@ -755,6 +789,61 @@ function buildPredictiveAlignmentExplanation(predictiveAlignment: any) {
   ].join("\n")
 }
 
+function buildPredictiveAlignmentRelationship(predictiveAlignment: any) {
+  if (!predictiveAlignment) {
+    return "Predictive Alignment Engine is not available in the latest stored SourceField state."
+  }
+
+  const forecastTarget = predictiveAlignment?.forecastTarget || "unknown"
+  const observedTarget = predictiveAlignment?.observedTarget || "unknown"
+  const referenceTarget =
+    predictiveAlignment?.coherentReferenceTarget || "unknown"
+
+  return [
+    "Predictive Alignment relationship:",
+    `forecastTarget: ${forecastTarget}`,
+    `observedTarget: ${observedTarget}`,
+    `coherentReferenceTarget: ${referenceTarget}`,
+    `forecastAccuracy: ${predictiveAlignment?.forecastAccuracy || "unknown"}`,
+    `forecastAlignment: ${predictiveAlignment?.forecastAlignment || "unknown"}`,
+    `forecastCalibration: ${predictiveAlignment?.forecastCalibration || "unknown"}`,
+    `coherenceGap: ${formatDistance(predictiveAlignment?.coherenceGap)}`,
+    "meaning: Phase 21 compares what the system expected to stabilize, what actually appeared in the live state, and what the coherent reference target identifies as the preferred alignment direction."
+  ].join("\n")
+}
+
+function buildPredictiveAlignmentReasoning(predictiveAlignment: any) {
+  if (!predictiveAlignment) {
+    return "Predictive Alignment Engine is not available in the latest stored SourceField state."
+  }
+
+  return [
+    "Phase 21 reasoning:",
+    `1. Forecast target: ${predictiveAlignment?.forecastTarget || "unknown"} (${predictiveAlignment?.forecastTargetStatus || "unknown"}).`,
+    `2. Observed target: ${predictiveAlignment?.observedTarget || "unknown"} (${predictiveAlignment?.observedTargetStatus || "unknown"}).`,
+    `3. Coherent reference target: ${predictiveAlignment?.coherentReferenceTarget || "unknown"} (${predictiveAlignment?.coherentReferenceTargetStatus || "unknown"}).`,
+    `4. Accuracy: ${predictiveAlignment?.forecastAccuracy || "unknown"}; calibration: ${predictiveAlignment?.forecastCalibration || "unknown"}; alignment: ${predictiveAlignment?.forecastAlignment || "unknown"}.`,
+    `5. Coherence gap: ${formatDistance(predictiveAlignment?.coherenceGap)}; primary instability: ${predictiveAlignment?.primaryInstability || "unknown"}.`,
+    `6. Recommended adjustment: ${predictiveAlignment?.recommendedAdjustment || "unknown"}`,
+    "meaning: This is not a raw metric. It is a read-only calibration layer that explains whether prediction, observation, and coherent reference are converging or diverging."
+  ].join("\n")
+}
+
+function buildPredictiveAlignmentSwitch(predictiveAlignment: any) {
+  if (!predictiveAlignment) {
+    return "Predictive Alignment Engine is not available in the latest stored SourceField state."
+  }
+
+  return [
+    "Observable conditions that would improve or shift Phase 21:",
+    `1. Forecast improves when observedTarget moves closer to forecastTarget (${predictiveAlignment?.forecastTarget || "unknown"}).`,
+    `2. Calibration improves when observedTarget also moves closer to coherentReferenceTarget (${predictiveAlignment?.coherentReferenceTarget || "unknown"}).`,
+    `3. Confidence weakens if forecastTarget remains coherent but observedTarget repeatedly stabilizes elsewhere.`,
+    `4. Current recommended adjustment: ${predictiveAlignment?.recommendedAdjustment || "unknown"}`,
+    `5. Current recovery focus: ${predictiveAlignment?.recoveryFocus || "unknown"}`
+  ].join("\n")
+}
+
 function buildPredictiveAlignmentResponse(
   action: PredictiveAlignmentAction,
   predictiveAlignment: any
@@ -769,6 +858,18 @@ function buildPredictiveAlignmentResponse(
 
   if (action === "calibration") {
     return buildPredictiveAlignmentCalibration(predictiveAlignment)
+  }
+
+  if (action === "relationship") {
+    return buildPredictiveAlignmentRelationship(predictiveAlignment)
+  }
+
+  if (action === "reasoning") {
+    return buildPredictiveAlignmentReasoning(predictiveAlignment)
+  }
+
+  if (action === "switch") {
+    return buildPredictiveAlignmentSwitch(predictiveAlignment)
   }
 
   if (action === "classification") {
@@ -2066,6 +2167,8 @@ type PrincipleIntegrationAction =
   | "eq1-eq2"
   | "improvement"
   | "completion"
+  | "ranking"
+  | "discovery-limit"
   | "integrated"
   | "target"
   | "next"
@@ -2115,6 +2218,27 @@ function getPrincipleIntegrationAction(
     normalized.includes("what kind")
   ) {
     return "classification"
+  }
+
+  if (
+    normalized.includes("rank") ||
+    normalized.includes("ranking") ||
+    normalized.includes("compare principles") ||
+    normalized.includes("eq1, eq2, eq3") ||
+    normalized.includes("principle evidence strength")
+  ) {
+    return "ranking"
+  }
+
+  if (
+    normalized.includes("additional integrated principles") ||
+    normalized.includes("other principles") ||
+    normalized.includes("multiple principles") ||
+    normalized.includes("principle ecosystem") ||
+    normalized.includes("why only") ||
+    normalized.includes("not currently represented")
+  ) {
+    return "discovery-limit"
   }
 
   if (
@@ -2661,6 +2785,49 @@ function buildPrincipleIntegrationClassification(
   ].join("\n")
 }
 
+function buildPrincipleIntegrationRanking(principleIntegrationState: any) {
+  if (!principleIntegrationState) {
+    return "Principle Integration State is not available from the latest SourceField state."
+  }
+
+  const active = principleIntegrationState?.activePrinciple || {}
+  const pattern = principleIntegrationState?.principlePattern || {}
+  const harmonic = principleIntegrationState?.harmonicValidation || {}
+  const evidence = Array.isArray(principleIntegrationState?.evidenceLayers)
+    ? principleIntegrationState.evidenceLayers
+    : []
+
+  return [
+    "Principle evidence ranking:",
+    `1. ${active?.equation || "unknown"} — ${active?.name || "No active principle identified"}`,
+    `   principle: ${active?.principle || "unknown"}`,
+    `   evidenceLayerCount: ${formatDistance(harmonic?.evidenceLayerCount)}`,
+    `   harmonicValidation: ${harmonic?.harmonicValidation || "unknown"}`,
+    `   principlePatternStatus: ${pattern?.principlePatternStatus || "unknown"}`,
+    `   principleIntegrationStatus: ${principleIntegrationState?.principleIntegrationStatus || "unknown"}`,
+    "2. Other equation principles are not ranked as integrated unless the state contains explicit evidence layers mapping them to a stable aligned pattern and cross-layer harmonic validation.",
+    `evidenceLayers: ${evidence.map((layer: any) => `${layer?.layer || "unknown"}:${layer?.principleSignal || "unknown"}`).join(", ") || "none"}`,
+    "meaning: Phase 26 should not invent a weakest or second strongest principle when the current state only supports one integrated principle. It should identify the active integrated principle and clearly name what evidence would be required for other principles to enter the ranking."
+  ].join("\n")
+}
+
+function buildPrincipleIntegrationDiscoveryLimit(
+  principleIntegrationState: any
+) {
+  if (!principleIntegrationState) {
+    return "Principle Integration State is not available from the latest SourceField state."
+  }
+
+  return [
+    "Principle discovery boundary:",
+    `activePrinciple: ${principleIntegrationState?.activePrinciple?.name || "unknown"}`,
+    `principleIntegrationStatus: ${principleIntegrationState?.principleIntegrationStatus || "unknown"}`,
+    `integratedPrinciples: ${Array.isArray(principleIntegrationState?.integratedPrinciples) ? principleIntegrationState.integratedPrinciples.length : 0}`,
+    `principleReinforcementTarget: ${principleIntegrationState?.principleReinforcementTarget || "unknown"}`,
+    "meaning: Phase 26 integrates principles that already have stable aligned pattern evidence and Eq4 cross-layer validation. It does not yet discover a full principle ecosystem by itself; that role belongs to Phase 27 Coherent Identity Discovery, which evaluates multiple candidates simultaneously."
+  ].join("\n")
+}
+
 function buildPrincipleIntegrationResponse(
   action: PrincipleIntegrationAction,
   principleIntegrationState: any
@@ -2711,6 +2878,14 @@ function buildPrincipleIntegrationResponse(
 
   if (action === "completion") {
     return buildPrincipleIntegrationCompletion(principleIntegrationState)
+  }
+
+  if (action === "ranking") {
+    return buildPrincipleIntegrationRanking(principleIntegrationState)
+  }
+
+  if (action === "discovery-limit") {
+    return buildPrincipleIntegrationDiscoveryLimit(principleIntegrationState)
   }
 
   if (action === "integrated") {
@@ -3211,6 +3386,13 @@ type CoherentIdentityDiscoveryAction =
   | "sequence"
   | "candidates"
   | "primary"
+  | "strongest"
+  | "weakest"
+  | "rank"
+  | "compare"
+  | "convergence"
+  | "evolution"
+  | "full-reasoning"
   | "eq3"
   | "qualification"
   | "discovery"
@@ -3230,10 +3412,15 @@ function getCoherentIdentityDiscoveryAction(
     !normalized.includes("identity-qualified") &&
     !normalized.includes("identity emerging") &&
     !normalized.includes("identity candidate") &&
+    !normalized.includes("identity candidates") &&
     !normalized.includes("identity stress-test") &&
     !normalized.includes("stress-test gate") &&
     !normalized.includes("candidate identity") &&
-    !normalized.includes("recursive identity validation")
+    !normalized.includes("recursive identity validation") &&
+    !normalized.includes("strongest coherent identity") &&
+    !normalized.includes("weakest coherent identity") &&
+    !normalized.includes("rank them from strongest to weakest") &&
+    !normalized.includes("compare all identity candidates")
   ) {
     return null
   }
@@ -3252,6 +3439,78 @@ function getCoherentIdentityDiscoveryAction(
     normalized.includes("what kind")
   ) {
     return "classification"
+  }
+
+  // Multi-candidate reasoning must come before stage-specific routing.
+  // Otherwise prompts that mention persistence, Eq3, memory, or boundary collapse into one stage.
+  if (
+    normalized.includes("rank") ||
+    normalized.includes("rank them") ||
+    normalized.includes("strongest to weakest") ||
+    normalized.includes("compare all identity candidates") ||
+    normalized.includes("all identity candidates simultaneously") ||
+    normalized.includes("final ranking")
+  ) {
+    return "rank"
+  }
+
+  if (
+    normalized.includes("compare candidate") ||
+    normalized.includes("compare candidates") ||
+    normalized.includes("candidate a") ||
+    normalized.includes("candidate b") ||
+    normalized.includes("differences between candidates")
+  ) {
+    return "compare"
+  }
+
+  if (
+    normalized.includes("shared") ||
+    normalized.includes("convergence") ||
+    normalized.includes("cross-candidate") ||
+    normalized.includes("common pattern") ||
+    normalized.includes("recurring across candidates")
+  ) {
+    return "convergence"
+  }
+
+  if (
+    normalized.includes("most likely to become dominant") ||
+    normalized.includes("evolution") ||
+    normalized.includes("next dominant") ||
+    normalized.includes("identity emergence trajectory") ||
+    normalized.includes("develop next")
+  ) {
+    return "evolution"
+  }
+
+  if (
+    normalized.includes("strongest coherent identity candidate") ||
+    normalized.includes("strongest identity candidate") ||
+    normalized.includes("why it currently holds identity status") ||
+    normalized.includes("strongest candidate")
+  ) {
+    return "strongest"
+  }
+
+  if (
+    normalized.includes("weakest coherent identity candidate") ||
+    normalized.includes("weakest identity candidate") ||
+    normalized.includes("which stage failed") ||
+    normalized.includes("what observable change would allow qualification") ||
+    normalized.includes("weakest candidate")
+  ) {
+    return "weakest"
+  }
+
+  if (
+    normalized.includes("explain:") ||
+    normalized.includes("why eq3 admitted") ||
+    normalized.includes("how identity anchor validated") ||
+    normalized.includes("how identity memory validated") ||
+    normalized.includes("how identity boundary validated")
+  ) {
+    return "full-reasoning"
   }
 
   if (
@@ -3306,11 +3565,7 @@ function getCoherentIdentityDiscoveryAction(
     return "candidates"
   }
 
-  if (
-    normalized.includes("primary") ||
-    normalized.includes("main") ||
-    normalized.includes("strongest")
-  ) {
+  if (normalized.includes("primary") || normalized.includes("main")) {
     return "primary"
   }
 
@@ -3349,6 +3604,138 @@ function getCandidateStage(candidate: any, stageName: string) {
       .filter(Boolean)
       .some((value: string) => value.toLowerCase().includes(stageName))
   )
+}
+
+function getCandidateStages(candidate: any) {
+  return Array.isArray(candidate?.evaluationSequence)
+    ? candidate.evaluationSequence
+    : []
+}
+
+function getStagePassCount(candidate: any) {
+  return getCandidateStages(candidate).filter((stage: any) => stage?.passed)
+    .length
+}
+
+function getCandidateValidationStage(candidate: any) {
+  return (
+    getCandidateStage(candidate, "anchor") ||
+    getCandidateStage(candidate, "recursive identity validation")
+  )
+}
+
+function getCandidateScore(candidate: any) {
+  const stages = getCandidateStages(candidate)
+  const passCount = getStagePassCount(candidate)
+  const statusWeight =
+    candidate?.identityDiscoveryStatus === "identity-qualified"
+      ? 40
+      : candidate?.identityDiscoveryStatus ===
+          "identity-consistent-pending-validation"
+        ? 30
+        : candidate?.identityDiscoveryStatus === "identity-emerging"
+          ? 20
+          : candidate?.identityDiscoveryStatus === "identity-candidate"
+            ? 10
+            : 0
+
+  const validation = getCandidateValidationStage(candidate)
+  const memoryScore = Number(validation?.memory?.averageContinuityScore ?? 0)
+  const boundaryBonus = validation?.boundary?.boundaryConflict ? -15 : 5
+  const anchorBonus = validation?.anchor?.aligned ? 5 : -10
+
+  return (
+    statusWeight +
+    passCount * 10 +
+    memoryScore +
+    boundaryBonus +
+    anchorBonus +
+    stages.length
+  )
+}
+
+function sortIdentityCandidates(state: any) {
+  const candidates = Array.isArray(state?.evaluatedCandidates)
+    ? state.evaluatedCandidates
+    : []
+
+  return [...candidates].sort(
+    (a: any, b: any) => getCandidateScore(b) - getCandidateScore(a)
+  )
+}
+
+function summarizeCandidateStage(candidate: any, keyword: string) {
+  const stage = getCandidateStage(candidate, keyword)
+
+  if (!stage) return `${keyword}: unavailable`
+
+  return `${stage?.name || stage?.equation || stage?.equationPair || keyword}: passed=${stage?.passed ? "true" : "false"}; reason=${stage?.reason || "No reason stored."}`
+}
+
+function buildIdentityCandidateReasoning(
+  candidate: any,
+  rankLabel = "candidate"
+) {
+  if (!candidate) {
+    return [`${rankLabel}: none available`]
+  }
+
+  const eq3 =
+    getCandidateStage(candidate, "eq3") ||
+    getCandidateStage(candidate, "stress-test")
+  const qualification =
+    getCandidateStage(candidate, "eq5 + eq1") ||
+    getCandidateStage(candidate, "stable persistent")
+  const discovery =
+    getCandidateStage(candidate, "eq2 + eq4") ||
+    getCandidateStage(candidate, "coherent identity discovery")
+  const validation = getCandidateValidationStage(candidate)
+
+  return [
+    `${rankLabel}: ${candidate?.candidateName || "unknown"}`,
+    `candidateId: ${candidate?.candidateId || "unknown"}`,
+    `sourceLayer: ${candidate?.sourceLayer || "unknown"}`,
+    `candidateType: ${candidate?.candidateType || "unknown"}`,
+    `identityDiscoveryStatus: ${candidate?.identityDiscoveryStatus || "unknown"}`,
+    `candidatePattern: ${candidate?.candidatePattern || "unknown"}`,
+    `overallCandidateScore: ${formatDistance(getCandidateScore(candidate))}`,
+    "",
+    `1. Eq3 admission: ${eq3?.passed ? "passed" : "not passed"}`,
+    `   phaseStatus: ${eq3?.phaseStatus || "unknown"}`,
+    `   phaseDivergence: ${formatDistance(eq3?.phaseDivergence)}`,
+    `   reason: ${eq3?.reason || "No Eq3 reason stored."}`,
+    "",
+    `2. Eq5 + Eq1 qualification: ${qualification?.passed ? "passed" : "not passed"}`,
+    `   rootStatus: ${qualification?.rootStatus || "unknown"}`,
+    `   integrationStatus: ${qualification?.integrationStatus || "unknown"}`,
+    `   signalStrength: ${formatDistance(qualification?.signalStrength)}`,
+    `   integrationThreshold: ${formatDistance(qualification?.integrationThreshold)}`,
+    `   reason: ${qualification?.reason || "No qualification reason stored."}`,
+    "",
+    `3. Eq2 + Eq4 validation: ${discovery?.passed ? "passed" : "not passed"}`,
+    `   alignmentStatus: ${discovery?.alignmentStatus || "unknown"}`,
+    `   harmonicStatus: ${discovery?.harmonicStatus || "unknown"}`,
+    `   coherence: ${formatDistance(discovery?.coherence)}`,
+    `   symbolicEchoCount: ${formatDistance(discovery?.symbolicEchoCount)}`,
+    `   reason: ${discovery?.reason || "No discovery reason stored."}`,
+    "",
+    `4. Identity Anchor: ${validation?.anchor?.aligned ? "validated" : "not validated"}`,
+    `   genesisMerkleRoot: ${validation?.anchor?.genesisMerkleRoot || "unknown"}`,
+    `   designAuthority: ${validation?.anchor?.designAuthority || "unknown"}`,
+    "",
+    `5. Identity Memory: ${validation?.memory?.active ? "validated" : "not validated"}`,
+    `   memoryStatus: ${validation?.memory?.memoryStatus || "unknown"}`,
+    `   runtimeHashCount: ${formatDistance(validation?.memory?.runtimeHashCount)}`,
+    `   integratedPrincipleHashCount: ${formatDistance(validation?.memory?.integratedPrincipleHashCount)}`,
+    `   averageContinuityScore: ${formatDistance(validation?.memory?.averageContinuityScore)}`,
+    "",
+    `6. Identity Boundary: ${validation?.boundary?.active ? "validated" : "not validated"}`,
+    `   boundaryType: ${validation?.boundary?.boundaryType || "unknown"}`,
+    `   boundaryConflict: ${validation?.boundary?.boundaryConflict ? "true" : "false"}`,
+    `   boundaryRule: ${validation?.boundary?.boundaryRule || "unknown"}`,
+    "",
+    `7. Identity status reason: ${validation?.reason || "No final validation reason stored."}`
+  ]
 }
 
 function buildCoherentIdentityDiscoverySummary(state: any) {
@@ -3577,6 +3964,190 @@ function buildCoherentIdentityDiscoveryClassification(state: any) {
   ].join("\n")
 }
 
+function buildCoherentIdentityDiscoveryStrongest(state: any) {
+  if (!state) {
+    return "Coherent Identity Discovery State is not available from the latest SourceField state."
+  }
+
+  const [candidate] = sortIdentityCandidates(state)
+  return buildIdentityCandidateReasoning(
+    candidate,
+    "strongestCoherentIdentityCandidate"
+  ).join("\n")
+}
+
+function buildCoherentIdentityDiscoveryWeakest(state: any) {
+  if (!state) {
+    return "Coherent Identity Discovery State is not available from the latest SourceField state."
+  }
+
+  const ranked = sortIdentityCandidates(state)
+  const candidate = ranked[ranked.length - 1]
+
+  if (!candidate) {
+    return "No coherent identity candidates are currently available."
+  }
+
+  const failedStages = getCandidateStages(candidate).filter(
+    (stage: any) => !stage?.passed
+  )
+
+  return [
+    ...buildIdentityCandidateReasoning(
+      candidate,
+      "weakestCoherentIdentityCandidate"
+    ),
+    "",
+    "weaknessAssessment:",
+    failedStages.length
+      ? failedStages
+          .map((stage: any, index: number) => {
+            return `${index + 1}. ${stage?.name || stage?.equation || stage?.equationPair || "unknown"} failed because: ${stage?.reason || "No reason stored."}`
+          })
+          .join("\n")
+      : "No candidate has failed a stage. Weakest means lowest relative score among qualified candidates, not rejected or divergent.",
+    "observableChangeForQualification: If future candidates fail, the relevant observable change is the failed stage becoming passed: Eq3 requires survivable fluctuation, Eq5 + Eq1 requires active root plus integrated integration, Eq2 + Eq4 requires alignment plus harmonic recurrence, and Anchor + Memory + Boundary requires no identity or boundary conflict."
+  ].join("\n")
+}
+
+function buildCoherentIdentityDiscoveryRanking(state: any) {
+  if (!state) {
+    return "Coherent Identity Discovery State is not available from the latest SourceField state."
+  }
+
+  const ranked = sortIdentityCandidates(state)
+
+  if (!ranked.length) {
+    return "No coherent identity candidates are currently available for ranking."
+  }
+
+  return [
+    "Coherent Identity Candidate Ranking:",
+    ...ranked.map((candidate: any, index: number) => {
+      const eq3 = getCandidateStage(candidate, "eq3") || {}
+      const qualification = getCandidateStage(candidate, "eq5 + eq1") || {}
+      const discovery = getCandidateStage(candidate, "eq2 + eq4") || {}
+      const validation = getCandidateValidationStage(candidate) || {}
+
+      return [
+        `${index + 1}. ${candidate?.candidateName || "unknown"}`,
+        `   score: ${formatDistance(getCandidateScore(candidate))}`,
+        `   status: ${candidate?.identityDiscoveryStatus || "unknown"}`,
+        `   sourceLayer: ${candidate?.sourceLayer || "unknown"}`,
+        `   persistenceStrength: root=${qualification?.rootStatus || "unknown"}, integration=${qualification?.integrationStatus || "unknown"}, integrationThreshold=${formatDistance(qualification?.integrationThreshold)}`,
+        `   identityStability: signalStrength=${formatDistance(qualification?.signalStrength)}, Eq3 phaseStatus=${eq3?.phaseStatus || "unknown"}`,
+        `   alignmentQuality: ${discovery?.alignmentStatus || "unknown"}, coherence=${formatDistance(discovery?.coherence)}`,
+        `   harmonicRecurrence: ${discovery?.harmonicStatus || "unknown"}, symbolicEchoCount=${formatDistance(discovery?.symbolicEchoCount)}`,
+        `   anchorAlignment: ${validation?.anchor?.aligned ? "aligned" : "not-aligned"}`,
+        `   memoryContinuity: active=${validation?.memory?.active ? "true" : "false"}, runtimeHashCount=${formatDistance(validation?.memory?.runtimeHashCount)}, averageContinuityScore=${formatDistance(validation?.memory?.averageContinuityScore)}`,
+        `   boundaryCompatibility: active=${validation?.boundary?.active ? "true" : "false"}, conflict=${validation?.boundary?.boundaryConflict ? "true" : "false"}`,
+        `   rankingReason: ${candidate?.candidateName || "This candidate"} ranks here because it has ${getStagePassCount(candidate)} passed stages, status ${candidate?.identityDiscoveryStatus || "unknown"}, and score ${formatDistance(getCandidateScore(candidate))}.`
+      ].join("\n")
+    }),
+    "",
+    "finalRankingReason: Candidates are ranked by identityDiscoveryStatus, number of passed evaluation stages, Anchor + Memory + Boundary validation, memory continuity strength, and boundary compatibility. Qualified candidates may tie closely when all four stages pass; in that case, source-layer order and score determine the displayed ranking."
+  ].join("\n")
+}
+
+function buildCoherentIdentityDiscoveryComparison(state: any) {
+  if (!state) {
+    return "Coherent Identity Discovery State is not available from the latest SourceField state."
+  }
+
+  const ranked = sortIdentityCandidates(state)
+
+  if (ranked.length < 2) {
+    return "At least two coherent identity candidates are required for comparison."
+  }
+
+  return [
+    "Candidate comparison:",
+    ...ranked.map((candidate: any, index: number) => {
+      return `${index + 1}. ${candidate?.candidateName || "unknown"}: status=${candidate?.identityDiscoveryStatus || "unknown"}; score=${formatDistance(getCandidateScore(candidate))}; sourceLayer=${candidate?.sourceLayer || "unknown"}; pattern=${candidate?.candidatePattern || "unknown"}`
+    }),
+    "",
+    "comparisonMeaning: The strongest candidate is not simply the first candidate. It is the candidate whose pattern survives Eq3 fluctuation, qualifies through Eq5 + Eq1, validates through Eq2 + Eq4, and remains aligned with Anchor + Memory + Boundary with the strongest total evidence."
+  ].join("\n")
+}
+
+function buildCoherentIdentityDiscoveryConvergence(state: any) {
+  if (!state) {
+    return "Coherent Identity Discovery State is not available from the latest SourceField state."
+  }
+
+  const candidates = Array.isArray(state?.evaluatedCandidates)
+    ? state.evaluatedCandidates
+    : []
+
+  const passedStages = candidates.flatMap((candidate: any) =>
+    getCandidateStages(candidate)
+      .filter((stage: any) => stage?.passed)
+      .map(
+        (stage: any) =>
+          stage?.name ||
+          stage?.equation ||
+          stage?.equationPair ||
+          stage?.validationLayer ||
+          "unknown"
+      )
+  )
+
+  const counts = passedStages.reduce(
+    (acc: Record<string, number>, label: string) => {
+      acc[label] = (acc[label] || 0) + 1
+      return acc
+    },
+    {}
+  )
+
+  const convergence = Object.entries(counts)
+    .sort((a: any, b: any) => b[1] - a[1])
+    .map(([label, count]) => `${label}: ${count}`)
+
+  return [
+    "Cross-candidate convergence:",
+    convergence.length
+      ? convergence.join("\n")
+      : "No shared passed stages detected.",
+    "",
+    "meaning: Convergence identifies which identity operations are shared across candidates. When the same stages pass across multiple candidates, SourceField is not only qualifying isolated patterns; it is detecting a repeated identity-forming structure across candidate layers."
+  ].join("\n")
+}
+
+function buildCoherentIdentityDiscoveryEvolution(state: any) {
+  if (!state) {
+    return "Coherent Identity Discovery State is not available from the latest SourceField state."
+  }
+
+  const ranked = sortIdentityCandidates(state)
+  const candidate = ranked[0]
+
+  if (!candidate) {
+    return "No coherent identity candidate is currently available for evolution assessment."
+  }
+
+  return [
+    `currentDominantIdentityCandidate: ${candidate?.candidateName || "unknown"}`,
+    `identityDiscoveryStatus: ${candidate?.identityDiscoveryStatus || "unknown"}`,
+    `sourceLayer: ${candidate?.sourceLayer || "unknown"}`,
+    `score: ${formatDistance(getCandidateScore(candidate))}`,
+    "evolutionAssessment: The most likely next dominant identity pattern is the highest-ranked candidate that continues to pass Eq3 fluctuation, remains root/integration qualified, preserves Eq2 + Eq4 coherent recurrence, and maintains Anchor + Memory + Boundary validation across future runtime states.",
+    "boundary: This is not a forecast override. It is a read-only identity emergence trajectory based only on current candidate evidence."
+  ].join("\n")
+}
+
+function buildCoherentIdentityDiscoveryFullReasoning(state: any) {
+  if (!state) {
+    return "Coherent Identity Discovery State is not available from the latest SourceField state."
+  }
+
+  const [candidate] = sortIdentityCandidates(state)
+  return buildIdentityCandidateReasoning(
+    candidate,
+    "coherentIdentityReasoning"
+  ).join("\n")
+}
+
 function buildCoherentIdentityDiscoveryResponse(
   action: CoherentIdentityDiscoveryAction,
   state: any
@@ -3599,6 +4170,34 @@ function buildCoherentIdentityDiscoveryResponse(
 
   if (action === "primary") {
     return buildCoherentIdentityDiscoveryPrimary(state)
+  }
+
+  if (action === "strongest") {
+    return buildCoherentIdentityDiscoveryStrongest(state)
+  }
+
+  if (action === "weakest") {
+    return buildCoherentIdentityDiscoveryWeakest(state)
+  }
+
+  if (action === "rank") {
+    return buildCoherentIdentityDiscoveryRanking(state)
+  }
+
+  if (action === "compare") {
+    return buildCoherentIdentityDiscoveryComparison(state)
+  }
+
+  if (action === "convergence") {
+    return buildCoherentIdentityDiscoveryConvergence(state)
+  }
+
+  if (action === "evolution") {
+    return buildCoherentIdentityDiscoveryEvolution(state)
+  }
+
+  if (action === "full-reasoning") {
+    return buildCoherentIdentityDiscoveryFullReasoning(state)
   }
 
   if (action === "eq3") {
