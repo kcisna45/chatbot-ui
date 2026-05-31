@@ -34,6 +34,10 @@ import {
   buildMetaReasoningResponse
 } from "@/lib/sourcefield/metaReasoningEngine"
 import { generateDifferentialMetaReasoningState } from "@/lib/sourcefield/differentialMetaReasoningEngine"
+import {
+  generateRouteReasoningPropagation,
+  buildRouteReasoningPropagationResponse
+} from "@/lib/sourcefield/routeReasoningPropagation"
 import { GENESIS_IDENTITY_ANCHOR } from "@/lib/sourcefield/genesisIdentityAnchor"
 import { generateIdentityMemory } from "@/lib/sourcefield/identityMemory"
 import { IDENTITY_BOUNDARY } from "@/lib/sourcefield/identityBoundary"
@@ -4014,27 +4018,83 @@ function formatEquationIsomorphicReasoningTrace(trace: any) {
   ].join("\n")
 }
 
+function getRoutePropagationResponseMode(
+  requestedAction?: string | null
+): "summary" | "chain" | "dominant" | "compare" | "json" {
+  const action = requestedAction || "summary"
+
+  if (action === "report") {
+    return "json"
+  }
+
+  if (
+    action === "compare" ||
+    action === "rank" ||
+    action === "convergence" ||
+    action === "cooperation"
+  ) {
+    return "compare"
+  }
+
+  if (
+    action === "dominant" ||
+    action === "primary" ||
+    action === "strongest" ||
+    action === "weakest"
+  ) {
+    return "dominant"
+  }
+
+  if (
+    action === "full-reasoning" ||
+    action === "reasoning" ||
+    action === "sequence" ||
+    action === "synthesis"
+  ) {
+    return "chain"
+  }
+
+  return "summary"
+}
+
 function buildEquationIsomorphicRouteResponse(
   input: EquationIsomorphicReasoningInput
 ) {
+  const trace = buildEquationIsomorphicReasoningTrace(input)
+  const propagationState = generateRouteReasoningPropagation({
+    equationLaneState: input?.equationLaneState,
+    identityFoundationState: input?.identityFoundationState,
+    coherentIdentityDiscoveryState: input?.coherentIdentityDiscoveryState,
+    metaReasoningState: input?.metaReasoningState,
+    differentialMetaReasoningState: input?.differentialMetaReasoningState,
+    requestedScope: input?.requestedScope,
+    requestedAction: input?.requestedAction || "summary"
+  })
+
   if (input?.requestedAction === "report") {
     return input?.baseResponse || "null"
   }
 
-  const trace = buildEquationIsomorphicReasoningTrace(input)
+  const propagationMode = getRoutePropagationResponseMode(
+    input?.requestedAction
+  )
 
   return [
     formatEquationIsomorphicReasoningTrace(trace),
+    "",
+    "Route Reasoning Propagation:",
+    buildRouteReasoningPropagationResponse(propagationState, propagationMode),
     "",
     "Requested Reasoning Result:",
     input?.baseResponse || "No requested reasoning response was generated.",
     "",
     "Route-level synthesis:",
-    trace?.stage1StablePersistence?.passed &&
-    trace?.stage2CoherentRecurrence?.passed &&
-    trace?.identityFoundationValidation?.passed
-      ? "The response is route-qualified because persistence/root support, alignment/recurrence support, and Anchor + Memory + Boundary validation are all active."
-      : "The response is route-limited because one or more paired-equation or identity-foundation validation stages are incomplete."
+    propagationState?.finalConclusion ||
+      (trace?.stage1StablePersistence?.passed &&
+      trace?.stage2CoherentRecurrence?.passed &&
+      trace?.identityFoundationValidation?.passed
+        ? "The response is route-qualified because persistence/root support, alignment/recurrence support, and Anchor + Memory + Boundary validation are all active."
+        : "The response is route-limited because one or more paired-equation or identity-foundation validation stages are incomplete.")
   ].join("\n")
 }
 
@@ -6654,12 +6714,24 @@ export async function POST(req: Request) {
         equationLaneState
       })
 
+    const routeReasoningPropagationState = generateRouteReasoningPropagation({
+      equationLaneState,
+      identityFoundationState,
+      coherentIdentityDiscoveryState,
+      metaReasoningState,
+      differentialMetaReasoningState,
+      requestedScope: "live route reasoning",
+      requestedAction: "summary"
+    })
+
     authoritativeLiveState.identityFoundationState = identityFoundationState
     authoritativeLiveState.coherentIdentityDiscoveryState =
       coherentIdentityDiscoveryState
     authoritativeLiveState.metaReasoningState = metaReasoningState
     authoritativeLiveState.differentialMetaReasoningState =
       differentialMetaReasoningState
+    authoritativeLiveState.routeReasoningPropagationState =
+      routeReasoningPropagationState
 
     let retrievedContext = ""
 
