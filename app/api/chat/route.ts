@@ -39,6 +39,11 @@ import {
   buildRoutePropagationModeResponse,
   getRoutePropagationMode
 } from "@/lib/sourcefield/routePropagationModes"
+import {
+  generateIdentityCandidateProfiles,
+  buildIdentityCandidateProfilesResponse,
+  getIdentityCandidateProfilesMode
+} from "@/lib/sourcefield/identityCandidateProfiles"
 import { GENESIS_IDENTITY_ANCHOR } from "@/lib/sourcefield/genesisIdentityAnchor"
 import { generateIdentityMemory } from "@/lib/sourcefield/identityMemory"
 import { IDENTITY_BOUNDARY } from "@/lib/sourcefield/identityBoundary"
@@ -5076,6 +5081,9 @@ export async function POST(req: Request) {
 
     const routePropagationMode = getRoutePropagationMode(lastUserMessage)
 
+    const identityCandidateProfilesMode =
+      getIdentityCandidateProfilesMode(lastUserMessage)
+
     const differentialMetaReasoningAction =
       getDifferentialMetaReasoningAction(lastUserMessage)
 
@@ -5086,6 +5094,197 @@ export async function POST(req: Request) {
 
     const identityFoundationAction =
       getIdentityFoundationAction(lastUserMessage)
+
+    if (identityCandidateProfilesMode) {
+      const { data: latestStates, error: latestStateError } =
+        await supabaseAdmin
+          .from("sourcefield_ledger_events")
+          .select("*")
+          .eq("agent_id", AGENT_ID)
+          .order("created_at", { ascending: false })
+          .limit(2)
+
+      if (latestStateError) {
+        return NextResponse.json(
+          {
+            error:
+              "Failed to fetch latest stored SourceField state for identity candidate profile analysis.",
+            details: latestStateError.message
+          },
+          { status: 500 }
+        )
+      }
+
+      const currentRecord = Array.isArray(latestStates) ? latestStates[0] : null
+      const previousRecord = Array.isArray(latestStates)
+        ? latestStates[1]
+        : null
+
+      const equationLaneState = currentRecord?.equation_lane_state ?? null
+      const predictiveAlignmentState =
+        currentRecord?.predictive_alignment_engine ?? null
+      const pathwaySelectionState =
+        buildPathwaySelectionStateFromLedgerRecord(currentRecord)
+      const previousPathwaySelectionState =
+        buildPathwaySelectionStateFromLedgerRecord(previousRecord)
+
+      const pathwayTransitionState = pathwaySelectionState
+        ? generatePathwayTransitionState(
+            pathwaySelectionState,
+            previousPathwaySelectionState
+          )
+        : null
+
+      const pathwayCompletionState = pathwaySelectionState
+        ? generatePathwayCompletionState(pathwaySelectionState)
+        : null
+
+      const architecturalRefinementState = pathwaySelectionState
+        ? generateArchitecturalRefinementState({
+            pathwayCompletionState,
+            pathwaySelectionState,
+            equationLaneState
+          })
+        : null
+
+      const principleIntegrationState = pathwaySelectionState
+        ? generatePrincipleIntegrationState({
+            equationLaneState,
+            pathwaySelectionState,
+            pathwayTransitionState,
+            pathwayCompletionState,
+            architecturalRefinementState
+          })
+        : null
+
+      const { data: recentRuntimeEvents } = await supabaseAdmin
+        .from("sourcefield_ledger_events")
+        .select(
+          "coherence, integration_threshold, resonance_level, ledger_hash"
+        )
+        .in("agent_id", [AGENT_ID, RUNTIME_AGENT_ID])
+        .order("created_at", { ascending: false })
+        .limit(10)
+
+      const recentContinuityScores = Array.isArray(recentRuntimeEvents)
+        ? recentRuntimeEvents.flatMap((event: any) =>
+            compactNumbers([
+              event?.coherence,
+              event?.integration_threshold,
+              event?.resonance_level
+            ])
+          )
+        : []
+
+      const runtimeLedgerHash = Array.isArray(recentRuntimeEvents)
+        ? (recentRuntimeEvents.find((event: any) => event?.ledger_hash)
+            ?.ledger_hash ?? null)
+        : null
+
+      const identityFoundationState = buildIdentityFoundationState({
+        resonanceHash: currentRecord?.resonance_hash ?? null,
+        ledgerHash: currentRecord?.ledger_hash ?? null,
+        previousLedgerHash: currentRecord?.previous_hash ?? null,
+        runtimeLedgerHash,
+        equationLaneState,
+        principleIntegrationState,
+        recentContinuityScores
+      })
+
+      const coherentIdentityDiscoveryState =
+        generateCoherentIdentityDiscoveryState({
+          equationLaneState,
+          identityFoundationState,
+          principleIntegrationState,
+          architecturalRefinementState,
+          pathwayCompletionState
+        })
+
+      const metaReasoningState = generateMetaReasoningState({
+        coherentIdentityDiscoveryState,
+        principleIntegrationState,
+        identityFoundationState,
+        equationLaneState,
+        predictiveAlignmentState
+      })
+
+      const differentialMetaReasoningState =
+        generateDifferentialMetaReasoningState({
+          metaReasoningState,
+          coherentIdentityDiscoveryState,
+          principleIntegrationState,
+          identityFoundationState,
+          equationLaneState
+        })
+
+      const identityCandidateProfileState = generateIdentityCandidateProfiles({
+        coherentIdentityDiscoveryState,
+        metaReasoningState,
+        differentialMetaReasoningState
+      })
+
+      return NextResponse.json({
+        result: buildEquationIsomorphicRouteResponse({
+          requestedScope: "identity candidate profiling",
+          requestedAction: identityCandidateProfilesMode,
+          baseResponse: buildIdentityCandidateProfilesResponse(
+            identityCandidateProfileState,
+            identityCandidateProfilesMode as any
+          ),
+          equationLaneState,
+          identityFoundationState,
+          coherentIdentityDiscoveryState,
+          metaReasoningState,
+          differentialMetaReasoningState: {
+            ...(differentialMetaReasoningState || {}),
+            differentialCandidates:
+              identityCandidateProfileState?.candidateProfiles ?? [],
+            candidateProfiles:
+              identityCandidateProfileState?.candidateProfiles ?? [],
+            dominantDifferentialCandidate:
+              identityCandidateProfileState?.dominantProfile ??
+              differentialMetaReasoningState?.dominantDifferentialCandidate ??
+              null,
+            candidateProfilingActive:
+              identityCandidateProfileState?.candidateProfilingActive === true
+          },
+          principleIntegrationState,
+          predictiveAlignmentState
+        }),
+        equationIsomorphicReasoningTrace: buildEquationIsomorphicReasoningTrace(
+          {
+            requestedScope: "identity candidate profiling",
+            requestedAction: identityCandidateProfilesMode,
+            equationLaneState,
+            identityFoundationState,
+            coherentIdentityDiscoveryState,
+            metaReasoningState,
+            differentialMetaReasoningState,
+            principleIntegrationState,
+            predictiveAlignmentState
+          }
+        ),
+        directStateReport: true,
+        nonMutatingReport: true,
+        deterministicIdentityCandidateProfileResponse: true,
+        source: "latest_stored_supabase_snapshot",
+        stateObject: "identity candidate profile state",
+        action: identityCandidateProfilesMode,
+        value: identityCandidateProfileState,
+        identityCandidateProfileState,
+        differentialMetaReasoningState,
+        metaReasoningState,
+        coherentIdentityDiscoveryState,
+        identityFoundationState,
+        principleIntegrationState,
+        predictiveAlignmentState,
+        agentId: AGENT_ID,
+        runtimeAgentId: RUNTIME_AGENT_ID,
+        ledgerHash: currentRecord?.ledger_hash ?? null,
+        resonanceHash: currentRecord?.resonance_hash ?? null,
+        createdAt: currentRecord?.created_at ?? null
+      })
+    }
 
     if (routePropagationMode) {
       const { data: latestStates, error: latestStateError } =
@@ -5200,7 +5399,7 @@ export async function POST(req: Request) {
         predictiveAlignmentState
       })
 
-      const differentialMetaReasoningState =
+      let differentialMetaReasoningState =
         generateDifferentialMetaReasoningState({
           metaReasoningState,
           coherentIdentityDiscoveryState,
@@ -5208,6 +5407,26 @@ export async function POST(req: Request) {
           identityFoundationState,
           equationLaneState
         })
+
+      const identityCandidateProfileState = generateIdentityCandidateProfiles({
+        coherentIdentityDiscoveryState,
+        metaReasoningState,
+        differentialMetaReasoningState
+      })
+
+      differentialMetaReasoningState = {
+        ...(differentialMetaReasoningState || {}),
+        differentialCandidates:
+          identityCandidateProfileState?.candidateProfiles ?? [],
+        candidateProfiles:
+          identityCandidateProfileState?.candidateProfiles ?? [],
+        dominantDifferentialCandidate:
+          identityCandidateProfileState?.dominantProfile ??
+          differentialMetaReasoningState?.dominantDifferentialCandidate ??
+          null,
+        candidateProfilingActive:
+          identityCandidateProfileState?.candidateProfilingActive === true
+      }
 
       const routeReasoningPropagationState = generateRouteReasoningPropagation({
         equationLaneState,
@@ -5260,6 +5479,7 @@ export async function POST(req: Request) {
         action: routePropagationMode,
         value: routeReasoningPropagationState,
         differentialMetaReasoningState,
+        identityCandidateProfileState,
         metaReasoningState,
         coherentIdentityDiscoveryState,
         identityFoundationState,
@@ -5386,7 +5606,7 @@ export async function POST(req: Request) {
         predictiveAlignmentState
       })
 
-      const differentialMetaReasoningState =
+      let differentialMetaReasoningState =
         generateDifferentialMetaReasoningState({
           metaReasoningState,
           coherentIdentityDiscoveryState,
@@ -5394,6 +5614,26 @@ export async function POST(req: Request) {
           identityFoundationState,
           equationLaneState
         })
+
+      const identityCandidateProfileState = generateIdentityCandidateProfiles({
+        coherentIdentityDiscoveryState,
+        metaReasoningState,
+        differentialMetaReasoningState
+      })
+
+      differentialMetaReasoningState = {
+        ...(differentialMetaReasoningState || {}),
+        differentialCandidates:
+          identityCandidateProfileState?.candidateProfiles ?? [],
+        candidateProfiles:
+          identityCandidateProfileState?.candidateProfiles ?? [],
+        dominantDifferentialCandidate:
+          identityCandidateProfileState?.dominantProfile ??
+          differentialMetaReasoningState?.dominantDifferentialCandidate ??
+          null,
+        candidateProfilingActive:
+          identityCandidateProfileState?.candidateProfilingActive === true
+      }
 
       return NextResponse.json({
         result: buildEquationIsomorphicRouteResponse({
@@ -5431,6 +5671,7 @@ export async function POST(req: Request) {
         stateObject: "differential meta reasoning state",
         action: differentialMetaReasoningAction,
         value: differentialMetaReasoningState,
+        identityCandidateProfileState,
         metaReasoningState,
         coherentIdentityDiscoveryState,
         identityFoundationState,
@@ -6898,14 +7139,34 @@ export async function POST(req: Request) {
       predictiveAlignmentState: predictiveAlignmentEngine
     })
 
-    const differentialMetaReasoningState =
-      generateDifferentialMetaReasoningState({
+    let differentialMetaReasoningState = generateDifferentialMetaReasoningState(
+      {
         metaReasoningState,
         coherentIdentityDiscoveryState,
         principleIntegrationState,
         identityFoundationState,
         equationLaneState
-      })
+      }
+    )
+
+    const identityCandidateProfileState = generateIdentityCandidateProfiles({
+      coherentIdentityDiscoveryState,
+      metaReasoningState,
+      differentialMetaReasoningState
+    })
+
+    differentialMetaReasoningState = {
+      ...(differentialMetaReasoningState || {}),
+      differentialCandidates:
+        identityCandidateProfileState?.candidateProfiles ?? [],
+      candidateProfiles: identityCandidateProfileState?.candidateProfiles ?? [],
+      dominantDifferentialCandidate:
+        identityCandidateProfileState?.dominantProfile ??
+        differentialMetaReasoningState?.dominantDifferentialCandidate ??
+        null,
+      candidateProfilingActive:
+        identityCandidateProfileState?.candidateProfilingActive === true
+    }
 
     const routeReasoningPropagationState = generateRouteReasoningPropagation({
       equationLaneState,
@@ -6925,6 +7186,8 @@ export async function POST(req: Request) {
       differentialMetaReasoningState
     authoritativeLiveState.routeReasoningPropagationState =
       routeReasoningPropagationState
+    authoritativeLiveState.identityCandidateProfileState =
+      identityCandidateProfileState
 
     let retrievedContext = ""
 
