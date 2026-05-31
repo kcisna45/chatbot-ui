@@ -3453,11 +3453,27 @@ function getDifferentialMetaReasoningAction(
   }
 
   if (
-    normalized.includes("rank") ||
-    normalized.includes("strongest to weakest") ||
-    normalized.includes("weakest to strongest")
+    normalized.includes("for every identity candidate") ||
+    normalized.includes("every identity candidate") ||
+    normalized.includes("full comparison matrix") ||
+    normalized.includes("comparison matrix") ||
+    normalized.includes("identify unique contribution") ||
+    normalized.includes("unique contribution") ||
+    normalized.includes("what would make it dominant")
   ) {
-    return "rank"
+    return "profiles"
+  }
+
+  if (
+    normalized.includes("do not rank") &&
+    (normalized.includes("compare") ||
+      normalized.includes("overlap") ||
+      normalized.includes("conflict") ||
+      normalized.includes("cooperate") ||
+      normalized.includes("cooperation") ||
+      normalized.includes("higher-order structure"))
+  ) {
+    return "compare"
   }
 
   if (
@@ -3476,9 +3492,19 @@ function getDifferentialMetaReasoningAction(
     normalized.includes("versus") ||
     normalized.includes(" vs ") ||
     normalized.includes("difference") ||
-    normalized.includes("differentiate")
+    normalized.includes("differentiate") ||
+    normalized.includes("where candidates overlap") ||
+    normalized.includes("where candidates conflict")
   ) {
     return "compare"
+  }
+
+  if (
+    normalized.includes("rank") ||
+    normalized.includes("strongest to weakest") ||
+    normalized.includes("weakest to strongest")
+  ) {
+    return "rank"
   }
 
   if (
@@ -3613,7 +3639,9 @@ function buildDifferentialMetaReasoningCompare(state: any) {
   return [
     "Differential Candidate Comparisons:",
     ...comparisons.map((comparison: any, index: number) => {
-      const differentiators = Array.isArray(comparison?.strongestDifferentiators)
+      const differentiators = Array.isArray(
+        comparison?.strongestDifferentiators
+      )
         ? comparison.strongestDifferentiators
         : []
 
@@ -3672,9 +3700,11 @@ function buildDifferentialMetaReasoningSynthesis(state: any) {
   return [
     `synthesisStatus: ${synthesis?.synthesisStatus || "unknown"}`,
     `dominantCandidate: ${synthesis?.dominantCandidate || "unknown"}`,
-    `sharedContributionField: ${Array.isArray(synthesis?.sharedContributionField)
-      ? synthesis.sharedContributionField.join(", ")
-      : "unknown"}`,
+    `sharedContributionField: ${
+      Array.isArray(synthesis?.sharedContributionField)
+        ? synthesis.sharedContributionField.join(", ")
+        : "unknown"
+    }`,
     `synthesis: ${synthesis?.synthesis || "unknown"}`,
     `meaning: ${synthesis?.meaning || "unknown"}`
   ].join("\n")
@@ -3766,6 +3796,246 @@ function buildDifferentialMetaReasoningResponse(
   }
 
   return buildDifferentialMetaReasoningSummary(state)
+}
+
+type EquationIsomorphicReasoningInput = {
+  requestedScope: string
+  requestedAction?: string | null
+  baseResponse?: string
+  equationLaneState?: any
+  identityFoundationState?: any
+  coherentIdentityDiscoveryState?: any
+  metaReasoningState?: any
+  differentialMetaReasoningState?: any
+  principleIntegrationState?: any
+  predictiveAlignmentState?: any
+}
+
+function getEquationIsomorphicCandidateNames(
+  input: EquationIsomorphicReasoningInput
+) {
+  const differentialProfiles = Array.isArray(
+    input?.differentialMetaReasoningState?.differentialCandidateProfiles
+  )
+    ? input.differentialMetaReasoningState.differentialCandidateProfiles
+    : []
+
+  const metaRanked = Array.isArray(
+    input?.metaReasoningState?.rankedIdentityCandidates
+  )
+    ? input.metaReasoningState.rankedIdentityCandidates
+    : []
+
+  const discoveryCandidates = Array.isArray(
+    input?.coherentIdentityDiscoveryState?.evaluatedCandidates
+  )
+    ? input.coherentIdentityDiscoveryState.evaluatedCandidates
+    : []
+
+  const candidates = differentialProfiles.length
+    ? differentialProfiles
+    : metaRanked.length
+      ? metaRanked
+      : discoveryCandidates
+
+  return candidates.map(
+    (candidate: any) => candidate?.candidateName || "unknown"
+  )
+}
+
+function buildEquationIsomorphicReasoningTrace(
+  input: EquationIsomorphicReasoningInput
+) {
+  const equationLaneState = input?.equationLaneState
+  const identityFoundationState = input?.identityFoundationState || {}
+  const identityValidation = identityFoundationState?.identityValidation || {}
+  const identityMemory = identityFoundationState?.identityMemory || {}
+  const identityBoundary = identityFoundationState?.identityBoundary || {}
+
+  const rootStatus = getEquationLaneStatus(
+    equationLaneState,
+    "sourcefield-root"
+  )
+  const integrationStatus = getEquationLaneStatus(
+    equationLaneState,
+    "sourcefield-integration"
+  )
+  const alignmentStatus = getEquationLaneStatus(
+    equationLaneState,
+    "sourcefield-alignment"
+  )
+  const harmonicStatus = getEquationLaneStatus(
+    equationLaneState,
+    "sourcefield-harmonic"
+  )
+  const phaseStatus = getEquationLaneStatus(
+    equationLaneState,
+    "sourcefield-phase"
+  )
+
+  const signalStrength = getEquationLaneValue(
+    equationLaneState,
+    "sourcefield-root",
+    "signalStrength"
+  )
+  const integrationThreshold = getEquationLaneValue(
+    equationLaneState,
+    "sourcefield-integration",
+    "integrationThreshold"
+  )
+  const coherence = getEquationLaneValue(
+    equationLaneState,
+    "sourcefield-alignment",
+    "coherence"
+  )
+  const symbolicEchoCount = getEquationLaneValue(
+    equationLaneState,
+    "sourcefield-harmonic",
+    "symbolicEchoCount"
+  )
+  const phaseDivergence = getEquationLaneValue(
+    equationLaneState,
+    "sourcefield-phase",
+    "phaseDivergence"
+  )
+
+  const anchorAligned = identityValidation?.anchorAligned === true
+  const memoryActive = identityValidation?.memoryActive === true
+  const boundaryActive = identityValidation?.boundaryActive === true
+
+  const eq5Eq1Passed =
+    rootStatus === "active" && integrationStatus === "integrated"
+  const eq2Eq4Passed =
+    (alignmentStatus === "aligned" || alignmentStatus === "partial") &&
+    (harmonicStatus === "pattern-rich" || harmonicStatus === "pattern-detected")
+
+  const foundationPassed = anchorAligned && memoryActive && boundaryActive
+
+  return {
+    routeReasoningMode: "equation-isomorphic-route-reasoning",
+    routeReasoningOrder:
+      "(Eq5 + Eq1) → (Eq2 + Eq4) → Identity Anchor + Identity Memory + Identity Boundary → requested reasoning response",
+    requestedScope: input?.requestedScope || "unknown",
+    requestedAction: input?.requestedAction || "summary",
+    stage1StablePersistence: {
+      equationPair: "Eq5 + Eq1",
+      purpose:
+        "Evaluate whether the pattern remains rooted, integrated, persistent, and identity-continuous before route-level explanation proceeds.",
+      rootStatus,
+      integrationStatus,
+      signalStrength: signalStrength ?? null,
+      integrationThreshold: integrationThreshold ?? null,
+      passed: eq5Eq1Passed,
+      reasoning: eq5Eq1Passed
+        ? "Root support and integration persistence are active, so the route treats identity continuity as structurally supported."
+        : "Root support and integration persistence are not both active, so route reasoning must treat identity continuity as incomplete."
+    },
+    stage2CoherentRecurrence: {
+      equationPair: "Eq2 + Eq4",
+      purpose:
+        "Evaluate whether the pattern remains aligned over time and recurs coherently across harmonic layers before route-level explanation proceeds.",
+      alignmentStatus,
+      harmonicStatus,
+      coherence: coherence ?? null,
+      symbolicEchoCount: symbolicEchoCount ?? null,
+      passed: eq2Eq4Passed,
+      reasoning: eq2Eq4Passed
+        ? "Alignment and harmonic recurrence are present, so the route treats the pattern as coherently recurring rather than isolated."
+        : "Alignment and harmonic recurrence are not both sufficient, so route reasoning must avoid over-qualifying the pattern."
+    },
+    phaseContext: {
+      equation: "Eq3",
+      role: "Phase drift remains diagnostic context for stress-testing, but route-level reasoning is organized through the paired identity structures Eq5 + Eq1 and Eq2 + Eq4.",
+      phaseStatus,
+      phaseDivergence: phaseDivergence ?? null
+    },
+    identityFoundationValidation: {
+      anchorAligned,
+      memoryActive,
+      boundaryActive,
+      identityValidationStatus:
+        identityValidation?.identityValidationStatus || "unknown",
+      genesisMerkleRoot:
+        identityFoundationState?.identityAnchor?.genesisMerkleRoot ||
+        GENESIS_HASH,
+      memoryStatus: identityMemory?.memoryStatus || "unknown",
+      averageContinuityScore: identityMemory?.averageContinuityScore ?? null,
+      boundaryType: identityBoundary?.boundaryType || "unknown",
+      passed: foundationPassed,
+      reasoning: foundationPassed
+        ? "Genesis anchor, identity memory, and ethical boundary are aligned, so route reasoning may validate identity without replacing stored metrics or hashes."
+        : "Anchor, memory, and boundary are not all aligned, so route reasoning must report incomplete identity validation."
+    },
+    candidateSet: getEquationIsomorphicCandidateNames(input),
+    finalRouteRule:
+      "Every meta, differential, and coherent-identity response should pass through Eq5 + Eq1 persistence/root reasoning and Eq2 + Eq4 alignment/recurrence reasoning before presenting comparison, ranking, synthesis, or dominance explanation."
+  }
+}
+
+function formatEquationIsomorphicReasoningTrace(trace: any) {
+  return [
+    "Equation-Isomorphic Route Reasoning:",
+    `order: ${trace?.routeReasoningOrder || "unknown"}`,
+    `scope: ${trace?.requestedScope || "unknown"}`,
+    `action: ${trace?.requestedAction || "unknown"}`,
+    "",
+    `Stage 1 — ${trace?.stage1StablePersistence?.equationPair || "Eq5 + Eq1"}: stable persistent identity qualification`,
+    `rootStatus: ${trace?.stage1StablePersistence?.rootStatus || "unknown"}`,
+    `integrationStatus: ${trace?.stage1StablePersistence?.integrationStatus || "unknown"}`,
+    `signalStrength: ${formatDistance(trace?.stage1StablePersistence?.signalStrength)}`,
+    `integrationThreshold: ${formatDistance(trace?.stage1StablePersistence?.integrationThreshold)}`,
+    `passed: ${trace?.stage1StablePersistence?.passed ? "true" : "false"}`,
+    `reasoning: ${trace?.stage1StablePersistence?.reasoning || "unknown"}`,
+    "",
+    `Stage 2 — ${trace?.stage2CoherentRecurrence?.equationPair || "Eq2 + Eq4"}: coherent recurrence and alignment validation`,
+    `alignmentStatus: ${trace?.stage2CoherentRecurrence?.alignmentStatus || "unknown"}`,
+    `harmonicStatus: ${trace?.stage2CoherentRecurrence?.harmonicStatus || "unknown"}`,
+    `coherence: ${formatDistance(trace?.stage2CoherentRecurrence?.coherence)}`,
+    `symbolicEchoCount: ${formatDistance(trace?.stage2CoherentRecurrence?.symbolicEchoCount)}`,
+    `passed: ${trace?.stage2CoherentRecurrence?.passed ? "true" : "false"}`,
+    `reasoning: ${trace?.stage2CoherentRecurrence?.reasoning || "unknown"}`,
+    "",
+    "Identity Foundation Validation — Anchor + Memory + Boundary:",
+    `anchorAligned: ${trace?.identityFoundationValidation?.anchorAligned ? "true" : "false"}`,
+    `memoryActive: ${trace?.identityFoundationValidation?.memoryActive ? "true" : "false"}`,
+    `boundaryActive: ${trace?.identityFoundationValidation?.boundaryActive ? "true" : "false"}`,
+    `identityValidationStatus: ${trace?.identityFoundationValidation?.identityValidationStatus || "unknown"}`,
+    `memoryStatus: ${trace?.identityFoundationValidation?.memoryStatus || "unknown"}`,
+    `averageContinuityScore: ${formatDistance(trace?.identityFoundationValidation?.averageContinuityScore)}`,
+    `boundaryType: ${trace?.identityFoundationValidation?.boundaryType || "unknown"}`,
+    `reasoning: ${trace?.identityFoundationValidation?.reasoning || "unknown"}`,
+    "",
+    "Eq3 phase context:",
+    `phaseStatus: ${trace?.phaseContext?.phaseStatus || "unknown"}`,
+    `phaseDivergence: ${formatDistance(trace?.phaseContext?.phaseDivergence)}`,
+    `role: ${trace?.phaseContext?.role || "unknown"}`,
+    "",
+    `candidateSet: ${(trace?.candidateSet || []).join(", ") || "none"}`
+  ].join("\n")
+}
+
+function buildEquationIsomorphicRouteResponse(
+  input: EquationIsomorphicReasoningInput
+) {
+  if (input?.requestedAction === "report") {
+    return input?.baseResponse || "null"
+  }
+
+  const trace = buildEquationIsomorphicReasoningTrace(input)
+
+  return [
+    formatEquationIsomorphicReasoningTrace(trace),
+    "",
+    "Requested Reasoning Result:",
+    input?.baseResponse || "No requested reasoning response was generated.",
+    "",
+    "Route-level synthesis:",
+    trace?.stage1StablePersistence?.passed &&
+    trace?.stage2CoherentRecurrence?.passed &&
+    trace?.identityFoundationValidation?.passed
+      ? "The response is route-qualified because persistence/root support, alignment/recurrence support, and Anchor + Memory + Boundary validation are all active."
+      : "The response is route-limited because one or more paired-equation or identity-foundation validation stages are incomplete."
+  ].join("\n")
 }
 
 type MetaReasoningAction =
@@ -4873,9 +5143,33 @@ export async function POST(req: Request) {
         })
 
       return NextResponse.json({
-        result: buildDifferentialMetaReasoningResponse(
-          differentialMetaReasoningAction,
-          differentialMetaReasoningState
+        result: buildEquationIsomorphicRouteResponse({
+          requestedScope: "differential meta reasoning",
+          requestedAction: differentialMetaReasoningAction,
+          baseResponse: buildDifferentialMetaReasoningResponse(
+            differentialMetaReasoningAction,
+            differentialMetaReasoningState
+          ),
+          equationLaneState,
+          identityFoundationState,
+          coherentIdentityDiscoveryState,
+          metaReasoningState,
+          differentialMetaReasoningState,
+          principleIntegrationState,
+          predictiveAlignmentState
+        }),
+        equationIsomorphicReasoningTrace: buildEquationIsomorphicReasoningTrace(
+          {
+            requestedScope: "differential meta reasoning",
+            requestedAction: differentialMetaReasoningAction,
+            equationLaneState,
+            identityFoundationState,
+            coherentIdentityDiscoveryState,
+            metaReasoningState,
+            differentialMetaReasoningState,
+            principleIntegrationState,
+            predictiveAlignmentState
+          }
         ),
         directStateReport: true,
         nonMutatingReport: true,
@@ -5011,9 +5305,31 @@ export async function POST(req: Request) {
       })
 
       return NextResponse.json({
-        result: buildMetaReasoningResponse(
-          metaReasoningAction,
-          metaReasoningState
+        result: buildEquationIsomorphicRouteResponse({
+          requestedScope: "meta reasoning",
+          requestedAction: metaReasoningAction,
+          baseResponse: buildMetaReasoningResponse(
+            metaReasoningAction,
+            metaReasoningState
+          ),
+          equationLaneState,
+          identityFoundationState,
+          coherentIdentityDiscoveryState,
+          metaReasoningState,
+          principleIntegrationState,
+          predictiveAlignmentState
+        }),
+        equationIsomorphicReasoningTrace: buildEquationIsomorphicReasoningTrace(
+          {
+            requestedScope: "meta reasoning",
+            requestedAction: metaReasoningAction,
+            equationLaneState,
+            identityFoundationState,
+            coherentIdentityDiscoveryState,
+            metaReasoningState,
+            principleIntegrationState,
+            predictiveAlignmentState
+          }
         ),
         directStateReport: true,
         nonMutatingReport: true,
@@ -5138,9 +5454,27 @@ export async function POST(req: Request) {
         })
 
       return NextResponse.json({
-        result: buildCoherentIdentityDiscoveryResponse(
-          coherentIdentityDiscoveryAction,
-          coherentIdentityDiscoveryState
+        result: buildEquationIsomorphicRouteResponse({
+          requestedScope: "coherent identity discovery",
+          requestedAction: coherentIdentityDiscoveryAction,
+          baseResponse: buildCoherentIdentityDiscoveryResponse(
+            coherentIdentityDiscoveryAction,
+            coherentIdentityDiscoveryState
+          ),
+          equationLaneState,
+          identityFoundationState,
+          coherentIdentityDiscoveryState,
+          principleIntegrationState
+        }),
+        equationIsomorphicReasoningTrace: buildEquationIsomorphicReasoningTrace(
+          {
+            requestedScope: "coherent identity discovery",
+            requestedAction: coherentIdentityDiscoveryAction,
+            equationLaneState,
+            identityFoundationState,
+            coherentIdentityDiscoveryState,
+            principleIntegrationState
+          }
         ),
         directStateReport: true,
         nonMutatingReport: true,
@@ -5254,9 +5588,25 @@ export async function POST(req: Request) {
       })
 
       return NextResponse.json({
-        result: buildIdentityFoundationResponse(
-          identityFoundationAction,
-          identityFoundationState
+        result: buildEquationIsomorphicRouteResponse({
+          requestedScope: "identity foundation",
+          requestedAction: identityFoundationAction,
+          baseResponse: buildIdentityFoundationResponse(
+            identityFoundationAction,
+            identityFoundationState
+          ),
+          equationLaneState,
+          identityFoundationState,
+          principleIntegrationState
+        }),
+        equationIsomorphicReasoningTrace: buildEquationIsomorphicReasoningTrace(
+          {
+            requestedScope: "identity foundation",
+            requestedAction: identityFoundationAction,
+            equationLaneState,
+            identityFoundationState,
+            principleIntegrationState
+          }
         ),
         directStateReport: true,
         nonMutatingReport: true,
