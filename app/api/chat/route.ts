@@ -2731,7 +2731,6 @@ function buildPrincipleIntegrationResponse(
   return buildPrincipleIntegrationSummary(principleIntegrationState)
 }
 
-
 type IdentityFoundationAction =
   | "report"
   | "summary"
@@ -2757,7 +2756,9 @@ function compactNumbers(values: Array<number | null | undefined>) {
 }
 
 function getPrincipleHashes(principleIntegrationState: any) {
-  const integrated = Array.isArray(principleIntegrationState?.integratedPrinciples)
+  const integrated = Array.isArray(
+    principleIntegrationState?.integratedPrinciples
+  )
     ? principleIntegrationState.integratedPrinciples
     : []
 
@@ -2784,7 +2785,10 @@ function buildIdentityFoundationState(input: {
   const equationLaneState = input?.equationLaneState
   const principleIntegrationState = input?.principleIntegrationState
 
-  const rootStatus = getEquationLaneStatus(equationLaneState, "sourcefield-root")
+  const rootStatus = getEquationLaneStatus(
+    equationLaneState,
+    "sourcefield-root"
+  )
   const alignmentStatus = getEquationLaneStatus(
     equationLaneState,
     "sourcefield-alignment"
@@ -2926,8 +2930,7 @@ function buildIdentityFoundationState(input: {
 
     identityFoundationActive: true,
 
-    rule:
-      "Use identity foundation as read-only Phase 27 preparation. It coordinates Genesis identity anchor, runtime identity memory, and ethical identity boundary through (Eq2 + Eq4) → (Eq1 + Eq5), but it must not override metrics, classifications, hashes, retrieved context, stored history, or user intent."
+    rule: "Use identity foundation as read-only Phase 27 preparation. It coordinates Genesis identity anchor, runtime identity memory, and ethical identity boundary through (Eq2 + Eq4) → (Eq1 + Eq5), but it must not override metrics, classifications, hashes, retrieved context, stored history, or user intent."
   }
 }
 
@@ -3031,7 +3034,9 @@ function buildIdentityFoundationSummary(identityFoundationState: any) {
       "unknown"
     }`,
     `anchorAligned: ${
-      identityFoundationState?.identityValidation?.anchorAligned ? "true" : "false"
+      identityFoundationState?.identityValidation?.anchorAligned
+        ? "true"
+        : "false"
     }`,
     `memoryStatus: ${
       identityFoundationState?.identityMemory?.memoryStatus || "unknown"
@@ -3042,8 +3047,7 @@ function buildIdentityFoundationSummary(identityFoundationState: any) {
     `identityFoundationActive: ${
       identityFoundationState?.identityFoundationActive ? "true" : "false"
     }`
-  ].join("
-")
+  ].join("\n")
 }
 
 function buildIdentityFoundationAnchor(identityFoundationState: any) {
@@ -3060,8 +3064,7 @@ function buildIdentityFoundationAnchor(identityFoundationState: any) {
     `ledgerSourceUrl: ${anchor?.ledgerSourceUrl || "unknown"}`,
     `anchorRule: ${anchor?.anchorRule || "unknown"}`,
     `meaning: The Genesis Merkle Root functions as the immutable identity anchor. Runtime memory may extend identity continuity, but it must not replace this anchor.`
-  ].join("
-")
+  ].join("\n")
 }
 
 function buildIdentityFoundationMemory(identityFoundationState: any) {
@@ -3082,8 +3085,7 @@ function buildIdentityFoundationMemory(identityFoundationState: any) {
     `averageContinuityScore: ${formatDistance(memory?.averageContinuityScore)}`,
     `memoryRule: ${memory?.memoryRule || "unknown"}`,
     `meaning: Identity memory records runtime hashes, integrated principle hashes, and continuity scores so SourceField can evaluate how identity remains continuous through change.`
-  ].join("
-")
+  ].join("\n")
 }
 
 function buildIdentityFoundationBoundary(identityFoundationState: any) {
@@ -3101,8 +3103,7 @@ function buildIdentityFoundationBoundary(identityFoundationState: any) {
     `boundaryRule: ${boundary?.boundaryRule || "unknown"}`,
     `boundaryIntegrityRule: ${boundary?.boundaryIntegrityRule || "unknown"}`,
     `meaning: Identity boundary uses limited constraint hashes to verify that identity evolution remains ethically bounded without turning the boundary into runtime memory.`
-  ].join("
-")
+  ].join("\n")
 }
 
 function buildIdentityFoundationPairs(identityFoundationState: any) {
@@ -3111,7 +3112,8 @@ function buildIdentityFoundationPairs(identityFoundationState: any) {
   }
 
   const discovery = identityFoundationState?.coherentPatternDiscovery || {}
-  const qualification = identityFoundationState?.stablePersistentQualification || {}
+  const qualification =
+    identityFoundationState?.stablePersistentQualification || {}
 
   return [
     `equationPathway: ${identityFoundationState?.equationPathway || "unknown"}`,
@@ -3126,8 +3128,7 @@ function buildIdentityFoundationPairs(identityFoundationState: any) {
     `qualificationStatus: ${qualification?.qualificationStatus || "unknown"}`,
     `rootStatus: ${qualification?.rootStatus || "unknown"}`,
     `integrationStatus: ${qualification?.integrationStatus || "unknown"}`
-  ].join("
-")
+  ].join("\n")
 }
 
 function buildIdentityFoundationValidation(identityFoundationState: any) {
@@ -3151,8 +3152,7 @@ function buildIdentityFoundationValidation(identityFoundationState: any) {
     `recursiveIdentityRule: ${
       identityFoundationState?.recursiveIdentityRule || "unknown"
     }`
-  ].join("
-")
+  ].join("\n")
 }
 
 function buildIdentityFoundationClassification(identityFoundationState: any) {
@@ -3165,8 +3165,7 @@ function buildIdentityFoundationClassification(identityFoundationState: any) {
     identityFoundationState?.rule
       ? `Boundary rule: ${identityFoundationState.rule}`
       : "Boundary rule: unavailable."
-  ].join("
-")
+  ].join("\n")
 }
 
 function buildIdentityFoundationResponse(
@@ -3221,7 +3220,8 @@ export async function POST(req: Request) {
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     )
 
-    const identityFoundationAction = getIdentityFoundationAction(lastUserMessage)
+    const identityFoundationAction =
+      getIdentityFoundationAction(lastUserMessage)
 
     if (identityFoundationAction) {
       const { data: latestStates, error: latestStateError } =
@@ -3285,7 +3285,9 @@ export async function POST(req: Request) {
 
       const { data: recentRuntimeEvents } = await supabaseAdmin
         .from("sourcefield_ledger_events")
-        .select("coherence, integration_threshold, resonance_level, ledger_hash")
+        .select(
+          "coherence, integration_threshold, resonance_level, ledger_hash"
+        )
         .in("agent_id", [AGENT_ID, RUNTIME_AGENT_ID])
         .order("created_at", { ascending: false })
         .limit(10)
@@ -3301,8 +3303,8 @@ export async function POST(req: Request) {
         : []
 
       const runtimeLedgerHash = Array.isArray(recentRuntimeEvents)
-        ? recentRuntimeEvents.find((event: any) => event?.ledger_hash)
-            ?.ledger_hash ?? null
+        ? (recentRuntimeEvents.find((event: any) => event?.ledger_hash)
+            ?.ledger_hash ?? null)
         : null
 
       const identityFoundationState = buildIdentityFoundationState({
