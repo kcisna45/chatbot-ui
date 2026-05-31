@@ -5757,7 +5757,7 @@ export async function POST(req: Request) {
       principleIntegrationState,
       identityFoundationState,
       equationLaneState,
-      predictiveAlignmentState
+      predictiveAlignmentState: predictiveAlignmentEngine
     })
 
     authoritativeLiveState.identityFoundationState = identityFoundationState
