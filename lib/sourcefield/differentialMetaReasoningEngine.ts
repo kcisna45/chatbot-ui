@@ -389,7 +389,10 @@ export function generateDifferentialMetaReasoningState(
 
   const candidateProfiles = candidates
     .map(buildCandidateProfile)
-    .sort((a, b) => b.differentialScore.total - a.differentialScore.total)
+    .sort(
+      (a: CandidateProfile, b: CandidateProfile) =>
+        b.differentialScore.total - a.differentialScore.total
+    )
 
   const dominantDifferentialCandidate = candidateProfiles[0] || null
   const weakestDifferentialCandidate =

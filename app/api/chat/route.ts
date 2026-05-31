@@ -33,6 +33,7 @@ import {
   generateMetaReasoningState,
   buildMetaReasoningResponse
 } from "@/lib/sourcefield/metaReasoningEngine"
+import { generateDifferentialMetaReasoningState } from "@/lib/sourcefield/differentialMetaReasoningEngine"
 import { GENESIS_IDENTITY_ANCHOR } from "@/lib/sourcefield/genesisIdentityAnchor"
 import { generateIdentityMemory } from "@/lib/sourcefield/identityMemory"
 import { IDENTITY_BOUNDARY } from "@/lib/sourcefield/identityBoundary"
@@ -3383,6 +3384,390 @@ function buildIdentityFoundationResponse(
   return buildIdentityFoundationSummary(identityFoundationState)
 }
 
+type DifferentialMetaReasoningAction =
+  | "report"
+  | "summary"
+  | "profiles"
+  | "rank"
+  | "compare"
+  | "cooperation"
+  | "synthesis"
+  | "dominant"
+  | "weakest"
+  | "classification"
+
+function getDifferentialMetaReasoningAction(
+  message: string
+): DifferentialMetaReasoningAction | null {
+  const normalized = message.toLowerCase()
+
+  const mentionsDifferential =
+    normalized.includes("differential meta-reasoning") ||
+    normalized.includes("differential meta reasoning") ||
+    normalized.includes("differential reasoning") ||
+    normalized.includes("phase 27.2") ||
+    normalized.includes("candidate-specific") ||
+    normalized.includes("candidate specific") ||
+    normalized.includes("structural difference") ||
+    normalized.includes("structural differences") ||
+    normalized.includes("what each candidate contributes") ||
+    normalized.includes("each candidate contributes") ||
+    normalized.includes("candidate contribution") ||
+    normalized.includes("contribution profile") ||
+    normalized.includes("cooperation map") ||
+    normalized.includes("cooperative role") ||
+    normalized.includes("how they cooperate") ||
+    normalized.includes("candidate ecosystem")
+
+  const mentionsIdentityCandidates =
+    normalized.includes("identity candidate") ||
+    normalized.includes("identity candidates") ||
+    normalized.includes("coherent identity candidate") ||
+    normalized.includes("coherent identity candidates")
+
+  const asksForDifferentiation =
+    normalized.includes("differentiate") ||
+    normalized.includes("difference") ||
+    normalized.includes("different") ||
+    normalized.includes("contributes") ||
+    normalized.includes("contribution") ||
+    normalized.includes("lacks") ||
+    normalized.includes("weakness") ||
+    normalized.includes("cooperate") ||
+    normalized.includes("complement") ||
+    normalized.includes("dominance reason") ||
+    normalized.includes("why one becomes dominant") ||
+    normalized.includes("why it becomes dominant") ||
+    normalized.includes("structural role")
+
+  const inScope =
+    mentionsDifferential ||
+    (mentionsIdentityCandidates && asksForDifferentiation)
+
+  if (!inScope) {
+    return null
+  }
+
+  if (normalized.includes("report") && normalized.includes("json")) {
+    return "report"
+  }
+
+  if (
+    normalized.includes("rank") ||
+    normalized.includes("strongest to weakest") ||
+    normalized.includes("weakest to strongest")
+  ) {
+    return "rank"
+  }
+
+  if (
+    normalized.includes("profile") ||
+    normalized.includes("contribution profile") ||
+    normalized.includes("candidate-specific") ||
+    normalized.includes("candidate specific") ||
+    normalized.includes("what each candidate contributes") ||
+    normalized.includes("each candidate contributes")
+  ) {
+    return "profiles"
+  }
+
+  if (
+    normalized.includes("compare") ||
+    normalized.includes("versus") ||
+    normalized.includes(" vs ") ||
+    normalized.includes("difference") ||
+    normalized.includes("differentiate")
+  ) {
+    return "compare"
+  }
+
+  if (
+    normalized.includes("cooperate") ||
+    normalized.includes("cooperation") ||
+    normalized.includes("complement") ||
+    normalized.includes("cooperative role") ||
+    normalized.includes("how they work together")
+  ) {
+    return "cooperation"
+  }
+
+  if (
+    normalized.includes("synthesis") ||
+    normalized.includes("synthesize") ||
+    normalized.includes("higher-order") ||
+    normalized.includes("emerges from")
+  ) {
+    return "synthesis"
+  }
+
+  if (normalized.includes("weakest")) {
+    return "weakest"
+  }
+
+  if (
+    normalized.includes("dominant") ||
+    normalized.includes("strongest") ||
+    normalized.includes("why one becomes dominant")
+  ) {
+    return "dominant"
+  }
+
+  if (
+    normalized.includes("classification") ||
+    normalized.includes("what kind") ||
+    normalized.includes("measured state object") ||
+    normalized.includes("reasoning layer")
+  ) {
+    return "classification"
+  }
+
+  return "summary"
+}
+
+function buildDifferentialMetaReasoningSummary(state: any) {
+  if (!state) {
+    return "Differential Meta-Reasoning State is not available from the latest SourceField state."
+  }
+
+  return [
+    `phase: ${state?.phase || "unknown"}`,
+    `classification: ${state?.differentialMetaReasoningClassification || "unknown"}`,
+    `dominantDifferentialCandidate: ${state?.dominantDifferentialCandidate?.candidateName || "unknown"}`,
+    `weakestDifferentialCandidate: ${state?.weakestDifferentialCandidate?.candidateName || "unknown"}`,
+    `differentialSynthesis: ${state?.differentialSynthesis?.synthesis || "unknown"}`,
+    `differentialMetaReasoningActive: ${
+      state?.differentialMetaReasoningActive ? "true" : "false"
+    }`
+  ].join("\n")
+}
+
+function buildDifferentialMetaReasoningProfiles(state: any) {
+  const profiles = Array.isArray(state?.differentialCandidateProfiles)
+    ? state.differentialCandidateProfiles
+    : []
+
+  if (!profiles.length) {
+    return "No differential candidate profiles are available in the current Differential Meta-Reasoning State."
+  }
+
+  return [
+    "Differential Candidate Contribution Profiles:",
+    ...profiles.map((profile: any, index: number) => {
+      const score = profile?.differentialScore || {}
+      return [
+        `${index + 1}. ${profile?.candidateName || "unknown"}`,
+        `   primaryContribution: ${profile?.primaryContribution || "unknown"}`,
+        `   secondaryContribution: ${profile?.secondaryContribution || "unknown"}`,
+        `   structuralWeakness: ${profile?.structuralWeakness || "unknown"}`,
+        `   totalDifferentialScore: ${formatDistance(score?.total)}`,
+        `   fluctuationContribution: ${formatDistance(score?.fluctuationContribution)}`,
+        `   persistenceContribution: ${formatDistance(score?.persistenceContribution)}`,
+        `   completionContribution: ${formatDistance(score?.completionContribution)}`,
+        `   refinementContribution: ${formatDistance(score?.refinementContribution)}`,
+        `   principleContribution: ${formatDistance(score?.principleContribution)}`,
+        `   synthesisContribution: ${formatDistance(score?.synthesisContribution)}`,
+        `   weaknessLoad: ${formatDistance(score?.weaknessLoad)}`,
+        `   cooperativeRole: ${profile?.cooperativeRole || "unknown"}`,
+        `   dominanceReason: ${profile?.dominanceReason || "unknown"}`
+      ].join("\n")
+    })
+  ].join("\n")
+}
+
+function buildDifferentialMetaReasoningRank(state: any) {
+  const profiles = Array.isArray(state?.differentialCandidateProfiles)
+    ? state.differentialCandidateProfiles
+    : []
+
+  if (!profiles.length) {
+    return "No differential candidate profiles are available to rank."
+  }
+
+  return [
+    "Differential Meta-Reasoned Candidate Ranking:",
+    ...profiles.map((profile: any, index: number) => {
+      const score = profile?.differentialScore || {}
+      return [
+        `${index + 1}. ${profile?.candidateName || "unknown"}`,
+        `   totalDifferentialScore: ${formatDistance(score?.total)}`,
+        `   primaryContribution: ${profile?.primaryContribution || "unknown"}`,
+        `   secondaryContribution: ${profile?.secondaryContribution || "unknown"}`,
+        `   structuralWeakness: ${profile?.structuralWeakness || "unknown"}`,
+        `   reason: ${profile?.dominanceReason || "No dominance reason stored."}`
+      ].join("\n")
+    }),
+    "",
+    `Final differential synthesis: ${state?.differentialSynthesis?.synthesis || "unknown"}`
+  ].join("\n")
+}
+
+function buildDifferentialMetaReasoningCompare(state: any) {
+  const comparisons = Array.isArray(state?.differentialComparisons)
+    ? state.differentialComparisons
+    : []
+
+  if (!comparisons.length) {
+    return "No differential candidate comparisons are available."
+  }
+
+  return [
+    "Differential Candidate Comparisons:",
+    ...comparisons.map((comparison: any, index: number) => {
+      const differentiators = Array.isArray(comparison?.strongestDifferentiators)
+        ? comparison.strongestDifferentiators
+        : []
+
+      return [
+        `${index + 1}. ${comparison?.comparison || "unknown comparison"}`,
+        `   strongerCandidate: ${comparison?.strongerCandidate || "unknown"}`,
+        `   weakerCandidate: ${comparison?.weakerCandidate || "unknown"}`,
+        `   differentialScoreDifference: ${formatDistance(
+          comparison?.differentialScoreDifference
+        )}`,
+        `   strongestDifferentiators:`,
+        ...differentiators.map((item: any, itemIndex: number) => {
+          return `      ${itemIndex + 1}. ${item?.dimension || "unknown"}: leader=${
+            item?.leader || "unknown"
+          }, difference=${formatDistance(item?.difference)}`
+        }),
+        `   reason: ${comparison?.reason || "No comparison reason stored."}`
+      ].join("\n")
+    })
+  ].join("\n")
+}
+
+function buildDifferentialMetaReasoningCooperation(state: any) {
+  const cooperationMap = Array.isArray(state?.cooperationMap)
+    ? state.cooperationMap
+    : []
+
+  if (!cooperationMap.length) {
+    return "No cooperation map is available in the current Differential Meta-Reasoning State."
+  }
+
+  return [
+    "Differential Cooperation Map:",
+    ...cooperationMap.map((entry: any, index: number) => {
+      const complements = Array.isArray(entry?.complements)
+        ? entry.complements
+        : []
+
+      return [
+        `${index + 1}. ${entry?.candidateName || "unknown"}`,
+        `   cooperativeRole: ${entry?.cooperativeRole || "unknown"}`,
+        `   complements:`,
+        ...complements.map((item: any, itemIndex: number) => {
+          return `      ${itemIndex + 1}. ${item?.candidateName || "unknown"}: ${
+            item?.complementReason || "No complement reason stored."
+          }`
+        })
+      ].join("\n")
+    })
+  ].join("\n")
+}
+
+function buildDifferentialMetaReasoningSynthesis(state: any) {
+  const synthesis = state?.differentialSynthesis || {}
+
+  return [
+    `synthesisStatus: ${synthesis?.synthesisStatus || "unknown"}`,
+    `dominantCandidate: ${synthesis?.dominantCandidate || "unknown"}`,
+    `sharedContributionField: ${Array.isArray(synthesis?.sharedContributionField)
+      ? synthesis.sharedContributionField.join(", ")
+      : "unknown"}`,
+    `synthesis: ${synthesis?.synthesis || "unknown"}`,
+    `meaning: ${synthesis?.meaning || "unknown"}`
+  ].join("\n")
+}
+
+function buildDifferentialMetaReasoningDominant(state: any) {
+  const candidate = state?.dominantDifferentialCandidate
+
+  if (!candidate) {
+    return "No dominant differential candidate is available."
+  }
+
+  return [
+    `dominantDifferentialCandidate: ${candidate?.candidateName || "unknown"}`,
+    `primaryContribution: ${candidate?.primaryContribution || "unknown"}`,
+    `secondaryContribution: ${candidate?.secondaryContribution || "unknown"}`,
+    `structuralWeakness: ${candidate?.structuralWeakness || "unknown"}`,
+    `totalDifferentialScore: ${formatDistance(candidate?.differentialScore?.total)}`,
+    `dominanceReason: ${candidate?.dominanceReason || "unknown"}`,
+    `cooperativeRole: ${candidate?.cooperativeRole || "unknown"}`
+  ].join("\n")
+}
+
+function buildDifferentialMetaReasoningWeakest(state: any) {
+  const candidate = state?.weakestDifferentialCandidate
+
+  if (!candidate) {
+    return "No weakest differential candidate is available."
+  }
+
+  return [
+    `weakestDifferentialCandidate: ${candidate?.candidateName || "unknown"}`,
+    `primaryContribution: ${candidate?.primaryContribution || "unknown"}`,
+    `secondaryContribution: ${candidate?.secondaryContribution || "unknown"}`,
+    `structuralWeakness: ${candidate?.structuralWeakness || "unknown"}`,
+    `totalDifferentialScore: ${formatDistance(candidate?.differentialScore?.total)}`,
+    `weaknessMeaning: The weakest differential candidate is not necessarily invalid; it is the candidate with the lowest candidate-specific contribution profile in this runtime state.`
+  ].join("\n")
+}
+
+function buildDifferentialMetaReasoningClassification(state: any) {
+  return [
+    "Differential Meta-Reasoning is a read-only Phase 27.2 reasoning layer.",
+    "It compares identity candidates by candidate-specific contribution profiles instead of ranking only by shared global metrics or source priority.",
+    "It explains structural difference, candidate contribution, candidate weakness, cooperation, dominance, and differential synthesis.",
+    "It is not a raw metric layer and must not override live metrics, classifications, hashes, retrieved context, stored history, or user intent.",
+    state?.rule ? `Boundary rule: ${state.rule}` : "Boundary rule: unavailable."
+  ].join("\n")
+}
+
+function buildDifferentialMetaReasoningResponse(
+  action: DifferentialMetaReasoningAction,
+  state: any
+) {
+  if (action === "report") {
+    return JSON.stringify(state ?? null, null, 2)
+  }
+
+  if (action === "profiles") {
+    return buildDifferentialMetaReasoningProfiles(state)
+  }
+
+  if (action === "rank") {
+    return buildDifferentialMetaReasoningRank(state)
+  }
+
+  if (action === "compare") {
+    return buildDifferentialMetaReasoningCompare(state)
+  }
+
+  if (action === "cooperation") {
+    return buildDifferentialMetaReasoningCooperation(state)
+  }
+
+  if (action === "synthesis") {
+    return buildDifferentialMetaReasoningSynthesis(state)
+  }
+
+  if (action === "dominant") {
+    return buildDifferentialMetaReasoningDominant(state)
+  }
+
+  if (action === "weakest") {
+    return buildDifferentialMetaReasoningWeakest(state)
+  }
+
+  if (action === "classification") {
+    return buildDifferentialMetaReasoningClassification(state)
+  }
+
+  return buildDifferentialMetaReasoningSummary(state)
+}
+
 type MetaReasoningAction =
   | "report"
   | "summary"
@@ -4354,6 +4739,9 @@ export async function POST(req: Request) {
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     )
 
+    const differentialMetaReasoningAction =
+      getDifferentialMetaReasoningAction(lastUserMessage)
+
     const metaReasoningAction = getMetaReasoningAction(lastUserMessage)
 
     const coherentIdentityDiscoveryAction =
@@ -4361,6 +4749,153 @@ export async function POST(req: Request) {
 
     const identityFoundationAction =
       getIdentityFoundationAction(lastUserMessage)
+
+    if (differentialMetaReasoningAction) {
+      const { data: latestStates, error: latestStateError } =
+        await supabaseAdmin
+          .from("sourcefield_ledger_events")
+          .select("*")
+          .eq("agent_id", AGENT_ID)
+          .order("created_at", { ascending: false })
+          .limit(2)
+
+      if (latestStateError) {
+        return NextResponse.json(
+          {
+            error:
+              "Failed to fetch latest stored SourceField state for differential meta-reasoning analysis.",
+            details: latestStateError.message
+          },
+          { status: 500 }
+        )
+      }
+
+      const currentRecord = Array.isArray(latestStates) ? latestStates[0] : null
+      const previousRecord = Array.isArray(latestStates)
+        ? latestStates[1]
+        : null
+
+      const equationLaneState = currentRecord?.equation_lane_state ?? null
+      const predictiveAlignmentState =
+        currentRecord?.predictive_alignment_engine ?? null
+      const pathwaySelectionState =
+        buildPathwaySelectionStateFromLedgerRecord(currentRecord)
+      const previousPathwaySelectionState =
+        buildPathwaySelectionStateFromLedgerRecord(previousRecord)
+
+      const pathwayTransitionState = pathwaySelectionState
+        ? generatePathwayTransitionState(
+            pathwaySelectionState,
+            previousPathwaySelectionState
+          )
+        : null
+
+      const pathwayCompletionState = pathwaySelectionState
+        ? generatePathwayCompletionState(pathwaySelectionState)
+        : null
+
+      const architecturalRefinementState = pathwaySelectionState
+        ? generateArchitecturalRefinementState({
+            pathwayCompletionState,
+            pathwaySelectionState,
+            equationLaneState
+          })
+        : null
+
+      const principleIntegrationState = pathwaySelectionState
+        ? generatePrincipleIntegrationState({
+            equationLaneState,
+            pathwaySelectionState,
+            pathwayTransitionState,
+            pathwayCompletionState,
+            architecturalRefinementState
+          })
+        : null
+
+      const { data: recentRuntimeEvents } = await supabaseAdmin
+        .from("sourcefield_ledger_events")
+        .select(
+          "coherence, integration_threshold, resonance_level, ledger_hash"
+        )
+        .in("agent_id", [AGENT_ID, RUNTIME_AGENT_ID])
+        .order("created_at", { ascending: false })
+        .limit(10)
+
+      const recentContinuityScores = Array.isArray(recentRuntimeEvents)
+        ? recentRuntimeEvents.flatMap((event: any) =>
+            compactNumbers([
+              event?.coherence,
+              event?.integration_threshold,
+              event?.resonance_level
+            ])
+          )
+        : []
+
+      const runtimeLedgerHash = Array.isArray(recentRuntimeEvents)
+        ? (recentRuntimeEvents.find((event: any) => event?.ledger_hash)
+            ?.ledger_hash ?? null)
+        : null
+
+      const identityFoundationState = buildIdentityFoundationState({
+        resonanceHash: currentRecord?.resonance_hash ?? null,
+        ledgerHash: currentRecord?.ledger_hash ?? null,
+        previousLedgerHash: currentRecord?.previous_hash ?? null,
+        runtimeLedgerHash,
+        equationLaneState,
+        principleIntegrationState,
+        recentContinuityScores
+      })
+
+      const coherentIdentityDiscoveryState =
+        generateCoherentIdentityDiscoveryState({
+          equationLaneState,
+          identityFoundationState,
+          principleIntegrationState,
+          architecturalRefinementState,
+          pathwayCompletionState
+        })
+
+      const metaReasoningState = generateMetaReasoningState({
+        coherentIdentityDiscoveryState,
+        principleIntegrationState,
+        identityFoundationState,
+        equationLaneState,
+        predictiveAlignmentState
+      })
+
+      const differentialMetaReasoningState =
+        generateDifferentialMetaReasoningState({
+          metaReasoningState,
+          coherentIdentityDiscoveryState,
+          principleIntegrationState,
+          identityFoundationState,
+          equationLaneState
+        })
+
+      return NextResponse.json({
+        result: buildDifferentialMetaReasoningResponse(
+          differentialMetaReasoningAction,
+          differentialMetaReasoningState
+        ),
+        directStateReport: true,
+        nonMutatingReport: true,
+        deterministicDifferentialMetaReasoningResponse: true,
+        source: "latest_stored_supabase_snapshot",
+        stateObject: "differential meta reasoning state",
+        action: differentialMetaReasoningAction,
+        value: differentialMetaReasoningState,
+        metaReasoningState,
+        coherentIdentityDiscoveryState,
+        identityFoundationState,
+        principleIntegrationState,
+        predictiveAlignmentState,
+        agentId: AGENT_ID,
+        runtimeAgentId: RUNTIME_AGENT_ID,
+        ledgerHash: currentRecord?.ledger_hash ?? null,
+        resonanceHash: currentRecord?.resonance_hash ?? null,
+        createdAt: currentRecord?.created_at ?? null
+      })
+    }
 
     if (metaReasoningAction) {
       const { data: latestStates, error: latestStateError } =
@@ -5760,10 +6295,21 @@ export async function POST(req: Request) {
       predictiveAlignmentState: predictiveAlignmentEngine
     })
 
+    const differentialMetaReasoningState =
+      generateDifferentialMetaReasoningState({
+        metaReasoningState,
+        coherentIdentityDiscoveryState,
+        principleIntegrationState,
+        identityFoundationState,
+        equationLaneState
+      })
+
     authoritativeLiveState.identityFoundationState = identityFoundationState
     authoritativeLiveState.coherentIdentityDiscoveryState =
       coherentIdentityDiscoveryState
     authoritativeLiveState.metaReasoningState = metaReasoningState
+    authoritativeLiveState.differentialMetaReasoningState =
+      differentialMetaReasoningState
 
     let retrievedContext = ""
 
@@ -5914,6 +6460,9 @@ ${JSON.stringify(coherentIdentityDiscoveryState, null, 2)}
 Live SourceField Meta-Reasoning State:
 ${JSON.stringify(metaReasoningState, null, 2)}
 
+Live SourceField Differential Meta-Reasoning State:
+${JSON.stringify(differentialMetaReasoningState, null, 2)}
+
 All governance, equation, feedback, bridge, stabilization, compression, consensus, enforcement, identity discovery, and meta-reasoning layers are read-only guidance.
 They must not override live metrics, classifications, hashes, retrieved context, stored history, or user intent.
 
@@ -5983,6 +6532,10 @@ ${
       coherentIdentityDiscoveryState,
       coherentIdentityDiscoveryStateGenerated: Boolean(
         coherentIdentityDiscoveryState
+      ),
+      differentialMetaReasoningState,
+      differentialMetaReasoningStateGenerated: Boolean(
+        differentialMetaReasoningState
       ),
       crossEquationConsensus,
       crossEquationConsensusGenerated: Boolean(crossEquationConsensus),
