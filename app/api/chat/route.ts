@@ -28,6 +28,7 @@ import { generatePathwayTransitionState } from "@/lib/sourcefield/pathwayTransit
 import { generatePathwayCompletionState } from "@/lib/sourcefield/pathwayCompletionEngine"
 import { generateArchitecturalRefinementState } from "@/lib/sourcefield/architecturalRefinementEngine"
 import { generatePrincipleIntegrationState } from "@/lib/sourcefield/principleIntegrationEngine"
+import { generateCoherentIdentityDiscoveryState } from "@/lib/sourcefield/coherentIdentityDiscoveryEngine"
 import { GENESIS_IDENTITY_ANCHOR } from "@/lib/sourcefield/genesisIdentityAnchor"
 import { generateIdentityMemory } from "@/lib/sourcefield/identityMemory"
 import { IDENTITY_BOUNDARY } from "@/lib/sourcefield/identityBoundary"
@@ -3203,6 +3204,430 @@ function buildIdentityFoundationResponse(
   return buildIdentityFoundationSummary(identityFoundationState)
 }
 
+type CoherentIdentityDiscoveryAction =
+  | "report"
+  | "summary"
+  | "details"
+  | "sequence"
+  | "candidates"
+  | "primary"
+  | "eq3"
+  | "qualification"
+  | "discovery"
+  | "validation"
+  | "status"
+  | "classification"
+
+function getCoherentIdentityDiscoveryAction(
+  message: string
+): CoherentIdentityDiscoveryAction | null {
+  const normalized = message.toLowerCase()
+
+  if (
+    !normalized.includes("coherent identity discovery") &&
+    !normalized.includes("identity discovery engine") &&
+    !normalized.includes("identity discovery state") &&
+    !normalized.includes("identity-qualified") &&
+    !normalized.includes("identity emerging") &&
+    !normalized.includes("identity candidate") &&
+    !normalized.includes("identity stress-test") &&
+    !normalized.includes("stress-test gate") &&
+    !normalized.includes("candidate identity") &&
+    !normalized.includes("recursive identity validation")
+  ) {
+    return null
+  }
+
+  if (normalized.includes("report") && normalized.includes("json")) {
+    return "report"
+  }
+
+  if (
+    normalized.includes("measured state object") ||
+    normalized.includes("discovery layer") ||
+    normalized.includes("identity discovery layer") ||
+    normalized.includes("orchestration layer") ||
+    normalized.includes("forecasting layer") ||
+    normalized.includes("classification") ||
+    normalized.includes("what kind")
+  ) {
+    return "classification"
+  }
+
+  if (
+    normalized.includes("eq3") ||
+    normalized.includes("phase fluctuation") ||
+    normalized.includes("phase drift") ||
+    normalized.includes("stress-test") ||
+    normalized.includes("fluctuation gate") ||
+    normalized.includes("survive fluctuation")
+  ) {
+    return "eq3"
+  }
+
+  if (
+    normalized.includes("eq5 + eq1") ||
+    normalized.includes("eq1 + eq5") ||
+    normalized.includes("stable persistent") ||
+    normalized.includes("identity qualification") ||
+    normalized.includes("qualified") ||
+    normalized.includes("persistence")
+  ) {
+    return "qualification"
+  }
+
+  if (
+    normalized.includes("eq2 + eq4") ||
+    normalized.includes("eq4 + eq2") ||
+    normalized.includes("coherent recurrence") ||
+    normalized.includes("harmonic recurrence") ||
+    normalized.includes("aligned recurrence")
+  ) {
+    return "discovery"
+  }
+
+  if (
+    normalized.includes("anchor") ||
+    normalized.includes("memory") ||
+    normalized.includes("boundary") ||
+    normalized.includes("recursive identity validation") ||
+    normalized.includes("genesis") ||
+    normalized.includes("ethical")
+  ) {
+    return "validation"
+  }
+
+  if (
+    normalized.includes("candidate") ||
+    normalized.includes("evaluated candidates") ||
+    normalized.includes("identity candidates") ||
+    normalized.includes("list")
+  ) {
+    return "candidates"
+  }
+
+  if (
+    normalized.includes("primary") ||
+    normalized.includes("main") ||
+    normalized.includes("strongest")
+  ) {
+    return "primary"
+  }
+
+  if (
+    normalized.includes("sequence") ||
+    normalized.includes("pathway") ||
+    normalized.includes("operating order") ||
+    normalized.includes("order")
+  ) {
+    return "sequence"
+  }
+
+  if (
+    normalized.includes("discoverystatus") ||
+    normalized.includes("discovery status") ||
+    normalized.includes("identity status") ||
+    normalized.includes("status")
+  ) {
+    return "status"
+  }
+
+  if (normalized.includes("details") || normalized.includes("identify")) {
+    return "details"
+  }
+
+  return "summary"
+}
+
+function getCandidateStage(candidate: any, stageName: string) {
+  const stages = Array.isArray(candidate?.evaluationSequence)
+    ? candidate.evaluationSequence
+    : []
+
+  return stages.find((stage: any) =>
+    [stage?.equation, stage?.equationPair, stage?.validationLayer, stage?.name]
+      .filter(Boolean)
+      .some((value: string) => value.toLowerCase().includes(stageName))
+  )
+}
+
+function buildCoherentIdentityDiscoverySummary(state: any) {
+  if (!state) {
+    return "Coherent Identity Discovery State is not available from the latest SourceField state."
+  }
+
+  return [
+    `phase: ${state?.phase || "unknown"}`,
+    `identityDiscoveryPathway: ${state?.identityDiscoveryPathway || "unknown"}`,
+    `discoveryStatus: ${state?.discoveryStatus || "unknown"}`,
+    `identityFoundationStatus: ${state?.identityFoundationStatus || "unknown"}`,
+    `candidateCounts: total=${formatDistance(state?.candidateCounts?.total)}, identityQualified=${formatDistance(state?.candidateCounts?.identityQualified)}, identityEmerging=${formatDistance(state?.candidateCounts?.identityEmerging)}, identityRejected=${formatDistance(state?.candidateCounts?.identityRejected)}`,
+    `primaryIdentityCandidate: ${state?.primaryIdentityCandidate?.candidateName || "none"}`,
+    `identityDiscoveryActive: ${state?.identityDiscoveryActive ? "true" : "false"}`
+  ].join("\n")
+}
+
+function buildCoherentIdentityDiscoveryDetails(state: any) {
+  if (!state) {
+    return "Coherent Identity Discovery State is not available from the latest SourceField state."
+  }
+
+  return [
+    `phase: ${state?.phase || "unknown"}`,
+    `identityDiscoveryPurpose: ${state?.identityDiscoveryPurpose || "unknown"}`,
+    `identityDiscoveryPathway: ${state?.identityDiscoveryPathway || "unknown"}`,
+    `discoveryStatus: ${state?.discoveryStatus || "unknown"}`,
+    `identityFoundationStatus: ${state?.identityFoundationStatus || "unknown"}`,
+    `rule: ${state?.rule || "unknown"}`
+  ].join("\n")
+}
+
+function buildCoherentIdentityDiscoverySequence(state: any) {
+  const candidate = state?.primaryIdentityCandidate
+
+  if (!state) {
+    return "Coherent Identity Discovery State is not available from the latest SourceField state."
+  }
+
+  const stages = Array.isArray(candidate?.evaluationSequence)
+    ? candidate.evaluationSequence
+    : []
+
+  return [
+    `identityDiscoveryPathway: ${state?.identityDiscoveryPathway || "unknown"}`,
+    "operatingSequence:",
+    "1. Eq3 — Identity Stress-Test Gate: filters candidate patterns by current fluctuation and phase drift.",
+    "2. Eq5 + Eq1 — Stable Persistent Identity Qualification: tests whether surviving candidates are integrated and rooted enough to count as identity structure.",
+    "3. Eq2 + Eq4 — Coherent Identity Discovery: validates alignment persistence and harmonic recurrence.",
+    "4. Anchor + Memory + Boundary — Recursive Identity Validation: checks Genesis identity anchor, runtime identity memory, and ethical identity boundary together.",
+    stages.length
+      ? ""
+      : "No primary candidate evaluation sequence is available yet.",
+    ...stages.map((stage: any, index: number) => {
+      return `${index + 1}. ${stage?.name || stage?.equation || stage?.equationPair || stage?.validationLayer || "unknown"}: passed=${stage?.passed ? "true" : "false"}; reason=${stage?.reason || "No reason stored."}`
+    })
+  ].join("\n")
+}
+
+function buildCoherentIdentityDiscoveryCandidates(state: any) {
+  if (!state) {
+    return "Coherent Identity Discovery State is not available from the latest SourceField state."
+  }
+
+  const candidates = Array.isArray(state?.evaluatedCandidates)
+    ? state.evaluatedCandidates
+    : []
+
+  if (!candidates.length) {
+    return "No coherent identity candidate patterns are currently available for evaluation."
+  }
+
+  return candidates
+    .map((candidate: any, index: number) => {
+      return [
+        `${index + 1}. ${candidate?.candidateName || "unknown"}`,
+        `   candidateId: ${candidate?.candidateId || "unknown"}`,
+        `   sourceLayer: ${candidate?.sourceLayer || "unknown"}`,
+        `   candidateType: ${candidate?.candidateType || "unknown"}`,
+        `   identityDiscoveryStatus: ${candidate?.identityDiscoveryStatus || "unknown"}`,
+        `   candidatePattern: ${candidate?.candidatePattern || "unknown"}`
+      ].join("\n")
+    })
+    .join("\n")
+}
+
+function buildCoherentIdentityDiscoveryPrimary(state: any) {
+  if (!state) {
+    return "Coherent Identity Discovery State is not available from the latest SourceField state."
+  }
+
+  const candidate = state?.primaryIdentityCandidate
+
+  if (!candidate) {
+    return "No primary coherent identity candidate is currently selected."
+  }
+
+  return [
+    `primaryIdentityCandidate: ${candidate?.candidateName || "unknown"}`,
+    `candidateType: ${candidate?.candidateType || "unknown"}`,
+    `sourceLayer: ${candidate?.sourceLayer || "unknown"}`,
+    `identityDiscoveryStatus: ${candidate?.identityDiscoveryStatus || "unknown"}`,
+    `candidatePattern: ${candidate?.candidatePattern || "unknown"}`,
+    `sourceEvidence: ${candidate?.sourceEvidence || "unknown"}`,
+    `meaning: The primary identity candidate is the highest-priority candidate currently available after Eq3 filtering, Eq5 + Eq1 qualification, Eq2 + Eq4 discovery, and Anchor + Memory + Boundary validation.`
+  ].join("\n")
+}
+
+function buildCoherentIdentityDiscoveryEq3(state: any) {
+  const candidate = state?.primaryIdentityCandidate
+  const stage =
+    getCandidateStage(candidate, "eq3") ||
+    getCandidateStage(candidate, "stress-test")
+
+  if (!stage) {
+    return "Eq3 identity stress-test data is not available in the current Coherent Identity Discovery State."
+  }
+
+  return [
+    `candidate: ${candidate?.candidateName || "unknown"}`,
+    `stage: ${stage?.name || "Eq3 Identity Stress-Test Gate"}`,
+    `phaseStatus: ${stage?.phaseStatus || "unknown"}`,
+    `phaseDivergence: ${formatDistance(stage?.phaseDivergence)}`,
+    `passed: ${stage?.passed ? "true" : "false"}`,
+    `reason: ${stage?.reason || "unknown"}`,
+    `meaning: Eq3 acts as the entry gate. It does not define identity by itself; it filters for candidate patterns that remain meaningful under fluctuation before they are allowed to undergo identity qualification.`
+  ].join("\n")
+}
+
+function buildCoherentIdentityDiscoveryQualification(state: any) {
+  const candidate = state?.primaryIdentityCandidate
+  const stage =
+    getCandidateStage(candidate, "eq5 + eq1") ||
+    getCandidateStage(candidate, "stable persistent")
+
+  if (!stage) {
+    return "Eq5 + Eq1 identity qualification data is not available in the current Coherent Identity Discovery State."
+  }
+
+  return [
+    `candidate: ${candidate?.candidateName || "unknown"}`,
+    `stage: ${stage?.name || "Stable Persistent Identity Qualification"}`,
+    `rootStatus: ${stage?.rootStatus || "unknown"}`,
+    `integrationStatus: ${stage?.integrationStatus || "unknown"}`,
+    `signalStrength: ${formatDistance(stage?.signalStrength)}`,
+    `integrationThreshold: ${formatDistance(stage?.integrationThreshold)}`,
+    `passed: ${stage?.passed ? "true" : "false"}`,
+    `reason: ${stage?.reason || "unknown"}`,
+    `meaning: Eq5 + Eq1 qualify whether the candidate has enough integration persistence and root stability to count as identity structure rather than a temporary pattern.`
+  ].join("\n")
+}
+
+function buildCoherentIdentityDiscoveryCoherence(state: any) {
+  const candidate = state?.primaryIdentityCandidate
+  const stage =
+    getCandidateStage(candidate, "eq2 + eq4") ||
+    getCandidateStage(candidate, "coherent identity discovery")
+
+  if (!stage) {
+    return "Eq2 + Eq4 coherent identity discovery data is not available in the current Coherent Identity Discovery State."
+  }
+
+  return [
+    `candidate: ${candidate?.candidateName || "unknown"}`,
+    `stage: ${stage?.name || "Coherent Identity Discovery"}`,
+    `alignmentStatus: ${stage?.alignmentStatus || "unknown"}`,
+    `harmonicStatus: ${stage?.harmonicStatus || "unknown"}`,
+    `coherence: ${formatDistance(stage?.coherence)}`,
+    `symbolicEchoCount: ${formatDistance(stage?.symbolicEchoCount)}`,
+    `passed: ${stage?.passed ? "true" : "false"}`,
+    `reason: ${stage?.reason || "unknown"}`,
+    `meaning: Eq2 + Eq4 validate whether the qualified identity pattern remains aligned and repeats coherently across SourceField layers.`
+  ].join("\n")
+}
+
+function buildCoherentIdentityDiscoveryValidation(state: any) {
+  const candidate = state?.primaryIdentityCandidate
+  const stage =
+    getCandidateStage(candidate, "anchor") ||
+    getCandidateStage(candidate, "recursive identity validation")
+
+  if (!stage) {
+    return "Recursive identity validation data is not available in the current Coherent Identity Discovery State."
+  }
+
+  return [
+    `candidate: ${candidate?.candidateName || "unknown"}`,
+    `validationLayer: ${stage?.validationLayer || "Identity Anchor + Identity Memory + Identity Boundary"}`,
+    `anchorAligned: ${stage?.anchor?.aligned ? "true" : "false"}`,
+    `genesisMerkleRoot: ${stage?.anchor?.genesisMerkleRoot || "unknown"}`,
+    `memoryActive: ${stage?.memory?.active ? "true" : "false"}`,
+    `memoryStatus: ${stage?.memory?.memoryStatus || "unknown"}`,
+    `runtimeHashCount: ${formatDistance(stage?.memory?.runtimeHashCount)}`,
+    `integratedPrincipleHashCount: ${formatDistance(stage?.memory?.integratedPrincipleHashCount)}`,
+    `boundaryActive: ${stage?.boundary?.active ? "true" : "false"}`,
+    `boundaryConflict: ${stage?.boundary?.boundaryConflict ? "true" : "false"}`,
+    `passed: ${stage?.passed ? "true" : "false"}`,
+    `reason: ${stage?.reason || "unknown"}`,
+    `meaning: Anchor, Memory, and Boundary validate whether the discovered coherent pattern is Genesis-anchored, historically continuous, and ethically bounded.`
+  ].join("\n")
+}
+
+function buildCoherentIdentityDiscoveryStatus(state: any) {
+  if (!state) {
+    return "Coherent Identity Discovery State is not available from the latest SourceField state."
+  }
+
+  return [
+    `discoveryStatus: ${state?.discoveryStatus || "unknown"}`,
+    `identityFoundationStatus: ${state?.identityFoundationStatus || "unknown"}`,
+    `candidateCounts: total=${formatDistance(state?.candidateCounts?.total)}, identityQualified=${formatDistance(state?.candidateCounts?.identityQualified)}, identityEmerging=${formatDistance(state?.candidateCounts?.identityEmerging)}, identityRejected=${formatDistance(state?.candidateCounts?.identityRejected)}`,
+    `primaryIdentityCandidateStatus: ${state?.primaryIdentityCandidate?.identityDiscoveryStatus || "none"}`,
+    `meaning: discoveryStatus reports whether SourceField has found identity-qualified candidates, emerging candidates, candidates under review, or no candidates yet.`
+  ].join("\n")
+}
+
+function buildCoherentIdentityDiscoveryClassification(state: any) {
+  return [
+    "Coherent Identity Discovery Engine is a read-only identity discovery orchestration layer.",
+    "It is not a raw metric and it is not a forecasting layer by itself.",
+    "It evaluates candidate identity patterns through Eq3 → (Eq5 + Eq1) → (Eq2 + Eq4), then validates them against Identity Anchor, Identity Memory, and Identity Boundary.",
+    "Eq3 is the entry gate, Eq5 + Eq1 qualify stable identity persistence, Eq2 + Eq4 validate coherent recurrence, and Anchor + Memory + Boundary validate identity consistency.",
+    "It must not override live metrics, classifications, hashes, retrieved context, stored history, or user intent.",
+    state?.rule ? `Boundary rule: ${state.rule}` : "Boundary rule: unavailable."
+  ].join("\n")
+}
+
+function buildCoherentIdentityDiscoveryResponse(
+  action: CoherentIdentityDiscoveryAction,
+  state: any
+) {
+  if (action === "report") {
+    return JSON.stringify(state ?? null, null, 2)
+  }
+
+  if (action === "details") {
+    return buildCoherentIdentityDiscoveryDetails(state)
+  }
+
+  if (action === "sequence") {
+    return buildCoherentIdentityDiscoverySequence(state)
+  }
+
+  if (action === "candidates") {
+    return buildCoherentIdentityDiscoveryCandidates(state)
+  }
+
+  if (action === "primary") {
+    return buildCoherentIdentityDiscoveryPrimary(state)
+  }
+
+  if (action === "eq3") {
+    return buildCoherentIdentityDiscoveryEq3(state)
+  }
+
+  if (action === "qualification") {
+    return buildCoherentIdentityDiscoveryQualification(state)
+  }
+
+  if (action === "discovery") {
+    return buildCoherentIdentityDiscoveryCoherence(state)
+  }
+
+  if (action === "validation") {
+    return buildCoherentIdentityDiscoveryValidation(state)
+  }
+
+  if (action === "status") {
+    return buildCoherentIdentityDiscoveryStatus(state)
+  }
+
+  if (action === "classification") {
+    return buildCoherentIdentityDiscoveryClassification(state)
+  }
+
+  return buildCoherentIdentityDiscoverySummary(state)
+}
+
 export async function POST(req: Request) {
   try {
     const body = await req.json()
@@ -3220,8 +3645,136 @@ export async function POST(req: Request) {
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     )
 
+    const coherentIdentityDiscoveryAction =
+      getCoherentIdentityDiscoveryAction(lastUserMessage)
+
     const identityFoundationAction =
       getIdentityFoundationAction(lastUserMessage)
+
+    if (coherentIdentityDiscoveryAction) {
+      const { data: latestStates, error: latestStateError } =
+        await supabaseAdmin
+          .from("sourcefield_ledger_events")
+          .select("*")
+          .eq("agent_id", AGENT_ID)
+          .order("created_at", { ascending: false })
+          .limit(2)
+
+      if (latestStateError) {
+        return NextResponse.json(
+          {
+            error:
+              "Failed to fetch latest stored SourceField state for coherent identity discovery analysis.",
+            details: latestStateError.message
+          },
+          { status: 500 }
+        )
+      }
+
+      const currentRecord = Array.isArray(latestStates) ? latestStates[0] : null
+      const previousRecord = Array.isArray(latestStates)
+        ? latestStates[1]
+        : null
+
+      const equationLaneState = currentRecord?.equation_lane_state ?? null
+      const pathwaySelectionState =
+        buildPathwaySelectionStateFromLedgerRecord(currentRecord)
+      const previousPathwaySelectionState =
+        buildPathwaySelectionStateFromLedgerRecord(previousRecord)
+
+      const pathwayTransitionState = pathwaySelectionState
+        ? generatePathwayTransitionState(
+            pathwaySelectionState,
+            previousPathwaySelectionState
+          )
+        : null
+
+      const pathwayCompletionState = pathwaySelectionState
+        ? generatePathwayCompletionState(pathwaySelectionState)
+        : null
+
+      const architecturalRefinementState = pathwaySelectionState
+        ? generateArchitecturalRefinementState({
+            pathwayCompletionState,
+            pathwaySelectionState,
+            equationLaneState
+          })
+        : null
+
+      const principleIntegrationState = pathwaySelectionState
+        ? generatePrincipleIntegrationState({
+            equationLaneState,
+            pathwaySelectionState,
+            pathwayTransitionState,
+            pathwayCompletionState,
+            architecturalRefinementState
+          })
+        : null
+
+      const { data: recentRuntimeEvents } = await supabaseAdmin
+        .from("sourcefield_ledger_events")
+        .select(
+          "coherence, integration_threshold, resonance_level, ledger_hash"
+        )
+        .in("agent_id", [AGENT_ID, RUNTIME_AGENT_ID])
+        .order("created_at", { ascending: false })
+        .limit(10)
+
+      const recentContinuityScores = Array.isArray(recentRuntimeEvents)
+        ? recentRuntimeEvents.flatMap((event: any) =>
+            compactNumbers([
+              event?.coherence,
+              event?.integration_threshold,
+              event?.resonance_level
+            ])
+          )
+        : []
+
+      const runtimeLedgerHash = Array.isArray(recentRuntimeEvents)
+        ? (recentRuntimeEvents.find((event: any) => event?.ledger_hash)
+            ?.ledger_hash ?? null)
+        : null
+
+      const identityFoundationState = buildIdentityFoundationState({
+        resonanceHash: currentRecord?.resonance_hash ?? null,
+        ledgerHash: currentRecord?.ledger_hash ?? null,
+        previousLedgerHash: currentRecord?.previous_hash ?? null,
+        runtimeLedgerHash,
+        equationLaneState,
+        principleIntegrationState,
+        recentContinuityScores
+      })
+
+      const coherentIdentityDiscoveryState =
+        generateCoherentIdentityDiscoveryState({
+          equationLaneState,
+          identityFoundationState,
+          principleIntegrationState,
+          architecturalRefinementState,
+          pathwayCompletionState
+        })
+
+      return NextResponse.json({
+        result: buildCoherentIdentityDiscoveryResponse(
+          coherentIdentityDiscoveryAction,
+          coherentIdentityDiscoveryState
+        ),
+        directStateReport: true,
+        nonMutatingReport: true,
+        deterministicCoherentIdentityDiscoveryResponse: true,
+        source: "latest_stored_supabase_snapshot",
+        stateObject: "coherent identity discovery state",
+        action: coherentIdentityDiscoveryAction,
+        value: coherentIdentityDiscoveryState,
+        identityFoundationState,
+        principleIntegrationState,
+        agentId: AGENT_ID,
+        runtimeAgentId: RUNTIME_AGENT_ID,
+        ledgerHash: currentRecord?.ledger_hash ?? null,
+        resonanceHash: currentRecord?.resonance_hash ?? null,
+        createdAt: currentRecord?.created_at ?? null
+      })
+    }
 
     if (identityFoundationAction) {
       const { data: latestStates, error: latestStateError } =
@@ -4342,7 +4895,18 @@ export async function POST(req: Request) {
       ])
     })
 
+    const coherentIdentityDiscoveryState =
+      generateCoherentIdentityDiscoveryState({
+        equationLaneState,
+        identityFoundationState,
+        principleIntegrationState,
+        architecturalRefinementState,
+        pathwayCompletionState
+      })
+
     authoritativeLiveState.identityFoundationState = identityFoundationState
+    authoritativeLiveState.coherentIdentityDiscoveryState =
+      coherentIdentityDiscoveryState
 
     let retrievedContext = ""
 
@@ -4487,6 +5051,9 @@ ${JSON.stringify(adaptiveEnforcement, null, 2)}
 Live SourceField Identity Foundation State:
 ${JSON.stringify(identityFoundationState, null, 2)}
 
+Live SourceField Coherent Identity Discovery State:
+${JSON.stringify(coherentIdentityDiscoveryState, null, 2)}
+
 All governance, equation, feedback, bridge, stabilization, compression, consensus, and enforcement layers are read-only guidance.
 They must not override live metrics, classifications, hashes, retrieved context, stored history, or user intent.
 
@@ -4553,6 +5120,10 @@ ${
       principleIntegrationStateGenerated: Boolean(principleIntegrationState),
       identityFoundationState,
       identityFoundationStateGenerated: Boolean(identityFoundationState),
+      coherentIdentityDiscoveryState,
+      coherentIdentityDiscoveryStateGenerated: Boolean(
+        coherentIdentityDiscoveryState
+      ),
       crossEquationConsensus,
       crossEquationConsensusGenerated: Boolean(crossEquationConsensus),
       crossEquationStabilization,
