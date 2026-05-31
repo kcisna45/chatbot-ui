@@ -5416,16 +5416,12 @@ export async function POST(req: Request) {
 
       differentialMetaReasoningState = {
         ...(differentialMetaReasoningState || {}),
-        differentialCandidates:
-          identityCandidateProfileState?.candidateProfiles ?? [],
-        candidateProfiles:
+        differentialCandidateProfiles:
           identityCandidateProfileState?.candidateProfiles ?? [],
         dominantDifferentialCandidate:
           identityCandidateProfileState?.dominantProfile ??
           differentialMetaReasoningState?.dominantDifferentialCandidate ??
-          null,
-        candidateProfilingActive:
-          identityCandidateProfileState?.candidateProfilingActive === true
+          null
       }
 
       const routeReasoningPropagationState = generateRouteReasoningPropagation({
