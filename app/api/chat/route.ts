@@ -5095,7 +5095,7 @@ export async function POST(req: Request) {
     const identityFoundationAction =
       getIdentityFoundationAction(lastUserMessage)
 
-    if (identityCandidateProfilesMode) {
+    if (identityCandidateProfilesMode && !routePropagationMode) {
       const { data: latestStates, error: latestStateError } =
         await supabaseAdmin
           .from("sourcefield_ledger_events")
@@ -5237,16 +5237,12 @@ export async function POST(req: Request) {
           metaReasoningState,
           differentialMetaReasoningState: {
             ...(differentialMetaReasoningState || {}),
-            differentialCandidates:
-              identityCandidateProfileState?.candidateProfiles ?? [],
-            candidateProfiles:
+            differentialCandidateProfiles:
               identityCandidateProfileState?.candidateProfiles ?? [],
             dominantDifferentialCandidate:
               identityCandidateProfileState?.dominantProfile ??
               differentialMetaReasoningState?.dominantDifferentialCandidate ??
-              null,
-            candidateProfilingActive:
-              identityCandidateProfileState?.candidateProfilingActive === true
+              null
           },
           principleIntegrationState,
           predictiveAlignmentState
