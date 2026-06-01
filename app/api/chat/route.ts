@@ -73,6 +73,63 @@ const GENESIS_HASH =
 
 const RUNTIME_AGENT_ID = "sourcefield-runtime"
 
+function resolveRoutePropagationMode(message: string) {
+  const normalized = message.toLowerCase()
+
+  const isRoutePropagationRequest =
+    normalized.includes("route reasoning propagation") ||
+    normalized.includes("route propagation") ||
+    normalized.includes("propagation chain") ||
+    normalized.includes("propagation compare") ||
+    normalized.includes("dominant candidate became dominant")
+
+  if (!isRoutePropagationRequest) {
+    return null
+  }
+
+  if (normalized.includes("json")) {
+    return "json"
+  }
+
+  // Compare intent must win before dominance intent.
+  // Prompts such as:
+  // "Using Route Reasoning Propagation Compare Mode with Identity Candidate Profiles..."
+  // also contain words like "dominance condition", so the imported selector can accidentally
+  // classify them as dominant unless compare is resolved first.
+  if (
+    normalized.includes("compare mode") ||
+    normalized.includes("propagation compare") ||
+    normalized.includes("compare all") ||
+    normalized.includes("compare identity candidates") ||
+    normalized.includes("compare all identity candidates") ||
+    normalized.includes("without ranking") ||
+    normalized.includes("do not rank") ||
+    normalized.includes("candidate comparison")
+  ) {
+    return "compare"
+  }
+
+  if (
+    normalized.includes("complete propagation chain") ||
+    normalized.includes("show the complete") ||
+    normalized.includes("receivedfrompriorstage") ||
+    normalized.includes("carriesforwardas") ||
+    normalized.includes("influenceonnextstage")
+  ) {
+    return "chain"
+  }
+
+  if (
+    normalized.includes("dominant candidate became dominant") ||
+    (normalized.includes("why") && normalized.includes("dominant")) ||
+    normalized.includes("dominance mode")
+  ) {
+    return "dominant"
+  }
+
+  return getRoutePropagationMode(message)
+}
+
 function getEquationLaneStatus(equationLaneState: any, laneName: string) {
   return (
     equationLaneState?.equationLanes?.find(
@@ -5079,7 +5136,7 @@ export async function POST(req: Request) {
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     )
 
-    const routePropagationMode = getRoutePropagationMode(lastUserMessage)
+    const routePropagationMode = resolveRoutePropagationMode(lastUserMessage)
 
     const identityCandidateProfilesMode =
       getIdentityCandidateProfilesMode(lastUserMessage)
