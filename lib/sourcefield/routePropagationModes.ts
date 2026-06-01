@@ -9,6 +9,10 @@ function line(value: any, fallback = "unknown") {
   return `${value}`
 }
 
+function normalize(value: any) {
+  return line(value, "").toLowerCase().trim()
+}
+
 function formatPassed(value: any) {
   return value === true ? "true" : "false"
 }
@@ -25,16 +29,198 @@ function getDominantDifferentialCandidate(differentialMetaReasoningState: any) {
   return (
     differentialMetaReasoningState?.dominantDifferentialCandidate ||
     differentialMetaReasoningState?.dominantCandidate ||
+    differentialMetaReasoningState?.dominantProfile ||
     null
   )
 }
 
 function getDifferentialCandidates(differentialMetaReasoningState: any) {
+  return [
+    ...safeList(differentialMetaReasoningState?.differentialCandidateProfiles),
+    ...safeList(differentialMetaReasoningState?.candidateProfiles),
+    ...safeList(differentialMetaReasoningState?.candidateProfileMatrix),
+    ...safeList(
+      differentialMetaReasoningState?.candidateProfilesState?.candidateProfiles
+    ),
+    ...safeList(
+      differentialMetaReasoningState?.identityCandidateProfileState
+        ?.candidateProfiles
+    ),
+    ...safeList(differentialMetaReasoningState?.differentialCandidates),
+    ...safeList(differentialMetaReasoningState?.candidateDifferentials),
+    ...safeList(differentialMetaReasoningState?.rankedDifferentialCandidates)
+  ]
+}
+
+function profileKey(candidate: any) {
+  return [
+    normalize(candidate?.candidateName),
+    normalize(candidate?.name),
+    normalize(candidate?.candidateType),
+    normalize(candidate?.type),
+    normalize(candidate?.candidateRole),
+    normalize(candidate?.primaryContribution)
+  ]
+    .filter(Boolean)
+    .join(" | ")
+}
+
+function namesMatch(candidate: any, candidateName: string) {
+  const requested = normalize(candidateName)
+  const key = profileKey(candidate)
+
+  if (!requested || !key) return false
+
   return (
-    safeList(differentialMetaReasoningState?.differentialCandidates) ||
-    safeList(differentialMetaReasoningState?.candidateDifferentials) ||
-    safeList(differentialMetaReasoningState?.rankedDifferentialCandidates)
+    key.includes(requested) ||
+    requested.includes(normalize(candidate?.candidateName)) ||
+    requested.includes(normalize(candidate?.name)) ||
+    requested.includes(normalize(candidate?.candidateType)) ||
+    requested.includes(normalize(candidate?.type))
   )
+}
+
+function inferProfileFallback(candidate: any) {
+  const name = normalize(candidate?.candidateName ?? candidate?.name)
+  const type = normalize(candidate?.candidateType ?? candidate?.type)
+  const role = normalize(candidate?.candidateRole)
+  const key = `${name} ${type} ${role}`
+
+  if (
+    key.includes("moment") ||
+    key.includes("resonance principle") ||
+    key.includes("integrated-principle") ||
+    key.includes("principle-identity")
+  ) {
+    return {
+      candidateRole: "principle-identity",
+      primaryContribution: "principle-level identity",
+      secondaryContribution: "fluctuation survival",
+      structuralWeakness:
+        "Does not by itself complete pathways or refine the architecture; it defines the identity meaning that other candidates organize around.",
+      cooperativeRole:
+        "Acts as the identity nucleus. It gives the refinement and completion candidates a stable principle to preserve or complete.",
+      dominanceCondition:
+        "Becomes dominant when identity-level meaning is more important than completion or refinement, especially during drift or instability.",
+      rejectionCondition:
+        "Reject or downgrade if the principle stops surviving phase fluctuation, loses coherence with memory, or conflicts with ethical boundary."
+    }
+  }
+
+  if (
+    key.includes("architectural") ||
+    key.includes("refinement") ||
+    key.includes("refinement-pattern") ||
+    key.includes("architectural-refinement")
+  ) {
+    return {
+      candidateRole: "architectural-refinement",
+      primaryContribution: "architectural refinement",
+      secondaryContribution: "stability correction",
+      structuralWeakness:
+        "Can become overly procedural if it is not anchored to an identity principle or validated through continuity memory.",
+      cooperativeRole:
+        "Acts as the repair and improvement function. It helps the dominant identity principle become more stable in future runtime states.",
+      dominanceCondition:
+        "Becomes dominant when the system's main need is structural correction rather than principle identity or pathway completion.",
+      rejectionCondition:
+        "Reject or downgrade if refinement activity appears without sufficient root/integration support, recurrence, or alignment."
+    }
+  }
+
+  if (
+    key.includes("pathway") ||
+    key.includes("completion") ||
+    key.includes("completion-pattern") ||
+    key.includes("pathway-completion")
+  ) {
+    return {
+      candidateRole: "pathway-completion",
+      primaryContribution: "pathway completion",
+      secondaryContribution: "closure and transition readiness",
+      structuralWeakness:
+        "Can declare completion too early if persistence, alignment, or recurrence are not strong enough.",
+      cooperativeRole:
+        "Acts as the closure function. It helps determine when the system can stop organizing around recovery/refinement and move into the next stable process.",
+      dominanceCondition:
+        "Becomes dominant when the main architectural question is whether the active pathway has completed and what should follow.",
+      rejectionCondition:
+        "Reject or downgrade if route propagation shows incomplete persistence, unresolved recurrence, or rejected identity discovery status."
+    }
+  }
+
+  return {
+    candidateRole: "general-identity-candidate",
+    primaryContribution: "general identity support",
+    secondaryContribution: "candidate-level signal",
+    structuralWeakness:
+      "Insufficient candidate-specific evidence to distinguish its role from other candidates.",
+    cooperativeRole:
+      "Participates in the candidate ecosystem but needs richer evidence before its cooperation role is fully specified.",
+    dominanceCondition:
+      "Becomes dominant only if candidate-specific contribution exceeds principle, refinement, completion, memory, or boundary alternatives.",
+    rejectionCondition:
+      "Reject or downgrade if it fails Eq5 + Eq1 persistence, Eq2 + Eq4 recurrence, or Anchor-Memory-Boundary validation."
+  }
+}
+
+function mergeCandidateProfile(candidate: any, differential: any) {
+  const fallback = inferProfileFallback({
+    ...candidate,
+    ...(differential || {})
+  })
+
+  return {
+    candidateName:
+      differential?.candidateName ||
+      differential?.name ||
+      candidate?.candidateName ||
+      candidate?.name ||
+      "unknown",
+    candidateType:
+      differential?.candidateType ||
+      differential?.type ||
+      candidate?.candidateType ||
+      candidate?.type ||
+      "unknown",
+    identityDiscoveryStatus:
+      differential?.identityDiscoveryStatus ||
+      differential?.status ||
+      candidate?.identityDiscoveryStatus ||
+      candidate?.status ||
+      "unknown",
+    candidateRole:
+      differential?.candidateRole ||
+      differential?.role ||
+      differential?.contributionProfile?.candidateRole ||
+      fallback.candidateRole,
+    primaryContribution:
+      differential?.primaryContribution ||
+      differential?.contributionProfile?.primaryContribution ||
+      fallback.primaryContribution,
+    secondaryContribution:
+      differential?.secondaryContribution ||
+      differential?.contributionProfile?.secondaryContribution ||
+      fallback.secondaryContribution,
+    structuralWeakness:
+      differential?.structuralWeakness ||
+      differential?.contributionProfile?.structuralWeakness ||
+      fallback.structuralWeakness,
+    cooperativeRole:
+      differential?.cooperativeRole ||
+      differential?.contributionProfile?.cooperativeRole ||
+      fallback.cooperativeRole,
+    dominanceCondition:
+      differential?.dominanceCondition ||
+      differential?.contributionProfile?.dominanceCondition ||
+      fallback.dominanceCondition,
+    rejectionCondition:
+      differential?.rejectionCondition ||
+      differential?.contributionProfile?.rejectionCondition ||
+      fallback.rejectionCondition,
+    totalDifferentialScore:
+      differential?.totalDifferentialScore ?? differential?.score ?? "unknown"
+  }
 }
 
 function findDifferentialCandidate(
@@ -48,13 +234,13 @@ function findDifferentialCandidate(
   if (
     dominant &&
     typeof dominant === "object" &&
-    dominant?.candidateName === candidateName
+    namesMatch(dominant, candidateName)
   ) {
     return dominant
   }
 
   return getDifferentialCandidates(differentialMetaReasoningState).find(
-    (candidate: any) => candidate?.candidateName === candidateName
+    (candidate: any) => namesMatch(candidate, candidateName)
   )
 }
 
@@ -102,31 +288,10 @@ function buildDominanceCausalLines(
     dominantCandidate
   )
 
-  const primaryContribution =
-    dominantDifferential?.primaryContribution ||
-    dominantDifferential?.contributionProfile?.primaryContribution ||
-    differentialMetaReasoningState?.dominantDifferentialCandidate
-      ?.primaryContribution ||
-    "unknown"
-
-  const secondaryContribution =
-    dominantDifferential?.secondaryContribution ||
-    dominantDifferential?.contributionProfile?.secondaryContribution ||
-    differentialMetaReasoningState?.dominantDifferentialCandidate
-      ?.secondaryContribution ||
-    "unknown"
-
-  const structuralWeakness =
-    dominantDifferential?.structuralWeakness ||
-    differentialMetaReasoningState?.dominantDifferentialCandidate
-      ?.structuralWeakness ||
-    "unknown"
-
-  const totalDifferentialScore =
-    dominantDifferential?.totalDifferentialScore ??
-    differentialMetaReasoningState?.dominantDifferentialCandidate
-      ?.totalDifferentialScore ??
-    "unknown"
+  const profile = mergeCandidateProfile(
+    { candidateName: dominantCandidate },
+    dominantDifferential
+  )
 
   return [
     "Dominance Propagation Explanation:",
@@ -153,10 +318,13 @@ function buildDominanceCausalLines(
     "   It identifies which candidate contributes the strongest candidate-specific function.",
     "",
     `dominantCandidate: ${dominantCandidate}`,
-    `primaryContribution: ${line(primaryContribution)}`,
-    `secondaryContribution: ${line(secondaryContribution)}`,
-    `structuralWeakness: ${line(structuralWeakness)}`,
-    `totalDifferentialScore: ${line(totalDifferentialScore)}`,
+    `candidateRole: ${line(profile.candidateRole)}`,
+    `primaryContribution: ${line(profile.primaryContribution)}`,
+    `secondaryContribution: ${line(profile.secondaryContribution)}`,
+    `structuralWeakness: ${line(profile.structuralWeakness)}`,
+    `dominanceCondition: ${line(profile.dominanceCondition)}`,
+    `rejectionCondition: ${line(profile.rejectionCondition)}`,
+    `totalDifferentialScore: ${line(profile.totalDifferentialScore)}`,
     "",
     `dominanceConclusion: ${dominantCandidate} becomes dominant only after the propagated route chain validates identity continuity, coherent recurrence, Genesis anchor alignment, runtime memory continuity, ethical boundary compatibility, meta-level synthesis, and differential candidate-specific contribution.`,
     "",
@@ -178,30 +346,19 @@ function buildCompareWithoutRankingLines(
         candidate?.candidateName
       )
 
-      const primaryContribution =
-        differential?.primaryContribution ||
-        differential?.contributionProfile?.primaryContribution ||
-        "unknown"
-
-      const secondaryContribution =
-        differential?.secondaryContribution ||
-        differential?.contributionProfile?.secondaryContribution ||
-        "unknown"
-
-      const structuralWeakness = differential?.structuralWeakness || "unknown"
-
-      const cooperativeRole =
-        differential?.cooperativeRole ||
-        "This candidate participates in the shared propagation chain, but no candidate-specific cooperative role is stored."
+      const profile = mergeCandidateProfile(candidate, differential)
 
       return [
-        `${index + 1}. ${line(candidate?.candidateName)}`,
-        `   candidateType: ${line(candidate?.candidateType)}`,
-        `   identityDiscoveryStatus: ${line(candidate?.identityDiscoveryStatus)}`,
-        `   primaryContribution: ${line(primaryContribution)}`,
-        `   secondaryContribution: ${line(secondaryContribution)}`,
-        `   structuralWeakness: ${line(structuralWeakness)}`,
-        `   cooperativeRole: ${line(cooperativeRole)}`
+        `${index + 1}. ${line(profile.candidateName)}`,
+        `   candidateType: ${line(profile.candidateType)}`,
+        `   identityDiscoveryStatus: ${line(profile.identityDiscoveryStatus)}`,
+        `   candidateRole: ${line(profile.candidateRole)}`,
+        `   primaryContribution: ${line(profile.primaryContribution)}`,
+        `   secondaryContribution: ${line(profile.secondaryContribution)}`,
+        `   structuralWeakness: ${line(profile.structuralWeakness)}`,
+        `   cooperativeRole: ${line(profile.cooperativeRole)}`,
+        `   dominanceCondition: ${line(profile.dominanceCondition)}`,
+        `   rejectionCondition: ${line(profile.rejectionCondition)}`
       ]
     }
   )
@@ -253,6 +410,15 @@ export function buildRoutePropagationModeResponse({
     ].join("\n")
   }
 
+  if (mode === "compare") {
+    return [
+      ...buildCompareWithoutRankingLines(
+        propagationState,
+        differentialMetaReasoningState
+      )
+    ].join("\n")
+  }
+
   if (mode === "dominant") {
     return [
       "Route Reasoning Propagation Dominance Mode:",
@@ -260,15 +426,6 @@ export function buildRoutePropagationModeResponse({
       ...chainLines,
       "",
       ...buildDominanceCausalLines(
-        propagationState,
-        differentialMetaReasoningState
-      )
-    ].join("\n")
-  }
-
-  if (mode === "compare") {
-    return [
-      ...buildCompareWithoutRankingLines(
         propagationState,
         differentialMetaReasoningState
       )
@@ -310,19 +467,12 @@ export function getRoutePropagationMode(
   }
 
   if (
-    normalized.includes("dominant candidate became dominant") ||
-    (normalized.includes("why") && normalized.includes("dominant")) ||
-    normalized.includes("dominance")
-  ) {
-    return "dominant"
-  }
-
-  if (
     normalized.includes("compare mode") ||
     normalized.includes("compare all") ||
     normalized.includes("without ranking") ||
     normalized.includes("do not rank") ||
-    normalized.includes("candidate comparison")
+    normalized.includes("candidate comparison") ||
+    normalized.includes("compare all identity candidates")
   ) {
     return "compare"
   }
@@ -335,6 +485,14 @@ export function getRoutePropagationMode(
     normalized.includes("influenceonnextstage")
   ) {
     return "chain"
+  }
+
+  if (
+    normalized.includes("dominant candidate became dominant") ||
+    (normalized.includes("why") && normalized.includes("dominant")) ||
+    normalized.includes("dominance")
+  ) {
+    return "dominant"
   }
 
   return "summary"
