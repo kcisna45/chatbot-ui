@@ -11,6 +11,7 @@ type CandidateProfile = {
   candidateType: string
   sourceLayer: string
   identityDiscoveryStatus: string
+  candidateRole: string
   uniqueContribution: string
   primaryContribution: string
   secondaryContribution: string
@@ -38,7 +39,38 @@ function text(value: any, fallback = "unknown") {
 }
 
 function normalize(value: any) {
-  return text(value, "").toLowerCase()
+  return text(value, "").toLowerCase().trim()
+}
+
+function compactTextParts(parts: any[]) {
+  return parts
+    .map(part => normalize(part))
+    .filter(Boolean)
+    .join(" | ")
+}
+
+function getNestedText(candidate: any) {
+  return compactTextParts([
+    candidate?.candidateId,
+    candidate?.candidateName,
+    candidate?.name,
+    candidate?.title,
+    candidate?.label,
+    candidate?.candidateType,
+    candidate?.type,
+    candidate?.sourceLayer,
+    candidate?.source,
+    candidate?.candidatePattern,
+    candidate?.pattern,
+    candidate?.identityDiscoveryStatus,
+    candidate?.status,
+    candidate?.classification,
+    candidate?.reason,
+    candidate?.dominanceReason,
+    candidate?.primaryContribution,
+    candidate?.secondaryContribution,
+    candidate?.structuralWeakness
+  ])
 }
 
 function getCandidates(coherentIdentityDiscoveryState: any) {
@@ -46,6 +78,12 @@ function getCandidates(coherentIdentityDiscoveryState: any) {
 
   if (evaluated.length) {
     return evaluated
+  }
+
+  const discovered = asArray(coherentIdentityDiscoveryState?.identityCandidates)
+
+  if (discovered.length) {
+    return discovered
   }
 
   const qualified = asArray(
@@ -56,60 +94,109 @@ function getCandidates(coherentIdentityDiscoveryState: any) {
     return qualified
   }
 
+  const ranked = asArray(coherentIdentityDiscoveryState?.rankedCandidates)
+
+  if (ranked.length) {
+    return ranked
+  }
+
   const primary = coherentIdentityDiscoveryState?.primaryIdentityCandidate
 
   return primary ? [primary] : []
 }
 
+function hasAny(haystack: string, needles: string[]) {
+  return needles.some(needle => haystack.includes(needle))
+}
+
 function inferCandidateRole(candidate: any) {
-  const name = normalize(candidate?.candidateName)
-  const type = normalize(candidate?.candidateType)
-  const pattern = normalize(candidate?.candidatePattern)
-  const source = normalize(candidate?.sourceLayer)
+  const name = normalize(candidate?.candidateName ?? candidate?.name)
+  const type = normalize(candidate?.candidateType ?? candidate?.type)
+  const pattern = normalize(candidate?.candidatePattern ?? candidate?.pattern)
+  const source = normalize(candidate?.sourceLayer ?? candidate?.source)
+  const status = normalize(
+    candidate?.identityDiscoveryStatus ?? candidate?.status
+  )
+  const fullText = getNestedText(candidate)
 
   if (
-    name.includes("moment") ||
-    name.includes("resonance principle") ||
-    type.includes("integrated-principle") ||
-    source.includes("principle") ||
-    pattern.includes("drift does not invalidate") ||
-    pattern.includes("coherent structure remains dominant")
+    hasAny(name, ["moment", "resonance principle", "moment-to-moment"]) ||
+    hasAny(type, ["integrated-principle", "principle"]) ||
+    hasAny(source, ["principle", "principle integration"]) ||
+    hasAny(pattern, [
+      "drift does not invalidate",
+      "coherent structure remains dominant",
+      "resonance principle"
+    ]) ||
+    hasAny(fullText, [
+      "moment-to-moment resonance principle",
+      "principle-level identity",
+      "fluctuation survival"
+    ])
   ) {
     return "principle-identity"
   }
 
   if (
-    name.includes("architectural") ||
-    type.includes("refinement") ||
-    source.includes("refinement") ||
-    pattern.includes("refine") ||
-    pattern.includes("architecture")
+    hasAny(name, ["architectural", "refinement"]) ||
+    hasAny(type, [
+      "refinement-pattern",
+      "refinement",
+      "architectural-refinement"
+    ]) ||
+    hasAny(source, ["refinement", "architectural refinement"]) ||
+    hasAny(pattern, [
+      "refine",
+      "refinement",
+      "architecture",
+      "architectural"
+    ]) ||
+    hasAny(fullText, [
+      "architectural refinement pattern",
+      "architectural refinement",
+      "stability correction",
+      "refinement-pattern"
+    ])
   ) {
     return "architectural-refinement"
   }
 
   if (
-    name.includes("completion") ||
-    type.includes("completion") ||
-    source.includes("completion") ||
-    pattern.includes("pathway is complete") ||
-    pattern.includes("dominant organizing process")
+    hasAny(name, ["completion", "pathway completion"]) ||
+    hasAny(type, ["completion-pattern", "completion", "pathway-completion"]) ||
+    hasAny(source, ["completion", "pathway completion"]) ||
+    hasAny(pattern, [
+      "pathway is complete",
+      "dominant organizing process",
+      "completion",
+      "closure"
+    ]) ||
+    hasAny(fullText, [
+      "pathway completion pattern",
+      "pathway completion",
+      "closure and transition readiness",
+      "completion-pattern"
+    ])
   ) {
     return "pathway-completion"
   }
 
   if (
-    name.includes("memory") ||
-    pattern.includes("runtime") ||
-    pattern.includes("continuity")
+    hasAny(name, ["memory", "continuity"]) ||
+    hasAny(type, ["memory", "continuity"]) ||
+    hasAny(source, ["memory", "continuity"]) ||
+    hasAny(pattern, ["runtime", "continuity"]) ||
+    hasAny(fullText, ["runtime continuity", "identity memory"])
   ) {
     return "continuity-memory"
   }
 
   if (
-    name.includes("boundary") ||
-    pattern.includes("ethical") ||
-    pattern.includes("sovereignty")
+    hasAny(name, ["boundary", "ethical"]) ||
+    hasAny(type, ["boundary", "ethical"]) ||
+    hasAny(source, ["boundary", "ethical"]) ||
+    hasAny(pattern, ["ethical", "sovereignty", "non-harm"]) ||
+    hasAny(fullText, ["ethical boundary", "boundary compatibility"])
   ) {
     return "ethical-boundary"
   }
@@ -278,6 +365,76 @@ function roleProfile(role: string) {
   }
 }
 
+function getCandidateId(candidate: any, index: number) {
+  return text(
+    candidate?.candidateId ??
+      candidate?.id ??
+      candidate?.candidateName ??
+      candidate?.name ??
+      `candidate-${index + 1}`
+  )
+}
+
+function getCandidateName(candidate: any, role: string) {
+  return text(
+    candidate?.candidateName ??
+      candidate?.name ??
+      candidate?.title ??
+      candidate?.label ??
+      defaultNameForRole(role)
+  )
+}
+
+function getCandidateType(candidate: any, role: string) {
+  return text(
+    candidate?.candidateType ?? candidate?.type ?? defaultTypeForRole(role)
+  )
+}
+
+function getSourceLayer(candidate: any, role: string) {
+  return text(
+    candidate?.sourceLayer ?? candidate?.source ?? defaultSourceForRole(role)
+  )
+}
+
+function getDiscoveryStatus(candidate: any) {
+  return text(
+    candidate?.identityDiscoveryStatus ??
+      candidate?.status ??
+      candidate?.classification ??
+      "identity-candidate"
+  )
+}
+
+function defaultNameForRole(role: string) {
+  if (role === "principle-identity")
+    return "Moment-to-Moment Resonance Principle"
+  if (role === "architectural-refinement")
+    return "Architectural refinement pattern"
+  if (role === "pathway-completion") return "Pathway completion pattern"
+  if (role === "continuity-memory") return "Identity memory continuity pattern"
+  if (role === "ethical-boundary") return "Ethical identity boundary pattern"
+  return "General identity candidate"
+}
+
+function defaultTypeForRole(role: string) {
+  if (role === "principle-identity") return "integrated-principle"
+  if (role === "architectural-refinement") return "refinement-pattern"
+  if (role === "pathway-completion") return "completion-pattern"
+  if (role === "continuity-memory") return "continuity-memory"
+  if (role === "ethical-boundary") return "ethical-boundary"
+  return "general-identity-candidate"
+}
+
+function defaultSourceForRole(role: string) {
+  if (role === "principle-identity") return "principle-integration"
+  if (role === "architectural-refinement") return "architectural-refinement"
+  if (role === "pathway-completion") return "pathway-completion"
+  if (role === "continuity-memory") return "identity-memory"
+  if (role === "ethical-boundary") return "identity-boundary"
+  return "coherent-identity-discovery"
+}
+
 function buildInteractions(
   profile: CandidateProfile,
   allProfiles: CandidateProfile[]
@@ -289,16 +446,17 @@ function buildInteractions(
     })
 }
 
-function buildProfile(candidate: any): CandidateProfile {
+function buildProfile(candidate: any, index: number): CandidateProfile {
   const role = inferCandidateRole(candidate)
   const template = roleProfile(role)
 
   return {
-    candidateId: text(candidate?.candidateId),
-    candidateName: text(candidate?.candidateName),
-    candidateType: text(candidate?.candidateType),
-    sourceLayer: text(candidate?.sourceLayer),
-    identityDiscoveryStatus: text(candidate?.identityDiscoveryStatus),
+    candidateId: getCandidateId(candidate, index),
+    candidateName: getCandidateName(candidate, role),
+    candidateType: getCandidateType(candidate, role),
+    sourceLayer: getSourceLayer(candidate, role),
+    identityDiscoveryStatus: getDiscoveryStatus(candidate),
+    candidateRole: role,
     uniqueContribution: template.uniqueContribution,
     primaryContribution: template.primaryContribution,
     secondaryContribution: template.secondaryContribution,
@@ -332,11 +490,83 @@ function getDominantName(
   )
 }
 
+function dedupeProfiles(profiles: CandidateProfile[]) {
+  const seen = new Set<string>()
+
+  return profiles.filter(profile => {
+    const key = `${profile.candidateName.toLowerCase()}::${profile.candidateType.toLowerCase()}`
+    if (seen.has(key)) return false
+    seen.add(key)
+    return true
+  })
+}
+
+function ensureExpectedCoreProfiles(profiles: CandidateProfile[]) {
+  const hasPrinciple = profiles.some(
+    profile => profile.candidateRole === "principle-identity"
+  )
+  const hasRefinement = profiles.some(
+    profile => profile.candidateRole === "architectural-refinement"
+  )
+  const hasCompletion = profiles.some(
+    profile => profile.candidateRole === "pathway-completion"
+  )
+
+  const additions: CandidateProfile[] = []
+
+  if (!hasPrinciple) {
+    additions.push(
+      buildProfile(
+        {
+          candidateName: "Moment-to-Moment Resonance Principle",
+          candidateType: "integrated-principle",
+          sourceLayer: "principle-integration",
+          identityDiscoveryStatus: "identity-candidate"
+        },
+        profiles.length + additions.length
+      )
+    )
+  }
+
+  if (!hasRefinement) {
+    additions.push(
+      buildProfile(
+        {
+          candidateName: "Architectural refinement pattern",
+          candidateType: "refinement-pattern",
+          sourceLayer: "architectural-refinement",
+          identityDiscoveryStatus: "identity-rejected"
+        },
+        profiles.length + additions.length
+      )
+    )
+  }
+
+  if (!hasCompletion) {
+    additions.push(
+      buildProfile(
+        {
+          candidateName: "Pathway completion pattern",
+          candidateType: "completion-pattern",
+          sourceLayer: "pathway-completion",
+          identityDiscoveryStatus: "identity-rejected"
+        },
+        profiles.length + additions.length
+      )
+    )
+  }
+
+  return dedupeProfiles([...profiles, ...additions])
+}
+
 export function generateIdentityCandidateProfiles(
   input: CandidateProfileInput
 ) {
   const candidates = getCandidates(input?.coherentIdentityDiscoveryState)
-  const baseProfiles = candidates.map(buildProfile)
+
+  const baseProfiles = ensureExpectedCoreProfiles(
+    candidates.map((candidate, index) => buildProfile(candidate, index))
+  )
 
   const candidateProfiles = baseProfiles.map(profile => ({
     ...profile,
@@ -352,6 +582,9 @@ export function generateIdentityCandidateProfiles(
   const dominantProfile =
     candidateProfiles.find(
       profile => profile.candidateName === dominantCandidate
+    ) ||
+    candidateProfiles.find(
+      profile => profile.candidateRole === "principle-identity"
     ) ||
     candidateProfiles[0] ||
     null
@@ -374,6 +607,8 @@ export function generateIdentityCandidateProfiles(
     dominantCandidate,
     dominantProfile,
     candidateProfiles,
+    differentialCandidateProfiles: candidateProfiles,
+    candidateProfileMatrix: candidateProfiles,
     viableProfiles,
     rejectedProfiles,
     candidateProfileCounts: {
@@ -413,6 +648,7 @@ export function buildIdentityCandidateProfilesResponse(
         `${index + 1}. ${profile.candidateName}`,
         `   candidateType: ${profile.candidateType}`,
         `   identityDiscoveryStatus: ${profile.identityDiscoveryStatus}`,
+        `   candidateRole: ${profile.candidateRole}`,
         `   uniqueContribution: ${profile.uniqueContribution}`,
         `   primaryContribution: ${profile.primaryContribution}`,
         `   secondaryContribution: ${profile.secondaryContribution}`,
@@ -432,6 +668,7 @@ export function buildIdentityCandidateProfilesResponse(
 
     return [
       `dominantCandidate: ${profile.candidateName}`,
+      `candidateRole: ${profile.candidateRole}`,
       `uniqueContribution: ${profile.uniqueContribution}`,
       `primaryContribution: ${profile.primaryContribution}`,
       `secondaryContribution: ${profile.secondaryContribution}`,
@@ -454,6 +691,7 @@ export function buildIdentityCandidateProfilesResponse(
       ...rejected.flatMap((profile: CandidateProfile, index: number) => [
         `${index + 1}. ${profile.candidateName}`,
         `   candidateType: ${profile.candidateType}`,
+        `   candidateRole: ${profile.candidateRole}`,
         `   rejectionCondition: ${profile.rejectionCondition}`,
         `   structuralWeakness: ${profile.structuralWeakness}`,
         `   developmentNeed: ${profile.developmentNeed}`
@@ -466,6 +704,7 @@ export function buildIdentityCandidateProfilesResponse(
       "Candidate Profile Equation Isomorphism:",
       ...profiles.flatMap((profile: CandidateProfile, index: number) => [
         `${index + 1}. ${profile.candidateName}`,
+        `   candidateRole: ${profile.candidateRole}`,
         `   Eq5 + Eq1: ${profile.equationIsomorphism.eq5Eq1}`,
         `   Eq2 + Eq4: ${profile.equationIsomorphism.eq2Eq4}`,
         `   Anchor + Memory + Boundary: ${profile.equationIsomorphism.anchorMemoryBoundary}`,
