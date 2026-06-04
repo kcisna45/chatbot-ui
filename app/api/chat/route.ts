@@ -44,6 +44,11 @@ import {
   buildIdentityCandidateProfilesResponse,
   getIdentityCandidateProfilesMode
 } from "@/lib/sourcefield/identityCandidateProfiles"
+import {
+  generateReasoningImplicationPropagation,
+  buildReasoningImplicationPropagationResponse,
+  getReasoningImplicationPropagationMode
+} from "@/lib/sourcefield/reasoningImplicationPropagation"
 import { GENESIS_IDENTITY_ANCHOR } from "@/lib/sourcefield/genesisIdentityAnchor"
 import { generateIdentityMemory } from "@/lib/sourcefield/identityMemory"
 import { IDENTITY_BOUNDARY } from "@/lib/sourcefield/identityBoundary"
@@ -5138,6 +5143,9 @@ export async function POST(req: Request) {
 
     const routePropagationMode = resolveRoutePropagationMode(lastUserMessage)
 
+    const reasoningImplicationPropagationMode =
+      getReasoningImplicationPropagationMode(lastUserMessage)
+
     const identityCandidateProfilesMode =
       getIdentityCandidateProfilesMode(lastUserMessage)
 
@@ -5152,7 +5160,11 @@ export async function POST(req: Request) {
     const identityFoundationAction =
       getIdentityFoundationAction(lastUserMessage)
 
-    if (identityCandidateProfilesMode && !routePropagationMode) {
+    if (
+      identityCandidateProfilesMode &&
+      !routePropagationMode &&
+      !reasoningImplicationPropagationMode
+    ) {
       const { data: latestStates, error: latestStateError } =
         await supabaseAdmin
           .from("sourcefield_ledger_events")
@@ -5339,7 +5351,7 @@ export async function POST(req: Request) {
       })
     }
 
-    if (routePropagationMode) {
+    if (routePropagationMode || reasoningImplicationPropagationMode) {
       const { data: latestStates, error: latestStateError } =
         await supabaseAdmin
           .from("sourcefield_ledger_events")
@@ -5477,26 +5489,47 @@ export async function POST(req: Request) {
           null
       }
 
+      const requestedPropagationScope = reasoningImplicationPropagationMode
+        ? "reasoning implication propagation"
+        : "route reasoning propagation"
+
+      const requestedPropagationAction =
+        reasoningImplicationPropagationMode || routePropagationMode || "summary"
+
       const routeReasoningPropagationState = generateRouteReasoningPropagation({
         equationLaneState,
         identityFoundationState,
         coherentIdentityDiscoveryState,
         metaReasoningState,
         differentialMetaReasoningState,
-        requestedScope: "route reasoning propagation",
-        requestedAction: routePropagationMode
+        requestedScope: requestedPropagationScope,
+        requestedAction: requestedPropagationAction
       })
 
-      const propagationResponse = buildRoutePropagationModeResponse({
-        propagationState: routeReasoningPropagationState,
-        differentialMetaReasoningState,
-        mode: routePropagationMode
-      })
+      const reasoningImplicationPropagationState =
+        generateReasoningImplicationPropagation({
+          equationLaneState,
+          identityFoundationState,
+          routeReasoningPropagationState,
+          identityCandidateProfileState,
+          differentialMetaReasoningState
+        })
+
+      const propagationResponse = reasoningImplicationPropagationMode
+        ? buildReasoningImplicationPropagationResponse(
+            reasoningImplicationPropagationState,
+            reasoningImplicationPropagationMode
+          )
+        : buildRoutePropagationModeResponse({
+            propagationState: routeReasoningPropagationState,
+            differentialMetaReasoningState,
+            mode: routePropagationMode || "summary"
+          })
 
       return NextResponse.json({
         result: buildEquationIsomorphicRouteResponse({
-          requestedScope: "route reasoning propagation",
-          requestedAction: routePropagationMode,
+          requestedScope: requestedPropagationScope,
+          requestedAction: requestedPropagationAction,
           baseResponse: propagationResponse,
           equationLaneState,
           identityFoundationState,
@@ -5508,8 +5541,8 @@ export async function POST(req: Request) {
         }),
         equationIsomorphicReasoningTrace: buildEquationIsomorphicReasoningTrace(
           {
-            requestedScope: "route reasoning propagation",
-            requestedAction: routePropagationMode,
+            requestedScope: requestedPropagationScope,
+            requestedAction: requestedPropagationAction,
             equationLaneState,
             identityFoundationState,
             coherentIdentityDiscoveryState,
@@ -5520,13 +5553,21 @@ export async function POST(req: Request) {
           }
         ),
         routeReasoningPropagationState,
+        reasoningImplicationPropagationState,
         directStateReport: true,
         nonMutatingReport: true,
         deterministicRouteReasoningPropagationResponse: true,
+        deterministicReasoningImplicationPropagationResponse: Boolean(
+          reasoningImplicationPropagationMode
+        ),
         source: "latest_stored_supabase_snapshot",
-        stateObject: "route reasoning propagation state",
-        action: routePropagationMode,
-        value: routeReasoningPropagationState,
+        stateObject: reasoningImplicationPropagationMode
+          ? "reasoning implication propagation state"
+          : "route reasoning propagation state",
+        action: requestedPropagationAction,
+        value: reasoningImplicationPropagationMode
+          ? reasoningImplicationPropagationState
+          : routeReasoningPropagationState,
         differentialMetaReasoningState,
         identityCandidateProfileState,
         metaReasoningState,
@@ -7220,6 +7261,15 @@ export async function POST(req: Request) {
       requestedAction: "summary"
     })
 
+    const reasoningImplicationPropagationState =
+      generateReasoningImplicationPropagation({
+        equationLaneState,
+        identityFoundationState,
+        routeReasoningPropagationState,
+        identityCandidateProfileState,
+        differentialMetaReasoningState
+      })
+
     authoritativeLiveState.identityFoundationState = identityFoundationState
     authoritativeLiveState.coherentIdentityDiscoveryState =
       coherentIdentityDiscoveryState
@@ -7230,6 +7280,8 @@ export async function POST(req: Request) {
       routeReasoningPropagationState
     authoritativeLiveState.identityCandidateProfileState =
       identityCandidateProfileState
+    authoritativeLiveState.reasoningImplicationPropagationState =
+      reasoningImplicationPropagationState
 
     let retrievedContext = ""
 
