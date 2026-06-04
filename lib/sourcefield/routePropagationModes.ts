@@ -52,46 +52,67 @@ function getDifferentialCandidates(differentialMetaReasoningState: any) {
   ]
 }
 
-function profileKey(candidate: any) {
-  return [
-    normalize(candidate?.candidateName),
-    normalize(candidate?.name),
-    normalize(candidate?.candidateType),
-    normalize(candidate?.type),
-    normalize(candidate?.candidateRole),
-    normalize(candidate?.primaryContribution)
-  ]
-    .filter(Boolean)
-    .join(" | ")
+function candidateNameOf(candidate: any) {
+  return normalize(candidate?.candidateName ?? candidate?.name)
 }
 
-function namesMatch(candidate: any, candidateName: string) {
-  const requested = normalize(candidateName)
-  const key = profileKey(candidate)
+function candidateTypeOf(candidate: any) {
+  return normalize(candidate?.candidateType ?? candidate?.type)
+}
 
-  if (!requested || !key) return false
+function candidateRoleOf(candidate: any) {
+  return normalize(candidate?.candidateRole ?? candidate?.role)
+}
 
-  return (
-    key.includes(requested) ||
-    requested.includes(normalize(candidate?.candidateName)) ||
-    requested.includes(normalize(candidate?.name)) ||
-    requested.includes(normalize(candidate?.candidateType)) ||
-    requested.includes(normalize(candidate?.type))
+function candidateContributionOf(candidate: any) {
+  return normalize(
+    candidate?.primaryContribution ??
+      candidate?.contributionProfile?.primaryContribution
   )
 }
 
-function inferProfileFallback(candidate: any) {
-  const name = normalize(candidate?.candidateName ?? candidate?.name)
-  const type = normalize(candidate?.candidateType ?? candidate?.type)
-  const role = normalize(candidate?.candidateRole)
-  const key = `${name} ${type} ${role}`
+function roleFromCandidateIdentity(candidate: any) {
+  const name = candidateNameOf(candidate)
+  const type = candidateTypeOf(candidate)
+  const role = candidateRoleOf(candidate)
+  const contribution = candidateContributionOf(candidate)
+  const key = `${name} ${type} ${role} ${contribution}`
 
   if (
-    key.includes("moment") ||
+    key.includes("moment-to-moment") ||
     key.includes("resonance principle") ||
     key.includes("integrated-principle") ||
-    key.includes("principle-identity")
+    key.includes("principle-identity") ||
+    key.includes("principle-level identity")
   ) {
+    return "principle-identity"
+  }
+
+  if (
+    key.includes("architectural refinement") ||
+    key.includes("refinement-pattern") ||
+    key.includes("architectural-refinement") ||
+    key.includes("stability correction")
+  ) {
+    return "architectural-refinement"
+  }
+
+  if (
+    key.includes("pathway completion") ||
+    key.includes("completion-pattern") ||
+    key.includes("pathway-completion") ||
+    key.includes("closure and transition readiness")
+  ) {
+    return "pathway-completion"
+  }
+
+  return ""
+}
+
+function inferProfileFallback(candidate: any) {
+  const role = roleFromCandidateIdentity(candidate)
+
+  if (role === "principle-identity") {
     return {
       candidateRole: "principle-identity",
       primaryContribution: "principle-level identity",
@@ -107,12 +128,7 @@ function inferProfileFallback(candidate: any) {
     }
   }
 
-  if (
-    key.includes("architectural") ||
-    key.includes("refinement") ||
-    key.includes("refinement-pattern") ||
-    key.includes("architectural-refinement")
-  ) {
+  if (role === "architectural-refinement") {
     return {
       candidateRole: "architectural-refinement",
       primaryContribution: "architectural refinement",
@@ -128,12 +144,7 @@ function inferProfileFallback(candidate: any) {
     }
   }
 
-  if (
-    key.includes("pathway") ||
-    key.includes("completion") ||
-    key.includes("completion-pattern") ||
-    key.includes("pathway-completion")
-  ) {
+  if (role === "pathway-completion") {
     return {
       candidateRole: "pathway-completion",
       primaryContribution: "pathway completion",
@@ -164,11 +175,87 @@ function inferProfileFallback(candidate: any) {
   }
 }
 
+function exactNameMatch(candidate: any, targetName: any) {
+  const candidateName = candidateNameOf(candidate)
+  const target = normalize(targetName)
+
+  return Boolean(candidateName && target && candidateName === target)
+}
+
+function exactTypeMatch(candidate: any, targetType: any) {
+  const candidateType = candidateTypeOf(candidate)
+  const target = normalize(targetType)
+
+  return Boolean(candidateType && target && candidateType === target)
+}
+
+function exactRoleMatch(candidate: any, targetRole: any) {
+  const candidateRole = candidateRoleOf(candidate)
+  const target = normalize(targetRole)
+
+  return Boolean(candidateRole && target && candidateRole === target)
+}
+
+function findDifferentialCandidate(
+  differentialMetaReasoningState: any,
+  candidate: any
+) {
+  const candidates = getDifferentialCandidates(differentialMetaReasoningState)
+
+  const targetName = candidate?.candidateName ?? candidate?.name
+  const targetType = candidate?.candidateType ?? candidate?.type
+  const targetRole =
+    candidate?.candidateRole ?? roleFromCandidateIdentity(candidate)
+
+  const byName = candidates.find(candidateProfile =>
+    exactNameMatch(candidateProfile, targetName)
+  )
+
+  if (byName) return byName
+
+  const byType = candidates.find(candidateProfile =>
+    exactTypeMatch(candidateProfile, targetType)
+  )
+
+  if (byType) return byType
+
+  const byRole = candidates.find(candidateProfile =>
+    exactRoleMatch(candidateProfile, targetRole)
+  )
+
+  if (byRole) return byRole
+
+  return null
+}
+
+function findDominantDifferentialCandidate(
+  differentialMetaReasoningState: any,
+  dominantCandidateName: string
+) {
+  const dominant = getDominantDifferentialCandidate(
+    differentialMetaReasoningState
+  )
+
+  if (
+    dominant &&
+    typeof dominant === "object" &&
+    exactNameMatch(dominant, dominantCandidateName)
+  ) {
+    return dominant
+  }
+
+  return findDifferentialCandidate(differentialMetaReasoningState, {
+    candidateName: dominantCandidateName
+  })
+}
+
 function mergeCandidateProfile(candidate: any, differential: any) {
-  const fallback = inferProfileFallback({
+  const merged = {
     ...candidate,
     ...(differential || {})
-  })
+  }
+
+  const fallback = inferProfileFallback(merged)
 
   return {
     candidateName:
@@ -223,27 +310,6 @@ function mergeCandidateProfile(candidate: any, differential: any) {
   }
 }
 
-function findDifferentialCandidate(
-  differentialMetaReasoningState: any,
-  candidateName: string
-) {
-  const dominant = getDominantDifferentialCandidate(
-    differentialMetaReasoningState
-  )
-
-  if (
-    dominant &&
-    typeof dominant === "object" &&
-    namesMatch(dominant, candidateName)
-  ) {
-    return dominant
-  }
-
-  return getDifferentialCandidates(differentialMetaReasoningState).find(
-    (candidate: any) => namesMatch(candidate, candidateName)
-  )
-}
-
 function buildPropagationChainLines(propagationState: any) {
   const chain = getPropagationChain(propagationState)
 
@@ -283,7 +349,7 @@ function buildDominanceCausalLines(
   differentialMetaReasoningState: any
 ) {
   const dominantCandidate = line(propagationState?.dominantCandidate)
-  const dominantDifferential = findDifferentialCandidate(
+  const dominantDifferential = findDominantDifferentialCandidate(
     differentialMetaReasoningState,
     dominantCandidate
   )
@@ -343,7 +409,7 @@ function buildCompareWithoutRankingLines(
     (candidate: any, index: number) => {
       const differential = findDifferentialCandidate(
         differentialMetaReasoningState,
-        candidate?.candidateName
+        candidate
       )
 
       const profile = mergeCandidateProfile(candidate, differential)
