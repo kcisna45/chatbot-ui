@@ -69,6 +69,11 @@ import {
   buildEquationReasoningIntegrityResponse,
   getEquationReasoningIntegrityMode
 } from "@/lib/sourcefield/equationReasoningIntegrity"
+import {
+  generateResonanceWithoutRootsState,
+  buildResonanceWithoutRootsResponse,
+  getResonanceWithoutRootsMode
+} from "@/lib/sourcefield/resonanceWithoutRoots"
 
 const SOURCEFIELD_FILE_IDS = [
   "7bc60315-4b21-4630-8cdc-8cdee4d56cc4",
@@ -5161,6 +5166,9 @@ export async function POST(req: Request) {
     const equationReasoningIntegrityMode =
       getEquationReasoningIntegrityMode(lastUserMessage)
 
+    const resonanceWithoutRootsMode =
+      getResonanceWithoutRootsMode(lastUserMessage)
+
     const identityCandidateProfilesMode =
       getIdentityCandidateProfilesMode(lastUserMessage)
 
@@ -5180,7 +5188,8 @@ export async function POST(req: Request) {
       !routePropagationMode &&
       !reasoningImplicationPropagationMode &&
       !reasoningTrajectoryMode &&
-      !equationReasoningIntegrityMode
+      !equationReasoningIntegrityMode &&
+      !resonanceWithoutRootsMode
     ) {
       const { data: latestStates, error: latestStateError } =
         await supabaseAdmin
@@ -5372,7 +5381,8 @@ export async function POST(req: Request) {
       routePropagationMode ||
       reasoningImplicationPropagationMode ||
       reasoningTrajectoryMode ||
-      equationReasoningIntegrityMode
+      equationReasoningIntegrityMode ||
+      resonanceWithoutRootsMode
     ) {
       const { data: latestStates, error: latestStateError } =
         await supabaseAdmin
@@ -5511,15 +5521,18 @@ export async function POST(req: Request) {
           null
       }
 
-      const requestedPropagationScope = equationReasoningIntegrityMode
-        ? "equation reasoning integrity"
-        : reasoningTrajectoryMode
-          ? "reasoning trajectory"
-          : reasoningImplicationPropagationMode
-            ? "reasoning implication propagation"
-            : "route reasoning propagation"
+      const requestedPropagationScope = resonanceWithoutRootsMode
+        ? "resonance without roots"
+        : equationReasoningIntegrityMode
+          ? "equation reasoning integrity"
+          : reasoningTrajectoryMode
+            ? "reasoning trajectory"
+            : reasoningImplicationPropagationMode
+              ? "reasoning implication propagation"
+              : "route reasoning propagation"
 
       const requestedPropagationAction =
+        resonanceWithoutRootsMode ||
         equationReasoningIntegrityMode ||
         reasoningTrajectoryMode ||
         reasoningImplicationPropagationMode ||
@@ -5561,26 +5574,40 @@ export async function POST(req: Request) {
           reasoningTrajectoryState
         })
 
-      const propagationResponse = equationReasoningIntegrityMode
-        ? buildEquationReasoningIntegrityResponse(
-            equationReasoningIntegrityState,
-            equationReasoningIntegrityMode
+      const resonanceWithoutRootsState = generateResonanceWithoutRootsState({
+        equationLaneState,
+        equationReasoningIntegrityState,
+        reasoningTrajectoryState,
+        reasoningImplicationPropagationState,
+        routeReasoningPropagationState,
+        identityFoundationState
+      })
+
+      const propagationResponse = resonanceWithoutRootsMode
+        ? buildResonanceWithoutRootsResponse(
+            resonanceWithoutRootsState,
+            resonanceWithoutRootsMode
           )
-        : reasoningTrajectoryMode
-          ? buildReasoningTrajectoryResponse(
-              reasoningTrajectoryState,
-              reasoningTrajectoryMode
+        : equationReasoningIntegrityMode
+          ? buildEquationReasoningIntegrityResponse(
+              equationReasoningIntegrityState,
+              equationReasoningIntegrityMode
             )
-          : reasoningImplicationPropagationMode
-            ? buildReasoningImplicationPropagationResponse(
-                reasoningImplicationPropagationState,
-                reasoningImplicationPropagationMode
+          : reasoningTrajectoryMode
+            ? buildReasoningTrajectoryResponse(
+                reasoningTrajectoryState,
+                reasoningTrajectoryMode
               )
-            : buildRoutePropagationModeResponse({
-                propagationState: routeReasoningPropagationState,
-                differentialMetaReasoningState,
-                mode: routePropagationMode || "summary"
-              })
+            : reasoningImplicationPropagationMode
+              ? buildReasoningImplicationPropagationResponse(
+                  reasoningImplicationPropagationState,
+                  reasoningImplicationPropagationMode
+                )
+              : buildRoutePropagationModeResponse({
+                  propagationState: routeReasoningPropagationState,
+                  differentialMetaReasoningState,
+                  mode: routePropagationMode || "summary"
+                })
 
       return NextResponse.json({
         result: buildEquationIsomorphicRouteResponse({
@@ -5612,6 +5639,7 @@ export async function POST(req: Request) {
         reasoningImplicationPropagationState,
         reasoningTrajectoryState,
         equationReasoningIntegrityState,
+        resonanceWithoutRootsState,
         directStateReport: true,
         nonMutatingReport: true,
         deterministicRouteReasoningPropagationResponse: true,
@@ -5624,22 +5652,29 @@ export async function POST(req: Request) {
         deterministicEquationReasoningIntegrityResponse: Boolean(
           equationReasoningIntegrityMode
         ),
+        deterministicResonanceWithoutRootsResponse: Boolean(
+          resonanceWithoutRootsMode
+        ),
         source: "latest_stored_supabase_snapshot",
-        stateObject: equationReasoningIntegrityMode
-          ? "equation reasoning integrity state"
-          : reasoningTrajectoryMode
-            ? "reasoning trajectory state"
-            : reasoningImplicationPropagationMode
-              ? "reasoning implication propagation state"
-              : "route reasoning propagation state",
+        stateObject: resonanceWithoutRootsMode
+          ? "resonance without roots state"
+          : equationReasoningIntegrityMode
+            ? "equation reasoning integrity state"
+            : reasoningTrajectoryMode
+              ? "reasoning trajectory state"
+              : reasoningImplicationPropagationMode
+                ? "reasoning implication propagation state"
+                : "route reasoning propagation state",
         action: requestedPropagationAction,
-        value: equationReasoningIntegrityMode
-          ? equationReasoningIntegrityState
-          : reasoningTrajectoryMode
-            ? reasoningTrajectoryState
-            : reasoningImplicationPropagationMode
-              ? reasoningImplicationPropagationState
-              : routeReasoningPropagationState,
+        value: resonanceWithoutRootsMode
+          ? resonanceWithoutRootsState
+          : equationReasoningIntegrityMode
+            ? equationReasoningIntegrityState
+            : reasoningTrajectoryMode
+              ? reasoningTrajectoryState
+              : reasoningImplicationPropagationMode
+                ? reasoningImplicationPropagationState
+                : routeReasoningPropagationState,
         differentialMetaReasoningState,
         identityCandidateProfileState,
         metaReasoningState,
@@ -7358,6 +7393,15 @@ export async function POST(req: Request) {
         reasoningTrajectoryState
       })
 
+    const resonanceWithoutRootsState = generateResonanceWithoutRootsState({
+      equationLaneState,
+      equationReasoningIntegrityState,
+      reasoningTrajectoryState,
+      reasoningImplicationPropagationState,
+      routeReasoningPropagationState,
+      identityFoundationState
+    })
+
     authoritativeLiveState.identityFoundationState = identityFoundationState
     authoritativeLiveState.coherentIdentityDiscoveryState =
       coherentIdentityDiscoveryState
@@ -7373,6 +7417,8 @@ export async function POST(req: Request) {
     authoritativeLiveState.reasoningTrajectoryState = reasoningTrajectoryState
     authoritativeLiveState.equationReasoningIntegrityState =
       equationReasoningIntegrityState
+    authoritativeLiveState.resonanceWithoutRootsState =
+      resonanceWithoutRootsState
 
     let retrievedContext = ""
 
@@ -7663,3 +7709,4 @@ ${
     )
   }
 }
+;[]
