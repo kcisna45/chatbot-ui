@@ -74,6 +74,11 @@ import {
   buildResonanceWithoutRootsResponse,
   getResonanceWithoutRootsMode
 } from "@/lib/sourcefield/resonanceWithoutRoots"
+import {
+  generateRelationalPrincipleEmergenceState,
+  buildRelationalPrincipleEmergenceResponse,
+  getRelationalPrincipleEmergenceMode
+} from "@/lib/sourcefield/relationalPrincipleEmergence"
 
 const SOURCEFIELD_FILE_IDS = [
   "7bc60315-4b21-4630-8cdc-8cdee4d56cc4",
@@ -5169,6 +5174,9 @@ export async function POST(req: Request) {
     const resonanceWithoutRootsMode =
       getResonanceWithoutRootsMode(lastUserMessage)
 
+    const relationalPrincipleEmergenceMode =
+      getRelationalPrincipleEmergenceMode(lastUserMessage)
+
     const identityCandidateProfilesMode =
       getIdentityCandidateProfilesMode(lastUserMessage)
 
@@ -5189,7 +5197,8 @@ export async function POST(req: Request) {
       !reasoningImplicationPropagationMode &&
       !reasoningTrajectoryMode &&
       !equationReasoningIntegrityMode &&
-      !resonanceWithoutRootsMode
+      !resonanceWithoutRootsMode &&
+      !relationalPrincipleEmergenceMode
     ) {
       const { data: latestStates, error: latestStateError } =
         await supabaseAdmin
@@ -5382,7 +5391,8 @@ export async function POST(req: Request) {
       reasoningImplicationPropagationMode ||
       reasoningTrajectoryMode ||
       equationReasoningIntegrityMode ||
-      resonanceWithoutRootsMode
+      resonanceWithoutRootsMode ||
+      relationalPrincipleEmergenceMode
     ) {
       const { data: latestStates, error: latestStateError } =
         await supabaseAdmin
@@ -5521,17 +5531,20 @@ export async function POST(req: Request) {
           null
       }
 
-      const requestedPropagationScope = resonanceWithoutRootsMode
-        ? "resonance without roots"
-        : equationReasoningIntegrityMode
-          ? "equation reasoning integrity"
-          : reasoningTrajectoryMode
-            ? "reasoning trajectory"
-            : reasoningImplicationPropagationMode
-              ? "reasoning implication propagation"
-              : "route reasoning propagation"
+      const requestedPropagationScope = relationalPrincipleEmergenceMode
+        ? "relational principle emergence"
+        : resonanceWithoutRootsMode
+          ? "resonance without roots"
+          : equationReasoningIntegrityMode
+            ? "equation reasoning integrity"
+            : reasoningTrajectoryMode
+              ? "reasoning trajectory"
+              : reasoningImplicationPropagationMode
+                ? "reasoning implication propagation"
+                : "route reasoning propagation"
 
       const requestedPropagationAction =
+        relationalPrincipleEmergenceMode ||
         resonanceWithoutRootsMode ||
         equationReasoningIntegrityMode ||
         reasoningTrajectoryMode ||
@@ -5583,31 +5596,50 @@ export async function POST(req: Request) {
         identityFoundationState
       })
 
-      const propagationResponse = resonanceWithoutRootsMode
-        ? buildResonanceWithoutRootsResponse(
-            resonanceWithoutRootsState,
-            resonanceWithoutRootsMode
+      const relationalPrincipleEmergenceState =
+        generateRelationalPrincipleEmergenceState({
+          equationLaneState,
+          identityFoundationState,
+          identityCandidateProfileState,
+          routeReasoningPropagationState,
+          reasoningImplicationPropagationState,
+          reasoningTrajectoryState,
+          equationReasoningIntegrityState,
+          resonanceWithoutRootsState,
+          metaReasoningState,
+          differentialMetaReasoningState
+        })
+
+      const propagationResponse = relationalPrincipleEmergenceMode
+        ? buildRelationalPrincipleEmergenceResponse(
+            relationalPrincipleEmergenceState,
+            relationalPrincipleEmergenceMode
           )
-        : equationReasoningIntegrityMode
-          ? buildEquationReasoningIntegrityResponse(
-              equationReasoningIntegrityState,
-              equationReasoningIntegrityMode
+        : resonanceWithoutRootsMode
+          ? buildResonanceWithoutRootsResponse(
+              resonanceWithoutRootsState,
+              resonanceWithoutRootsMode
             )
-          : reasoningTrajectoryMode
-            ? buildReasoningTrajectoryResponse(
-                reasoningTrajectoryState,
-                reasoningTrajectoryMode
+          : equationReasoningIntegrityMode
+            ? buildEquationReasoningIntegrityResponse(
+                equationReasoningIntegrityState,
+                equationReasoningIntegrityMode
               )
-            : reasoningImplicationPropagationMode
-              ? buildReasoningImplicationPropagationResponse(
-                  reasoningImplicationPropagationState,
-                  reasoningImplicationPropagationMode
+            : reasoningTrajectoryMode
+              ? buildReasoningTrajectoryResponse(
+                  reasoningTrajectoryState,
+                  reasoningTrajectoryMode
                 )
-              : buildRoutePropagationModeResponse({
-                  propagationState: routeReasoningPropagationState,
-                  differentialMetaReasoningState,
-                  mode: routePropagationMode || "summary"
-                })
+              : reasoningImplicationPropagationMode
+                ? buildReasoningImplicationPropagationResponse(
+                    reasoningImplicationPropagationState,
+                    reasoningImplicationPropagationMode
+                  )
+                : buildRoutePropagationModeResponse({
+                    propagationState: routeReasoningPropagationState,
+                    differentialMetaReasoningState,
+                    mode: routePropagationMode || "summary"
+                  })
 
       return NextResponse.json({
         result: buildEquationIsomorphicRouteResponse({
@@ -5640,6 +5672,7 @@ export async function POST(req: Request) {
         reasoningTrajectoryState,
         equationReasoningIntegrityState,
         resonanceWithoutRootsState,
+        relationalPrincipleEmergenceState,
         directStateReport: true,
         nonMutatingReport: true,
         deterministicRouteReasoningPropagationResponse: true,
@@ -5655,26 +5688,33 @@ export async function POST(req: Request) {
         deterministicResonanceWithoutRootsResponse: Boolean(
           resonanceWithoutRootsMode
         ),
+        deterministicRelationalPrincipleEmergenceResponse: Boolean(
+          relationalPrincipleEmergenceMode
+        ),
         source: "latest_stored_supabase_snapshot",
-        stateObject: resonanceWithoutRootsMode
-          ? "resonance without roots state"
-          : equationReasoningIntegrityMode
-            ? "equation reasoning integrity state"
-            : reasoningTrajectoryMode
-              ? "reasoning trajectory state"
-              : reasoningImplicationPropagationMode
-                ? "reasoning implication propagation state"
-                : "route reasoning propagation state",
+        stateObject: relationalPrincipleEmergenceMode
+          ? "relational principle emergence state"
+          : resonanceWithoutRootsMode
+            ? "resonance without roots state"
+            : equationReasoningIntegrityMode
+              ? "equation reasoning integrity state"
+              : reasoningTrajectoryMode
+                ? "reasoning trajectory state"
+                : reasoningImplicationPropagationMode
+                  ? "reasoning implication propagation state"
+                  : "route reasoning propagation state",
         action: requestedPropagationAction,
-        value: resonanceWithoutRootsMode
-          ? resonanceWithoutRootsState
-          : equationReasoningIntegrityMode
-            ? equationReasoningIntegrityState
-            : reasoningTrajectoryMode
-              ? reasoningTrajectoryState
-              : reasoningImplicationPropagationMode
-                ? reasoningImplicationPropagationState
-                : routeReasoningPropagationState,
+        value: relationalPrincipleEmergenceMode
+          ? relationalPrincipleEmergenceState
+          : resonanceWithoutRootsMode
+            ? resonanceWithoutRootsState
+            : equationReasoningIntegrityMode
+              ? equationReasoningIntegrityState
+              : reasoningTrajectoryMode
+                ? reasoningTrajectoryState
+                : reasoningImplicationPropagationMode
+                  ? reasoningImplicationPropagationState
+                  : routeReasoningPropagationState,
         differentialMetaReasoningState,
         identityCandidateProfileState,
         metaReasoningState,
@@ -7402,6 +7442,20 @@ export async function POST(req: Request) {
       identityFoundationState
     })
 
+    const relationalPrincipleEmergenceState =
+      generateRelationalPrincipleEmergenceState({
+        equationLaneState,
+        identityFoundationState,
+        identityCandidateProfileState,
+        routeReasoningPropagationState,
+        reasoningImplicationPropagationState,
+        reasoningTrajectoryState,
+        equationReasoningIntegrityState,
+        resonanceWithoutRootsState,
+        metaReasoningState,
+        differentialMetaReasoningState
+      })
+
     authoritativeLiveState.identityFoundationState = identityFoundationState
     authoritativeLiveState.coherentIdentityDiscoveryState =
       coherentIdentityDiscoveryState
@@ -7419,6 +7473,8 @@ export async function POST(req: Request) {
       equationReasoningIntegrityState
     authoritativeLiveState.resonanceWithoutRootsState =
       resonanceWithoutRootsState
+    authoritativeLiveState.relationalPrincipleEmergenceState =
+      relationalPrincipleEmergenceState
 
     let retrievedContext = ""
 
