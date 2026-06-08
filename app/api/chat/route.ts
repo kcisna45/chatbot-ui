@@ -79,6 +79,11 @@ import {
   buildRelationalPrincipleEmergenceResponse,
   getRelationalPrincipleEmergenceMode
 } from "@/lib/sourcefield/relationalPrincipleEmergence"
+import {
+  generateStructuralCompletionState,
+  buildStructuralCompletionResponse,
+  getStructuralCompletionMode
+} from "@/lib/sourcefield/structuralCompletion"
 
 const SOURCEFIELD_FILE_IDS = [
   "7bc60315-4b21-4630-8cdc-8cdee4d56cc4",
@@ -5177,6 +5182,9 @@ export async function POST(req: Request) {
     const relationalPrincipleEmergenceMode =
       getRelationalPrincipleEmergenceMode(lastUserMessage)
 
+    const structuralCompletionMode =
+      getStructuralCompletionMode(lastUserMessage)
+
     const identityCandidateProfilesMode =
       getIdentityCandidateProfilesMode(lastUserMessage)
 
@@ -5198,7 +5206,8 @@ export async function POST(req: Request) {
       !reasoningTrajectoryMode &&
       !equationReasoningIntegrityMode &&
       !resonanceWithoutRootsMode &&
-      !relationalPrincipleEmergenceMode
+      !relationalPrincipleEmergenceMode &&
+      !structuralCompletionMode
     ) {
       const { data: latestStates, error: latestStateError } =
         await supabaseAdmin
@@ -5392,7 +5401,8 @@ export async function POST(req: Request) {
       reasoningTrajectoryMode ||
       equationReasoningIntegrityMode ||
       resonanceWithoutRootsMode ||
-      relationalPrincipleEmergenceMode
+      relationalPrincipleEmergenceMode ||
+      structuralCompletionMode
     ) {
       const { data: latestStates, error: latestStateError } =
         await supabaseAdmin
@@ -5531,19 +5541,22 @@ export async function POST(req: Request) {
           null
       }
 
-      const requestedPropagationScope = relationalPrincipleEmergenceMode
-        ? "relational principle emergence"
-        : resonanceWithoutRootsMode
-          ? "resonance without roots"
-          : equationReasoningIntegrityMode
-            ? "equation reasoning integrity"
-            : reasoningTrajectoryMode
-              ? "reasoning trajectory"
-              : reasoningImplicationPropagationMode
-                ? "reasoning implication propagation"
-                : "route reasoning propagation"
+      const requestedPropagationScope = structuralCompletionMode
+        ? "structural completion"
+        : relationalPrincipleEmergenceMode
+          ? "relational principle emergence"
+          : resonanceWithoutRootsMode
+            ? "resonance without roots"
+            : equationReasoningIntegrityMode
+              ? "equation reasoning integrity"
+              : reasoningTrajectoryMode
+                ? "reasoning trajectory"
+                : reasoningImplicationPropagationMode
+                  ? "reasoning implication propagation"
+                  : "route reasoning propagation"
 
       const requestedPropagationAction =
+        structuralCompletionMode ||
         relationalPrincipleEmergenceMode ||
         resonanceWithoutRootsMode ||
         equationReasoningIntegrityMode ||
@@ -5610,36 +5623,55 @@ export async function POST(req: Request) {
           differentialMetaReasoningState
         })
 
-      const propagationResponse = relationalPrincipleEmergenceMode
-        ? buildRelationalPrincipleEmergenceResponse(
-            relationalPrincipleEmergenceState,
-            relationalPrincipleEmergenceMode
+      const structuralCompletionState = generateStructuralCompletionState({
+        equationLaneState,
+        relationalPrincipleEmergenceState,
+        resonanceWithoutRootsState,
+        equationReasoningIntegrityState,
+        reasoningTrajectoryState,
+        reasoningImplicationPropagationState,
+        routeReasoningPropagationState,
+        identityFoundationState,
+        identityCandidateProfileState,
+        metaReasoningState,
+        differentialMetaReasoningState
+      })
+
+      const propagationResponse = structuralCompletionMode
+        ? buildStructuralCompletionResponse(
+            structuralCompletionState,
+            structuralCompletionMode
           )
-        : resonanceWithoutRootsMode
-          ? buildResonanceWithoutRootsResponse(
-              resonanceWithoutRootsState,
-              resonanceWithoutRootsMode
+        : relationalPrincipleEmergenceMode
+          ? buildRelationalPrincipleEmergenceResponse(
+              relationalPrincipleEmergenceState,
+              relationalPrincipleEmergenceMode
             )
-          : equationReasoningIntegrityMode
-            ? buildEquationReasoningIntegrityResponse(
-                equationReasoningIntegrityState,
-                equationReasoningIntegrityMode
+          : resonanceWithoutRootsMode
+            ? buildResonanceWithoutRootsResponse(
+                resonanceWithoutRootsState,
+                resonanceWithoutRootsMode
               )
-            : reasoningTrajectoryMode
-              ? buildReasoningTrajectoryResponse(
-                  reasoningTrajectoryState,
-                  reasoningTrajectoryMode
+            : equationReasoningIntegrityMode
+              ? buildEquationReasoningIntegrityResponse(
+                  equationReasoningIntegrityState,
+                  equationReasoningIntegrityMode
                 )
-              : reasoningImplicationPropagationMode
-                ? buildReasoningImplicationPropagationResponse(
-                    reasoningImplicationPropagationState,
-                    reasoningImplicationPropagationMode
+              : reasoningTrajectoryMode
+                ? buildReasoningTrajectoryResponse(
+                    reasoningTrajectoryState,
+                    reasoningTrajectoryMode
                   )
-                : buildRoutePropagationModeResponse({
-                    propagationState: routeReasoningPropagationState,
-                    differentialMetaReasoningState,
-                    mode: routePropagationMode || "summary"
-                  })
+                : reasoningImplicationPropagationMode
+                  ? buildReasoningImplicationPropagationResponse(
+                      reasoningImplicationPropagationState,
+                      reasoningImplicationPropagationMode
+                    )
+                  : buildRoutePropagationModeResponse({
+                      propagationState: routeReasoningPropagationState,
+                      differentialMetaReasoningState,
+                      mode: routePropagationMode || "summary"
+                    })
 
       return NextResponse.json({
         result: buildEquationIsomorphicRouteResponse({
@@ -5673,6 +5705,7 @@ export async function POST(req: Request) {
         equationReasoningIntegrityState,
         resonanceWithoutRootsState,
         relationalPrincipleEmergenceState,
+        structuralCompletionState,
         directStateReport: true,
         nonMutatingReport: true,
         deterministicRouteReasoningPropagationResponse: true,
@@ -5691,30 +5724,37 @@ export async function POST(req: Request) {
         deterministicRelationalPrincipleEmergenceResponse: Boolean(
           relationalPrincipleEmergenceMode
         ),
+        deterministicStructuralCompletionResponse: Boolean(
+          structuralCompletionMode
+        ),
         source: "latest_stored_supabase_snapshot",
-        stateObject: relationalPrincipleEmergenceMode
-          ? "relational principle emergence state"
-          : resonanceWithoutRootsMode
-            ? "resonance without roots state"
-            : equationReasoningIntegrityMode
-              ? "equation reasoning integrity state"
-              : reasoningTrajectoryMode
-                ? "reasoning trajectory state"
-                : reasoningImplicationPropagationMode
-                  ? "reasoning implication propagation state"
-                  : "route reasoning propagation state",
+        stateObject: structuralCompletionMode
+          ? "structural completion state"
+          : relationalPrincipleEmergenceMode
+            ? "relational principle emergence state"
+            : resonanceWithoutRootsMode
+              ? "resonance without roots state"
+              : equationReasoningIntegrityMode
+                ? "equation reasoning integrity state"
+                : reasoningTrajectoryMode
+                  ? "reasoning trajectory state"
+                  : reasoningImplicationPropagationMode
+                    ? "reasoning implication propagation state"
+                    : "route reasoning propagation state",
         action: requestedPropagationAction,
-        value: relationalPrincipleEmergenceMode
-          ? relationalPrincipleEmergenceState
-          : resonanceWithoutRootsMode
-            ? resonanceWithoutRootsState
-            : equationReasoningIntegrityMode
-              ? equationReasoningIntegrityState
-              : reasoningTrajectoryMode
-                ? reasoningTrajectoryState
-                : reasoningImplicationPropagationMode
-                  ? reasoningImplicationPropagationState
-                  : routeReasoningPropagationState,
+        value: structuralCompletionMode
+          ? structuralCompletionState
+          : relationalPrincipleEmergenceMode
+            ? relationalPrincipleEmergenceState
+            : resonanceWithoutRootsMode
+              ? resonanceWithoutRootsState
+              : equationReasoningIntegrityMode
+                ? equationReasoningIntegrityState
+                : reasoningTrajectoryMode
+                  ? reasoningTrajectoryState
+                  : reasoningImplicationPropagationMode
+                    ? reasoningImplicationPropagationState
+                    : routeReasoningPropagationState,
         differentialMetaReasoningState,
         identityCandidateProfileState,
         metaReasoningState,
@@ -7456,6 +7496,20 @@ export async function POST(req: Request) {
         differentialMetaReasoningState
       })
 
+    const structuralCompletionState = generateStructuralCompletionState({
+      equationLaneState,
+      relationalPrincipleEmergenceState,
+      resonanceWithoutRootsState,
+      equationReasoningIntegrityState,
+      reasoningTrajectoryState,
+      reasoningImplicationPropagationState,
+      routeReasoningPropagationState,
+      identityFoundationState,
+      identityCandidateProfileState,
+      metaReasoningState,
+      differentialMetaReasoningState
+    })
+
     authoritativeLiveState.identityFoundationState = identityFoundationState
     authoritativeLiveState.coherentIdentityDiscoveryState =
       coherentIdentityDiscoveryState
@@ -7475,6 +7529,7 @@ export async function POST(req: Request) {
       resonanceWithoutRootsState
     authoritativeLiveState.relationalPrincipleEmergenceState =
       relationalPrincipleEmergenceState
+    authoritativeLiveState.structuralCompletionState = structuralCompletionState
 
     let retrievedContext = ""
 
