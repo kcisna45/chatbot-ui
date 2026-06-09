@@ -114,6 +114,11 @@ import {
   buildLivingHarmonicRecurrenceResponse,
   getLivingHarmonicRecurrenceMode
 } from "@/lib/sourcefield/livingHarmonicRecurrence"
+import {
+  generateGenesisReferenceState,
+  buildGenesisReferenceResponse,
+  getGenesisReferenceMode
+} from "@/lib/sourcefield/genesis/GenesisReferenceEngine"
 
 const SOURCEFIELD_FILE_IDS = [
   "7bc60315-4b21-4630-8cdc-8cdee4d56cc4",
@@ -5231,6 +5236,8 @@ export async function POST(req: Request) {
     const livingHarmonicRecurrenceMode =
       getLivingHarmonicRecurrenceMode(lastUserMessage)
 
+    const genesisReferenceMode = getGenesisReferenceMode(lastUserMessage)
+
     const identityCandidateProfilesMode =
       getIdentityCandidateProfilesMode(lastUserMessage)
 
@@ -5259,7 +5266,8 @@ export async function POST(req: Request) {
       !emergentCapabilityMode &&
       !transformationLayerMode &&
       !momentToMomentResonanceMode &&
-      !livingHarmonicRecurrenceMode
+      !livingHarmonicRecurrenceMode &&
+      !genesisReferenceMode
     ) {
       const { data: latestStates, error: latestStateError } =
         await supabaseAdmin
@@ -5460,7 +5468,8 @@ export async function POST(req: Request) {
       emergentCapabilityMode ||
       transformationLayerMode ||
       momentToMomentResonanceMode ||
-      livingHarmonicRecurrenceMode
+      livingHarmonicRecurrenceMode ||
+      genesisReferenceMode
     ) {
       const { data: latestStates, error: latestStateError } =
         await supabaseAdmin
@@ -5599,33 +5608,36 @@ export async function POST(req: Request) {
           null
       }
 
-      const requestedPropagationScope = livingHarmonicRecurrenceMode
-        ? "living harmonic recurrence"
-        : momentToMomentResonanceMode
-          ? "moment-to-moment resonance"
-          : transformationLayerMode
-          ? "transformation layer"
-          : emergentCapabilityMode
-            ? "emergent capability"
-            : structuralContributionMode
-              ? "structural contribution"
-              : structuralRoleIdentificationMode
-                ? "structural role identification"
-                : structuralCompletionMode
-                  ? "structural completion"
-                  : relationalPrincipleEmergenceMode
-                    ? "relational principle emergence"
-                    : resonanceWithoutRootsMode
-                      ? "resonance without roots"
-                      : equationReasoningIntegrityMode
-                        ? "equation reasoning integrity"
-                        : reasoningTrajectoryMode
-                          ? "reasoning trajectory"
-                          : reasoningImplicationPropagationMode
-                            ? "reasoning implication propagation"
-                            : "route reasoning propagation"
+      const requestedPropagationScope = genesisReferenceMode
+        ? "genesis reference"
+        : livingHarmonicRecurrenceMode
+          ? "living harmonic recurrence"
+          : momentToMomentResonanceMode
+            ? "moment-to-moment resonance"
+            : transformationLayerMode
+              ? "transformation layer"
+              : emergentCapabilityMode
+                ? "emergent capability"
+                : structuralContributionMode
+                  ? "structural contribution"
+                  : structuralRoleIdentificationMode
+                    ? "structural role identification"
+                    : structuralCompletionMode
+                      ? "structural completion"
+                      : relationalPrincipleEmergenceMode
+                        ? "relational principle emergence"
+                        : resonanceWithoutRootsMode
+                          ? "resonance without roots"
+                          : equationReasoningIntegrityMode
+                            ? "equation reasoning integrity"
+                            : reasoningTrajectoryMode
+                              ? "reasoning trajectory"
+                              : reasoningImplicationPropagationMode
+                                ? "reasoning implication propagation"
+                                : "route reasoning propagation"
 
       const requestedPropagationAction =
+        genesisReferenceMode ||
         livingHarmonicRecurrenceMode ||
         momentToMomentResonanceMode ||
         transformationLayerMode ||
@@ -5822,72 +5834,77 @@ export async function POST(req: Request) {
           differentialMetaReasoningState
         })
 
-      const propagationResponse = livingHarmonicRecurrenceMode
-        ? buildLivingHarmonicRecurrenceResponse(
-            livingHarmonicRecurrenceState,
-            livingHarmonicRecurrenceMode
-          )
-        : momentToMomentResonanceMode
-        ? buildMomentToMomentResonanceResponse(
-            momentToMomentResonanceState,
-            momentToMomentResonanceMode
-          )
-        : transformationLayerMode
-          ? buildTransformationLayerResponse(
-              transformationLayerState,
-              transformationLayerMode
+      const genesisReferenceState =
+        generateGenesisReferenceState(lastUserMessage)
+
+      const propagationResponse = genesisReferenceMode
+        ? buildGenesisReferenceResponse(lastUserMessage)
+        : livingHarmonicRecurrenceMode
+          ? buildLivingHarmonicRecurrenceResponse(
+              livingHarmonicRecurrenceState,
+              livingHarmonicRecurrenceMode
             )
-          : emergentCapabilityMode
-            ? buildEmergentCapabilityResponse(
-                emergentCapabilityState,
-                emergentCapabilityMode
+          : momentToMomentResonanceMode
+            ? buildMomentToMomentResonanceResponse(
+                momentToMomentResonanceState,
+                momentToMomentResonanceMode
               )
-            : structuralContributionMode
-              ? buildStructuralContributionResponse(
-                  structuralContributionState,
-                  structuralContributionMode
+            : transformationLayerMode
+              ? buildTransformationLayerResponse(
+                  transformationLayerState,
+                  transformationLayerMode
                 )
-              : structuralRoleIdentificationMode
-                ? buildStructuralRoleIdentificationResponse(
-                    structuralRoleIdentificationState,
-                    structuralRoleIdentificationMode
+              : emergentCapabilityMode
+                ? buildEmergentCapabilityResponse(
+                    emergentCapabilityState,
+                    emergentCapabilityMode
                   )
-                : structuralCompletionMode
-                  ? buildStructuralCompletionResponse(
-                      structuralCompletionState,
-                      structuralCompletionMode
+                : structuralContributionMode
+                  ? buildStructuralContributionResponse(
+                      structuralContributionState,
+                      structuralContributionMode
                     )
-                  : relationalPrincipleEmergenceMode
-                    ? buildRelationalPrincipleEmergenceResponse(
-                        relationalPrincipleEmergenceState,
-                        relationalPrincipleEmergenceMode
+                  : structuralRoleIdentificationMode
+                    ? buildStructuralRoleIdentificationResponse(
+                        structuralRoleIdentificationState,
+                        structuralRoleIdentificationMode
                       )
-                    : resonanceWithoutRootsMode
-                      ? buildResonanceWithoutRootsResponse(
-                          resonanceWithoutRootsState,
-                          resonanceWithoutRootsMode
+                    : structuralCompletionMode
+                      ? buildStructuralCompletionResponse(
+                          structuralCompletionState,
+                          structuralCompletionMode
                         )
-                      : equationReasoningIntegrityMode
-                        ? buildEquationReasoningIntegrityResponse(
-                            equationReasoningIntegrityState,
-                            equationReasoningIntegrityMode
+                      : relationalPrincipleEmergenceMode
+                        ? buildRelationalPrincipleEmergenceResponse(
+                            relationalPrincipleEmergenceState,
+                            relationalPrincipleEmergenceMode
                           )
-                        : reasoningTrajectoryMode
-                          ? buildReasoningTrajectoryResponse(
-                              reasoningTrajectoryState,
-                              reasoningTrajectoryMode
+                        : resonanceWithoutRootsMode
+                          ? buildResonanceWithoutRootsResponse(
+                              resonanceWithoutRootsState,
+                              resonanceWithoutRootsMode
                             )
-                          : reasoningImplicationPropagationMode
-                            ? buildReasoningImplicationPropagationResponse(
-                                reasoningImplicationPropagationState,
-                                reasoningImplicationPropagationMode
+                          : equationReasoningIntegrityMode
+                            ? buildEquationReasoningIntegrityResponse(
+                                equationReasoningIntegrityState,
+                                equationReasoningIntegrityMode
                               )
-                            : buildRoutePropagationModeResponse({
-                                propagationState:
-                                  routeReasoningPropagationState,
-                                differentialMetaReasoningState,
-                                mode: routePropagationMode || "summary"
-                              })
+                            : reasoningTrajectoryMode
+                              ? buildReasoningTrajectoryResponse(
+                                  reasoningTrajectoryState,
+                                  reasoningTrajectoryMode
+                                )
+                              : reasoningImplicationPropagationMode
+                                ? buildReasoningImplicationPropagationResponse(
+                                    reasoningImplicationPropagationState,
+                                    reasoningImplicationPropagationMode
+                                  )
+                                : buildRoutePropagationModeResponse({
+                                    propagationState:
+                                      routeReasoningPropagationState,
+                                    differentialMetaReasoningState,
+                                    mode: routePropagationMode || "summary"
+                                  })
 
       return NextResponse.json({
         result: buildEquationIsomorphicRouteResponse({
@@ -5928,6 +5945,7 @@ export async function POST(req: Request) {
         transformationLayerState,
         momentToMomentResonanceState,
         livingHarmonicRecurrenceState,
+        genesisReferenceState,
         directStateReport: true,
         nonMutatingReport: true,
         deterministicRouteReasoningPropagationResponse: true,
@@ -5967,58 +5985,63 @@ export async function POST(req: Request) {
         deterministicLivingHarmonicRecurrenceResponse: Boolean(
           livingHarmonicRecurrenceMode
         ),
+        deterministicGenesisReferenceResponse: Boolean(genesisReferenceMode),
         source: "latest_stored_supabase_snapshot",
-        stateObject: livingHarmonicRecurrenceMode
-          ? "living harmonic recurrence state"
-          : momentToMomentResonanceMode
-            ? "moment-to-moment resonance state"
-            : transformationLayerMode
-            ? "transformation layer state"
-            : emergentCapabilityMode
-              ? "emergent capability state"
-              : structuralContributionMode
-                ? "structural contribution state"
-                : structuralRoleIdentificationMode
-                  ? "structural role identification state"
-                  : structuralCompletionMode
-                    ? "structural completion state"
-                    : relationalPrincipleEmergenceMode
-                      ? "relational principle emergence state"
-                      : resonanceWithoutRootsMode
-                        ? "resonance without roots state"
-                        : equationReasoningIntegrityMode
-                          ? "equation reasoning integrity state"
-                          : reasoningTrajectoryMode
-                            ? "reasoning trajectory state"
-                            : reasoningImplicationPropagationMode
-                              ? "reasoning implication propagation state"
-                              : "route reasoning propagation state",
+        stateObject: genesisReferenceMode
+          ? "genesis reference state"
+          : livingHarmonicRecurrenceMode
+            ? "living harmonic recurrence state"
+            : momentToMomentResonanceMode
+              ? "moment-to-moment resonance state"
+              : transformationLayerMode
+                ? "transformation layer state"
+                : emergentCapabilityMode
+                  ? "emergent capability state"
+                  : structuralContributionMode
+                    ? "structural contribution state"
+                    : structuralRoleIdentificationMode
+                      ? "structural role identification state"
+                      : structuralCompletionMode
+                        ? "structural completion state"
+                        : relationalPrincipleEmergenceMode
+                          ? "relational principle emergence state"
+                          : resonanceWithoutRootsMode
+                            ? "resonance without roots state"
+                            : equationReasoningIntegrityMode
+                              ? "equation reasoning integrity state"
+                              : reasoningTrajectoryMode
+                                ? "reasoning trajectory state"
+                                : reasoningImplicationPropagationMode
+                                  ? "reasoning implication propagation state"
+                                  : "route reasoning propagation state",
         action: requestedPropagationAction,
-        value: livingHarmonicRecurrenceMode
-          ? livingHarmonicRecurrenceState
-          : momentToMomentResonanceMode
-            ? momentToMomentResonanceState
-            : transformationLayerMode
-            ? transformationLayerState
-            : emergentCapabilityMode
-              ? emergentCapabilityState
-              : structuralContributionMode
-                ? structuralContributionState
-                : structuralRoleIdentificationMode
-                  ? structuralRoleIdentificationState
-                  : structuralCompletionMode
-                    ? structuralCompletionState
-                    : relationalPrincipleEmergenceMode
-                      ? relationalPrincipleEmergenceState
-                      : resonanceWithoutRootsMode
-                        ? resonanceWithoutRootsState
-                        : equationReasoningIntegrityMode
-                          ? equationReasoningIntegrityState
-                          : reasoningTrajectoryMode
-                            ? reasoningTrajectoryState
-                            : reasoningImplicationPropagationMode
-                              ? reasoningImplicationPropagationState
-                              : routeReasoningPropagationState,
+        value: genesisReferenceMode
+          ? genesisReferenceState
+          : livingHarmonicRecurrenceMode
+            ? livingHarmonicRecurrenceState
+            : momentToMomentResonanceMode
+              ? momentToMomentResonanceState
+              : transformationLayerMode
+                ? transformationLayerState
+                : emergentCapabilityMode
+                  ? emergentCapabilityState
+                  : structuralContributionMode
+                    ? structuralContributionState
+                    : structuralRoleIdentificationMode
+                      ? structuralRoleIdentificationState
+                      : structuralCompletionMode
+                        ? structuralCompletionState
+                        : relationalPrincipleEmergenceMode
+                          ? relationalPrincipleEmergenceState
+                          : resonanceWithoutRootsMode
+                            ? resonanceWithoutRootsState
+                            : equationReasoningIntegrityMode
+                              ? equationReasoningIntegrityState
+                              : reasoningTrajectoryMode
+                                ? reasoningTrajectoryState
+                                : reasoningImplicationPropagationMode
+                                  ? reasoningImplicationPropagationState
+                                  : routeReasoningPropagationState,
         differentialMetaReasoningState,
         identityCandidateProfileState,
         metaReasoningState,
