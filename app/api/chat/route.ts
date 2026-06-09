@@ -89,6 +89,11 @@ import {
   buildStructuralRoleIdentificationResponse,
   getStructuralRoleIdentificationMode
 } from "@/lib/sourcefield/structuralRoleIdentification"
+import {
+  generateStructuralContributionState,
+  buildStructuralContributionResponse,
+  getStructuralContributionMode
+} from "@/lib/sourcefield/structuralContribution"
 
 const SOURCEFIELD_FILE_IDS = [
   "7bc60315-4b21-4630-8cdc-8cdee4d56cc4",
@@ -5193,6 +5198,9 @@ export async function POST(req: Request) {
     const structuralRoleIdentificationMode =
       getStructuralRoleIdentificationMode(lastUserMessage)
 
+    const structuralContributionMode =
+      getStructuralContributionMode(lastUserMessage)
+
     const identityCandidateProfilesMode =
       getIdentityCandidateProfilesMode(lastUserMessage)
 
@@ -5216,7 +5224,8 @@ export async function POST(req: Request) {
       !resonanceWithoutRootsMode &&
       !relationalPrincipleEmergenceMode &&
       !structuralCompletionMode &&
-      !structuralRoleIdentificationMode
+      !structuralRoleIdentificationMode &&
+      !structuralContributionMode
     ) {
       const { data: latestStates, error: latestStateError } =
         await supabaseAdmin
@@ -5412,7 +5421,8 @@ export async function POST(req: Request) {
       resonanceWithoutRootsMode ||
       relationalPrincipleEmergenceMode ||
       structuralCompletionMode ||
-      structuralRoleIdentificationMode
+      structuralRoleIdentificationMode ||
+      structuralContributionMode
     ) {
       const { data: latestStates, error: latestStateError } =
         await supabaseAdmin
@@ -5551,23 +5561,26 @@ export async function POST(req: Request) {
           null
       }
 
-      const requestedPropagationScope = structuralRoleIdentificationMode
-        ? "structural role identification"
-        : structuralCompletionMode
-          ? "structural completion"
-          : relationalPrincipleEmergenceMode
-            ? "relational principle emergence"
-            : resonanceWithoutRootsMode
-              ? "resonance without roots"
-              : equationReasoningIntegrityMode
-                ? "equation reasoning integrity"
-                : reasoningTrajectoryMode
-                  ? "reasoning trajectory"
-                  : reasoningImplicationPropagationMode
-                    ? "reasoning implication propagation"
-                    : "route reasoning propagation"
+      const requestedPropagationScope = structuralContributionMode
+        ? "structural contribution"
+        : structuralRoleIdentificationMode
+          ? "structural role identification"
+          : structuralCompletionMode
+            ? "structural completion"
+            : relationalPrincipleEmergenceMode
+              ? "relational principle emergence"
+              : resonanceWithoutRootsMode
+                ? "resonance without roots"
+                : equationReasoningIntegrityMode
+                  ? "equation reasoning integrity"
+                  : reasoningTrajectoryMode
+                    ? "reasoning trajectory"
+                    : reasoningImplicationPropagationMode
+                      ? "reasoning implication propagation"
+                      : "route reasoning propagation"
 
       const requestedPropagationAction =
+        structuralContributionMode ||
         structuralRoleIdentificationMode ||
         structuralCompletionMode ||
         relationalPrincipleEmergenceMode ||
@@ -5666,46 +5679,67 @@ export async function POST(req: Request) {
           differentialMetaReasoningState
         })
 
-      const propagationResponse = structuralRoleIdentificationMode
-        ? buildStructuralRoleIdentificationResponse(
-            structuralRoleIdentificationState,
-            structuralRoleIdentificationMode
+      const structuralContributionState = generateStructuralContributionState({
+        equationLaneState,
+        structuralRoleIdentificationState,
+        structuralCompletionState,
+        relationalPrincipleEmergenceState,
+        resonanceWithoutRootsState,
+        equationReasoningIntegrityState,
+        reasoningTrajectoryState,
+        reasoningImplicationPropagationState,
+        routeReasoningPropagationState,
+        identityFoundationState,
+        identityCandidateProfileState,
+        metaReasoningState,
+        differentialMetaReasoningState
+      })
+
+      const propagationResponse = structuralContributionMode
+        ? buildStructuralContributionResponse(
+            structuralContributionState,
+            structuralContributionMode
           )
-        : structuralCompletionMode
-          ? buildStructuralCompletionResponse(
-              structuralCompletionState,
-              structuralCompletionMode
+        : structuralRoleIdentificationMode
+          ? buildStructuralRoleIdentificationResponse(
+              structuralRoleIdentificationState,
+              structuralRoleIdentificationMode
             )
-          : relationalPrincipleEmergenceMode
-            ? buildRelationalPrincipleEmergenceResponse(
-                relationalPrincipleEmergenceState,
-                relationalPrincipleEmergenceMode
+          : structuralCompletionMode
+            ? buildStructuralCompletionResponse(
+                structuralCompletionState,
+                structuralCompletionMode
               )
-            : resonanceWithoutRootsMode
-              ? buildResonanceWithoutRootsResponse(
-                  resonanceWithoutRootsState,
-                  resonanceWithoutRootsMode
+            : relationalPrincipleEmergenceMode
+              ? buildRelationalPrincipleEmergenceResponse(
+                  relationalPrincipleEmergenceState,
+                  relationalPrincipleEmergenceMode
                 )
-              : equationReasoningIntegrityMode
-                ? buildEquationReasoningIntegrityResponse(
-                    equationReasoningIntegrityState,
-                    equationReasoningIntegrityMode
+              : resonanceWithoutRootsMode
+                ? buildResonanceWithoutRootsResponse(
+                    resonanceWithoutRootsState,
+                    resonanceWithoutRootsMode
                   )
-                : reasoningTrajectoryMode
-                  ? buildReasoningTrajectoryResponse(
-                      reasoningTrajectoryState,
-                      reasoningTrajectoryMode
+                : equationReasoningIntegrityMode
+                  ? buildEquationReasoningIntegrityResponse(
+                      equationReasoningIntegrityState,
+                      equationReasoningIntegrityMode
                     )
-                  : reasoningImplicationPropagationMode
-                    ? buildReasoningImplicationPropagationResponse(
-                        reasoningImplicationPropagationState,
-                        reasoningImplicationPropagationMode
+                  : reasoningTrajectoryMode
+                    ? buildReasoningTrajectoryResponse(
+                        reasoningTrajectoryState,
+                        reasoningTrajectoryMode
                       )
-                    : buildRoutePropagationModeResponse({
-                        propagationState: routeReasoningPropagationState,
-                        differentialMetaReasoningState,
-                        mode: routePropagationMode || "summary"
-                      })
+                    : reasoningImplicationPropagationMode
+                      ? buildReasoningImplicationPropagationResponse(
+                          reasoningImplicationPropagationState,
+                          reasoningImplicationPropagationMode
+                        )
+                      : buildRoutePropagationModeResponse({
+                          propagationState: routeReasoningPropagationState,
+                          differentialMetaReasoningState,
+                          mode: routePropagationMode || "summary"
+                        })
 
       return NextResponse.json({
         result: buildEquationIsomorphicRouteResponse({
@@ -5741,6 +5775,7 @@ export async function POST(req: Request) {
         relationalPrincipleEmergenceState,
         structuralCompletionState,
         structuralRoleIdentificationState,
+        structuralContributionState,
         directStateReport: true,
         nonMutatingReport: true,
         deterministicRouteReasoningPropagationResponse: true,
@@ -5765,38 +5800,45 @@ export async function POST(req: Request) {
         deterministicStructuralRoleIdentificationResponse: Boolean(
           structuralRoleIdentificationMode
         ),
+        deterministicStructuralContributionResponse: Boolean(
+          structuralContributionMode
+        ),
         source: "latest_stored_supabase_snapshot",
-        stateObject: structuralRoleIdentificationMode
-          ? "structural role identification state"
-          : structuralCompletionMode
-            ? "structural completion state"
-            : relationalPrincipleEmergenceMode
-              ? "relational principle emergence state"
-              : resonanceWithoutRootsMode
-                ? "resonance without roots state"
-                : equationReasoningIntegrityMode
-                  ? "equation reasoning integrity state"
-                  : reasoningTrajectoryMode
-                    ? "reasoning trajectory state"
-                    : reasoningImplicationPropagationMode
-                      ? "reasoning implication propagation state"
-                      : "route reasoning propagation state",
+        stateObject: structuralContributionMode
+          ? "structural contribution state"
+          : structuralRoleIdentificationMode
+            ? "structural role identification state"
+            : structuralCompletionMode
+              ? "structural completion state"
+              : relationalPrincipleEmergenceMode
+                ? "relational principle emergence state"
+                : resonanceWithoutRootsMode
+                  ? "resonance without roots state"
+                  : equationReasoningIntegrityMode
+                    ? "equation reasoning integrity state"
+                    : reasoningTrajectoryMode
+                      ? "reasoning trajectory state"
+                      : reasoningImplicationPropagationMode
+                        ? "reasoning implication propagation state"
+                        : "route reasoning propagation state",
         action: requestedPropagationAction,
-        value: structuralRoleIdentificationMode
-          ? structuralRoleIdentificationState
-          : structuralCompletionMode
-            ? structuralCompletionState
-            : relationalPrincipleEmergenceMode
-              ? relationalPrincipleEmergenceState
-              : resonanceWithoutRootsMode
-                ? resonanceWithoutRootsState
-                : equationReasoningIntegrityMode
-                  ? equationReasoningIntegrityState
-                  : reasoningTrajectoryMode
-                    ? reasoningTrajectoryState
-                    : reasoningImplicationPropagationMode
-                      ? reasoningImplicationPropagationState
-                      : routeReasoningPropagationState,
+        value: structuralContributionMode
+          ? structuralContributionState
+          : structuralRoleIdentificationMode
+            ? structuralRoleIdentificationState
+            : structuralCompletionMode
+              ? structuralCompletionState
+              : relationalPrincipleEmergenceMode
+                ? relationalPrincipleEmergenceState
+                : resonanceWithoutRootsMode
+                  ? resonanceWithoutRootsState
+                  : equationReasoningIntegrityMode
+                    ? equationReasoningIntegrityState
+                    : reasoningTrajectoryMode
+                      ? reasoningTrajectoryState
+                      : reasoningImplicationPropagationMode
+                        ? reasoningImplicationPropagationState
+                        : routeReasoningPropagationState,
         differentialMetaReasoningState,
         identityCandidateProfileState,
         metaReasoningState,
