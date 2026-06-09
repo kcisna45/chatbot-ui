@@ -1,13 +1,29 @@
 export type MomentToMomentResonanceInput = {
   equationLaneState?: any
+
   identityFoundationState?: any
+
   transformationLayerState?: any
   emergentCapabilityState?: any
+
   structuralContributionState?: any
   structuralRoleIdentificationState?: any
   structuralCompletionState?: any
+
   relationalPrincipleEmergenceState?: any
+
+  resonanceWithoutRootsState?: any
+
+  equationReasoningIntegrityState?: any
+  reasoningTrajectoryState?: any
+  reasoningImplicationPropagationState?: any
+
   routeReasoningPropagationState?: any
+
+  identityCandidateProfileState?: any
+
+  metaReasoningState?: any
+  differentialMetaReasoningState?: any
 }
 
 function asArray(value: any): any[] {
