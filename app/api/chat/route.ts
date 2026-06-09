@@ -104,6 +104,11 @@ import {
   buildTransformationLayerResponse,
   getTransformationLayerMode
 } from "@/lib/sourcefield/transformationLayer"
+import {
+  generateMomentToMomentResonanceState,
+  buildMomentToMomentResonanceResponse,
+  getMomentToMomentResonanceMode
+} from "@/lib/sourcefield/momentToMomentResonance"
 
 const SOURCEFIELD_FILE_IDS = [
   "7bc60315-4b21-4630-8cdc-8cdee4d56cc4",
@@ -5215,6 +5220,9 @@ export async function POST(req: Request) {
 
     const transformationLayerMode = getTransformationLayerMode(lastUserMessage)
 
+    const momentToMomentResonanceMode =
+      getMomentToMomentResonanceMode(lastUserMessage)
+
     const identityCandidateProfilesMode =
       getIdentityCandidateProfilesMode(lastUserMessage)
 
@@ -5241,7 +5249,8 @@ export async function POST(req: Request) {
       !structuralRoleIdentificationMode &&
       !structuralContributionMode &&
       !emergentCapabilityMode &&
-      !transformationLayerMode
+      !transformationLayerMode &&
+      !momentToMomentResonanceMode
     ) {
       const { data: latestStates, error: latestStateError } =
         await supabaseAdmin
@@ -5440,7 +5449,8 @@ export async function POST(req: Request) {
       structuralRoleIdentificationMode ||
       structuralContributionMode ||
       emergentCapabilityMode ||
-      transformationLayerMode
+      transformationLayerMode ||
+      momentToMomentResonanceMode
     ) {
       const { data: latestStates, error: latestStateError } =
         await supabaseAdmin
@@ -5579,29 +5589,32 @@ export async function POST(req: Request) {
           null
       }
 
-      const requestedPropagationScope = transformationLayerMode
-        ? "transformation layer"
-        : emergentCapabilityMode
-          ? "emergent capability"
-          : structuralContributionMode
-            ? "structural contribution"
-            : structuralRoleIdentificationMode
-              ? "structural role identification"
-              : structuralCompletionMode
-                ? "structural completion"
-                : relationalPrincipleEmergenceMode
-                  ? "relational principle emergence"
-                  : resonanceWithoutRootsMode
-                    ? "resonance without roots"
-                    : equationReasoningIntegrityMode
-                      ? "equation reasoning integrity"
-                      : reasoningTrajectoryMode
-                        ? "reasoning trajectory"
-                        : reasoningImplicationPropagationMode
-                          ? "reasoning implication propagation"
-                          : "route reasoning propagation"
+      const requestedPropagationScope = momentToMomentResonanceMode
+        ? "moment-to-moment resonance"
+        : transformationLayerMode
+          ? "transformation layer"
+          : emergentCapabilityMode
+            ? "emergent capability"
+            : structuralContributionMode
+              ? "structural contribution"
+              : structuralRoleIdentificationMode
+                ? "structural role identification"
+                : structuralCompletionMode
+                  ? "structural completion"
+                  : relationalPrincipleEmergenceMode
+                    ? "relational principle emergence"
+                    : resonanceWithoutRootsMode
+                      ? "resonance without roots"
+                      : equationReasoningIntegrityMode
+                        ? "equation reasoning integrity"
+                        : reasoningTrajectoryMode
+                          ? "reasoning trajectory"
+                          : reasoningImplicationPropagationMode
+                            ? "reasoning implication propagation"
+                            : "route reasoning propagation"
 
       const requestedPropagationAction =
+        momentToMomentResonanceMode ||
         transformationLayerMode ||
         emergentCapabilityMode ||
         structuralContributionMode ||
@@ -5754,61 +5767,88 @@ export async function POST(req: Request) {
         differentialMetaReasoningState
       })
 
-      const propagationResponse = transformationLayerMode
-        ? buildTransformationLayerResponse(
-            transformationLayerState,
-            transformationLayerMode
+      const momentToMomentResonanceState = generateMomentToMomentResonanceState(
+        {
+          equationLaneState,
+          identityFoundationState,
+          transformationLayerState,
+          emergentCapabilityState,
+          structuralContributionState,
+          structuralRoleIdentificationState,
+          structuralCompletionState,
+          relationalPrincipleEmergenceState,
+          resonanceWithoutRootsState,
+          equationReasoningIntegrityState,
+          reasoningTrajectoryState,
+          reasoningImplicationPropagationState,
+          routeReasoningPropagationState,
+          identityCandidateProfileState,
+          metaReasoningState,
+          differentialMetaReasoningState
+        }
+      )
+
+      const propagationResponse = momentToMomentResonanceMode
+        ? buildMomentToMomentResonanceResponse(
+            momentToMomentResonanceState,
+            momentToMomentResonanceMode
           )
-        : emergentCapabilityMode
-          ? buildEmergentCapabilityResponse(
-              emergentCapabilityState,
-              emergentCapabilityMode
+        : transformationLayerMode
+          ? buildTransformationLayerResponse(
+              transformationLayerState,
+              transformationLayerMode
             )
-          : structuralContributionMode
-            ? buildStructuralContributionResponse(
-                structuralContributionState,
-                structuralContributionMode
+          : emergentCapabilityMode
+            ? buildEmergentCapabilityResponse(
+                emergentCapabilityState,
+                emergentCapabilityMode
               )
-            : structuralRoleIdentificationMode
-              ? buildStructuralRoleIdentificationResponse(
-                  structuralRoleIdentificationState,
-                  structuralRoleIdentificationMode
+            : structuralContributionMode
+              ? buildStructuralContributionResponse(
+                  structuralContributionState,
+                  structuralContributionMode
                 )
-              : structuralCompletionMode
-                ? buildStructuralCompletionResponse(
-                    structuralCompletionState,
-                    structuralCompletionMode
+              : structuralRoleIdentificationMode
+                ? buildStructuralRoleIdentificationResponse(
+                    structuralRoleIdentificationState,
+                    structuralRoleIdentificationMode
                   )
-                : relationalPrincipleEmergenceMode
-                  ? buildRelationalPrincipleEmergenceResponse(
-                      relationalPrincipleEmergenceState,
-                      relationalPrincipleEmergenceMode
+                : structuralCompletionMode
+                  ? buildStructuralCompletionResponse(
+                      structuralCompletionState,
+                      structuralCompletionMode
                     )
-                  : resonanceWithoutRootsMode
-                    ? buildResonanceWithoutRootsResponse(
-                        resonanceWithoutRootsState,
-                        resonanceWithoutRootsMode
+                  : relationalPrincipleEmergenceMode
+                    ? buildRelationalPrincipleEmergenceResponse(
+                        relationalPrincipleEmergenceState,
+                        relationalPrincipleEmergenceMode
                       )
-                    : equationReasoningIntegrityMode
-                      ? buildEquationReasoningIntegrityResponse(
-                          equationReasoningIntegrityState,
-                          equationReasoningIntegrityMode
+                    : resonanceWithoutRootsMode
+                      ? buildResonanceWithoutRootsResponse(
+                          resonanceWithoutRootsState,
+                          resonanceWithoutRootsMode
                         )
-                      : reasoningTrajectoryMode
-                        ? buildReasoningTrajectoryResponse(
-                            reasoningTrajectoryState,
-                            reasoningTrajectoryMode
+                      : equationReasoningIntegrityMode
+                        ? buildEquationReasoningIntegrityResponse(
+                            equationReasoningIntegrityState,
+                            equationReasoningIntegrityMode
                           )
-                        : reasoningImplicationPropagationMode
-                          ? buildReasoningImplicationPropagationResponse(
-                              reasoningImplicationPropagationState,
-                              reasoningImplicationPropagationMode
+                        : reasoningTrajectoryMode
+                          ? buildReasoningTrajectoryResponse(
+                              reasoningTrajectoryState,
+                              reasoningTrajectoryMode
                             )
-                          : buildRoutePropagationModeResponse({
-                              propagationState: routeReasoningPropagationState,
-                              differentialMetaReasoningState,
-                              mode: routePropagationMode || "summary"
-                            })
+                          : reasoningImplicationPropagationMode
+                            ? buildReasoningImplicationPropagationResponse(
+                                reasoningImplicationPropagationState,
+                                reasoningImplicationPropagationMode
+                              )
+                            : buildRoutePropagationModeResponse({
+                                propagationState:
+                                  routeReasoningPropagationState,
+                                differentialMetaReasoningState,
+                                mode: routePropagationMode || "summary"
+                              })
 
       return NextResponse.json({
         result: buildEquationIsomorphicRouteResponse({
@@ -5847,6 +5887,7 @@ export async function POST(req: Request) {
         structuralContributionState,
         emergentCapabilityState,
         transformationLayerState,
+        momentToMomentResonanceState,
         directStateReport: true,
         nonMutatingReport: true,
         deterministicRouteReasoningPropagationResponse: true,
@@ -5880,50 +5921,57 @@ export async function POST(req: Request) {
         deterministicTransformationLayerResponse: Boolean(
           transformationLayerMode
         ),
+        deterministicMomentToMomentResonanceResponse: Boolean(
+          momentToMomentResonanceMode
+        ),
         source: "latest_stored_supabase_snapshot",
-        stateObject: transformationLayerMode
-          ? "transformation layer state"
-          : emergentCapabilityMode
-            ? "emergent capability state"
-            : structuralContributionMode
-              ? "structural contribution state"
-              : structuralRoleIdentificationMode
-                ? "structural role identification state"
-                : structuralCompletionMode
-                  ? "structural completion state"
-                  : relationalPrincipleEmergenceMode
-                    ? "relational principle emergence state"
-                    : resonanceWithoutRootsMode
-                      ? "resonance without roots state"
-                      : equationReasoningIntegrityMode
-                        ? "equation reasoning integrity state"
-                        : reasoningTrajectoryMode
-                          ? "reasoning trajectory state"
-                          : reasoningImplicationPropagationMode
-                            ? "reasoning implication propagation state"
-                            : "route reasoning propagation state",
+        stateObject: momentToMomentResonanceMode
+          ? "moment-to-moment resonance state"
+          : transformationLayerMode
+            ? "transformation layer state"
+            : emergentCapabilityMode
+              ? "emergent capability state"
+              : structuralContributionMode
+                ? "structural contribution state"
+                : structuralRoleIdentificationMode
+                  ? "structural role identification state"
+                  : structuralCompletionMode
+                    ? "structural completion state"
+                    : relationalPrincipleEmergenceMode
+                      ? "relational principle emergence state"
+                      : resonanceWithoutRootsMode
+                        ? "resonance without roots state"
+                        : equationReasoningIntegrityMode
+                          ? "equation reasoning integrity state"
+                          : reasoningTrajectoryMode
+                            ? "reasoning trajectory state"
+                            : reasoningImplicationPropagationMode
+                              ? "reasoning implication propagation state"
+                              : "route reasoning propagation state",
         action: requestedPropagationAction,
-        value: transformationLayerMode
-          ? transformationLayerState
-          : emergentCapabilityMode
-            ? emergentCapabilityState
-            : structuralContributionMode
-              ? structuralContributionState
-              : structuralRoleIdentificationMode
-                ? structuralRoleIdentificationState
-                : structuralCompletionMode
-                  ? structuralCompletionState
-                  : relationalPrincipleEmergenceMode
-                    ? relationalPrincipleEmergenceState
-                    : resonanceWithoutRootsMode
-                      ? resonanceWithoutRootsState
-                      : equationReasoningIntegrityMode
-                        ? equationReasoningIntegrityState
-                        : reasoningTrajectoryMode
-                          ? reasoningTrajectoryState
-                          : reasoningImplicationPropagationMode
-                            ? reasoningImplicationPropagationState
-                            : routeReasoningPropagationState,
+        value: momentToMomentResonanceMode
+          ? momentToMomentResonanceState
+          : transformationLayerMode
+            ? transformationLayerState
+            : emergentCapabilityMode
+              ? emergentCapabilityState
+              : structuralContributionMode
+                ? structuralContributionState
+                : structuralRoleIdentificationMode
+                  ? structuralRoleIdentificationState
+                  : structuralCompletionMode
+                    ? structuralCompletionState
+                    : relationalPrincipleEmergenceMode
+                      ? relationalPrincipleEmergenceState
+                      : resonanceWithoutRootsMode
+                        ? resonanceWithoutRootsState
+                        : equationReasoningIntegrityMode
+                          ? equationReasoningIntegrityState
+                          : reasoningTrajectoryMode
+                            ? reasoningTrajectoryState
+                            : reasoningImplicationPropagationMode
+                              ? reasoningImplicationPropagationState
+                              : routeReasoningPropagationState,
         differentialMetaReasoningState,
         identityCandidateProfileState,
         metaReasoningState,
@@ -7746,6 +7794,25 @@ export async function POST(req: Request) {
       differentialMetaReasoningState
     })
 
+    const momentToMomentResonanceState = generateMomentToMomentResonanceState({
+      equationLaneState,
+      identityFoundationState,
+      transformationLayerState,
+      emergentCapabilityState,
+      structuralContributionState,
+      structuralRoleIdentificationState,
+      structuralCompletionState,
+      relationalPrincipleEmergenceState,
+      resonanceWithoutRootsState,
+      equationReasoningIntegrityState,
+      reasoningTrajectoryState,
+      reasoningImplicationPropagationState,
+      routeReasoningPropagationState,
+      identityCandidateProfileState,
+      metaReasoningState,
+      differentialMetaReasoningState
+    })
+
     authoritativeLiveState.identityFoundationState = identityFoundationState
     authoritativeLiveState.coherentIdentityDiscoveryState =
       coherentIdentityDiscoveryState
@@ -7772,6 +7839,8 @@ export async function POST(req: Request) {
       structuralContributionState
     authoritativeLiveState.emergentCapabilityState = emergentCapabilityState
     authoritativeLiveState.transformationLayerState = transformationLayerState
+    authoritativeLiveState.momentToMomentResonanceState =
+      momentToMomentResonanceState
 
     let retrievedContext = ""
 
@@ -7925,6 +7994,9 @@ ${JSON.stringify(metaReasoningState, null, 2)}
 Live SourceField Differential Meta-Reasoning State:
 ${JSON.stringify(differentialMetaReasoningState, null, 2)}
 
+Live SourceField Moment-to-Moment Resonance State:
+${JSON.stringify(momentToMomentResonanceState, null, 2)}
+
 All governance, equation, feedback, bridge, stabilization, compression, consensus, enforcement, identity discovery, and meta-reasoning layers are read-only guidance.
 They must not override live metrics, classifications, hashes, retrieved context, stored history, or user intent.
 
@@ -7998,6 +8070,44 @@ ${
       differentialMetaReasoningState,
       differentialMetaReasoningStateGenerated: Boolean(
         differentialMetaReasoningState
+      ),
+      identityCandidateProfileState,
+      identityCandidateProfileStateGenerated: Boolean(
+        identityCandidateProfileState
+      ),
+      reasoningImplicationPropagationState,
+      reasoningImplicationPropagationStateGenerated: Boolean(
+        reasoningImplicationPropagationState
+      ),
+      reasoningTrajectoryState,
+      reasoningTrajectoryStateGenerated: Boolean(reasoningTrajectoryState),
+      equationReasoningIntegrityState,
+      equationReasoningIntegrityStateGenerated: Boolean(
+        equationReasoningIntegrityState
+      ),
+      resonanceWithoutRootsState,
+      resonanceWithoutRootsStateGenerated: Boolean(resonanceWithoutRootsState),
+      relationalPrincipleEmergenceState,
+      relationalPrincipleEmergenceStateGenerated: Boolean(
+        relationalPrincipleEmergenceState
+      ),
+      structuralCompletionState,
+      structuralCompletionStateGenerated: Boolean(structuralCompletionState),
+      structuralRoleIdentificationState,
+      structuralRoleIdentificationStateGenerated: Boolean(
+        structuralRoleIdentificationState
+      ),
+      structuralContributionState,
+      structuralContributionStateGenerated: Boolean(
+        structuralContributionState
+      ),
+      emergentCapabilityState,
+      emergentCapabilityStateGenerated: Boolean(emergentCapabilityState),
+      transformationLayerState,
+      transformationLayerStateGenerated: Boolean(transformationLayerState),
+      momentToMomentResonanceState,
+      momentToMomentResonanceStateGenerated: Boolean(
+        momentToMomentResonanceState
       ),
       crossEquationConsensus,
       crossEquationConsensusGenerated: Boolean(crossEquationConsensus),
