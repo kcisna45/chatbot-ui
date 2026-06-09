@@ -109,6 +109,11 @@ import {
   buildMomentToMomentResonanceResponse,
   getMomentToMomentResonanceMode
 } from "@/lib/sourcefield/momentToMomentResonance"
+import {
+  generateLivingHarmonicRecurrenceState,
+  buildLivingHarmonicRecurrenceResponse,
+  getLivingHarmonicRecurrenceMode
+} from "@/lib/sourcefield/livingHarmonicRecurrence"
 
 const SOURCEFIELD_FILE_IDS = [
   "7bc60315-4b21-4630-8cdc-8cdee4d56cc4",
@@ -5223,6 +5228,9 @@ export async function POST(req: Request) {
     const momentToMomentResonanceMode =
       getMomentToMomentResonanceMode(lastUserMessage)
 
+    const livingHarmonicRecurrenceMode =
+      getLivingHarmonicRecurrenceMode(lastUserMessage)
+
     const identityCandidateProfilesMode =
       getIdentityCandidateProfilesMode(lastUserMessage)
 
@@ -5250,7 +5258,8 @@ export async function POST(req: Request) {
       !structuralContributionMode &&
       !emergentCapabilityMode &&
       !transformationLayerMode &&
-      !momentToMomentResonanceMode
+      !momentToMomentResonanceMode &&
+      !livingHarmonicRecurrenceMode
     ) {
       const { data: latestStates, error: latestStateError } =
         await supabaseAdmin
@@ -5450,7 +5459,8 @@ export async function POST(req: Request) {
       structuralContributionMode ||
       emergentCapabilityMode ||
       transformationLayerMode ||
-      momentToMomentResonanceMode
+      momentToMomentResonanceMode ||
+      livingHarmonicRecurrenceMode
     ) {
       const { data: latestStates, error: latestStateError } =
         await supabaseAdmin
@@ -5589,9 +5599,11 @@ export async function POST(req: Request) {
           null
       }
 
-      const requestedPropagationScope = momentToMomentResonanceMode
-        ? "moment-to-moment resonance"
-        : transformationLayerMode
+      const requestedPropagationScope = livingHarmonicRecurrenceMode
+        ? "living harmonic recurrence"
+        : momentToMomentResonanceMode
+          ? "moment-to-moment resonance"
+          : transformationLayerMode
           ? "transformation layer"
           : emergentCapabilityMode
             ? "emergent capability"
@@ -5614,6 +5626,7 @@ export async function POST(req: Request) {
                             : "route reasoning propagation"
 
       const requestedPropagationAction =
+        livingHarmonicRecurrenceMode ||
         momentToMomentResonanceMode ||
         transformationLayerMode ||
         emergentCapabilityMode ||
@@ -5788,7 +5801,33 @@ export async function POST(req: Request) {
         }
       )
 
-      const propagationResponse = momentToMomentResonanceMode
+      const livingHarmonicRecurrenceState =
+        generateLivingHarmonicRecurrenceState({
+          equationLaneState,
+          momentToMomentResonanceState,
+          transformationLayerState,
+          emergentCapabilityState,
+          structuralContributionState,
+          structuralRoleIdentificationState,
+          structuralCompletionState,
+          relationalPrincipleEmergenceState,
+          resonanceWithoutRootsState,
+          equationReasoningIntegrityState,
+          reasoningTrajectoryState,
+          reasoningImplicationPropagationState,
+          routeReasoningPropagationState,
+          identityFoundationState,
+          identityCandidateProfileState,
+          metaReasoningState,
+          differentialMetaReasoningState
+        })
+
+      const propagationResponse = livingHarmonicRecurrenceMode
+        ? buildLivingHarmonicRecurrenceResponse(
+            livingHarmonicRecurrenceState,
+            livingHarmonicRecurrenceMode
+          )
+        : momentToMomentResonanceMode
         ? buildMomentToMomentResonanceResponse(
             momentToMomentResonanceState,
             momentToMomentResonanceMode
@@ -5888,6 +5927,7 @@ export async function POST(req: Request) {
         emergentCapabilityState,
         transformationLayerState,
         momentToMomentResonanceState,
+        livingHarmonicRecurrenceState,
         directStateReport: true,
         nonMutatingReport: true,
         deterministicRouteReasoningPropagationResponse: true,
@@ -5924,10 +5964,15 @@ export async function POST(req: Request) {
         deterministicMomentToMomentResonanceResponse: Boolean(
           momentToMomentResonanceMode
         ),
+        deterministicLivingHarmonicRecurrenceResponse: Boolean(
+          livingHarmonicRecurrenceMode
+        ),
         source: "latest_stored_supabase_snapshot",
-        stateObject: momentToMomentResonanceMode
-          ? "moment-to-moment resonance state"
-          : transformationLayerMode
+        stateObject: livingHarmonicRecurrenceMode
+          ? "living harmonic recurrence state"
+          : momentToMomentResonanceMode
+            ? "moment-to-moment resonance state"
+            : transformationLayerMode
             ? "transformation layer state"
             : emergentCapabilityMode
               ? "emergent capability state"
@@ -5949,9 +5994,11 @@ export async function POST(req: Request) {
                               ? "reasoning implication propagation state"
                               : "route reasoning propagation state",
         action: requestedPropagationAction,
-        value: momentToMomentResonanceMode
-          ? momentToMomentResonanceState
-          : transformationLayerMode
+        value: livingHarmonicRecurrenceMode
+          ? livingHarmonicRecurrenceState
+          : momentToMomentResonanceMode
+            ? momentToMomentResonanceState
+            : transformationLayerMode
             ? transformationLayerState
             : emergentCapabilityMode
               ? emergentCapabilityState
@@ -8172,4 +8219,3 @@ ${
     )
   }
 }
-;[]
