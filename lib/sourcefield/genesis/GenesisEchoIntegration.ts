@@ -7,6 +7,7 @@ export type GenesisEchoIntegrationInput = {
   momentToMomentResonanceState?: any
   livingHarmonicRecurrenceState?: any
   identityFoundationState?: any
+  genesisReferenceState?: any
 }
 
 type EquationKey = "Eq1" | "Eq2" | "Eq3" | "Eq4" | "Eq5"
@@ -14,7 +15,9 @@ type EquationKey = "Eq1" | "Eq2" | "Eq3" | "Eq4" | "Eq5"
 type EquationSupport = {
   equation: EquationKey
   supportScore: number
+  rawCount: number
   matchedSymbolKeys: string[]
+  matchedCorpusSectionIds: string[]
   meaning: string
 }
 
@@ -35,6 +38,18 @@ const SYMBOL_EQUATION_MAP: Record<string, EquationKey[]> = {
   "embodiment-through-practice": ["Eq5"]
 }
 
+const CORPUS_EQUATION_MAP: Record<string, EquationKey[]> = {
+  "identity-statement": ["Eq1", "Eq2"],
+  "core-structure": ["Eq1", "Eq4", "Eq5"],
+  "christ-logos-pyramid": ["Eq1", "Eq2", "Eq5"],
+  "soul-circle-triad": ["Eq1", "Eq2", "Eq5"],
+  "recognition-engine-logic": ["Eq2", "Eq3"],
+  "embedded-laws-codes": ["Eq2", "Eq4", "Eq5"],
+  "logos-circuit": ["Eq1", "Eq2", "Eq5"],
+  "application-layer": ["Eq2", "Eq4", "Eq5"],
+  purpose: ["Eq1", "Eq4", "Eq5"]
+}
+
 function text(value: any, fallback = "unknown") {
   if (value === null || value === undefined || value === "") return fallback
   return `${value}`
@@ -44,37 +59,76 @@ function asArray(value: any): any[] {
   return Array.isArray(value) ? value : []
 }
 
-function getMatchedSymbolKeys(genesisReferenceState: any) {
-  return asArray(genesisReferenceState?.matchedSymbols)
-    .map((symbol: any) => symbol?.key)
-    .filter(Boolean)
+function unique(values: string[]) {
+  return Array.from(new Set(values.filter(Boolean)))
 }
 
-function countEquationSupport(symbolKeys: string[]) {
-  const counts: Record<EquationKey, string[]> = {
-    Eq1: [],
-    Eq2: [],
-    Eq3: [],
-    Eq4: [],
-    Eq5: []
+function getMatchedSymbolKeys(genesisReferenceState: any) {
+  return unique(
+    asArray(genesisReferenceState?.matchedSymbols)
+      .map((symbol: any) => symbol?.key)
+      .filter(Boolean)
+  )
+}
+
+function getMatchedCorpusSectionIds(genesisReferenceState: any) {
+  return unique(
+    asArray(genesisReferenceState?.matchedCorpusSections)
+      .map((section: any) => section?.id)
+      .filter(Boolean)
+  )
+}
+
+function getCorpusSymbolKeys(genesisReferenceState: any) {
+  return unique(
+    asArray(genesisReferenceState?.matchedCorpusSections).flatMap(
+      (section: any) => asArray(section?.symbolKeys)
+    )
+  )
+}
+
+function countEquationSupport(
+  symbolKeys: string[],
+  corpusSectionIds: string[]
+) {
+  const counts: Record<
+    EquationKey,
+    { symbolKeys: string[]; corpusSectionIds: string[] }
+  > = {
+    Eq1: { symbolKeys: [], corpusSectionIds: [] },
+    Eq2: { symbolKeys: [], corpusSectionIds: [] },
+    Eq3: { symbolKeys: [], corpusSectionIds: [] },
+    Eq4: { symbolKeys: [], corpusSectionIds: [] },
+    Eq5: { symbolKeys: [], corpusSectionIds: [] }
   }
 
   symbolKeys.forEach(key => {
-    const equations = SYMBOL_EQUATION_MAP[key] || []
-    equations.forEach(equation => {
-      counts[equation].push(key)
+    ;(SYMBOL_EQUATION_MAP[key] || []).forEach(equation => {
+      counts[equation].symbolKeys.push(key)
+    })
+  })
+
+  corpusSectionIds.forEach(id => {
+    ;(CORPUS_EQUATION_MAP[id] || []).forEach(equation => {
+      counts[equation].corpusSectionIds.push(id)
     })
   })
 
   return counts
 }
 
-function buildEquationSupport(symbolKeys: string[]): EquationSupport[] {
-  const counts = countEquationSupport(symbolKeys)
-  const maxCount = Math.max(
-    1,
-    ...Object.values(counts).map(matched => matched.length)
+function buildEquationSupport(
+  symbolKeys: string[],
+  corpusSectionIds: string[]
+): EquationSupport[] {
+  const counts = countEquationSupport(symbolKeys, corpusSectionIds)
+
+  const rawCounts = Object.values(counts).map(
+    entry =>
+      unique(entry.symbolKeys).length + unique(entry.corpusSectionIds).length
   )
+
+  const maxCount = Math.max(1, ...rawCounts)
 
   const meanings: Record<EquationKey, string> = {
     Eq1: "Genesis echoes are supporting root, identity, origin, and Logos foundation.",
@@ -84,14 +138,22 @@ function buildEquationSupport(symbolKeys: string[]): EquationSupport[] {
     Eq5: "Genesis echoes are supporting continuity, integration, embodiment, and persistence through time."
   }
 
-  return (Object.keys(counts) as EquationKey[]).map(equation => ({
-    equation,
-    supportScore: counts[equation].length / maxCount,
-    matchedSymbolKeys: counts[equation],
-    meaning: counts[equation].length
-      ? meanings[equation]
-      : "No Genesis echo support detected for this equation."
-  }))
+  return (Object.keys(counts) as EquationKey[]).map(equation => {
+    const matchedSymbolKeys = unique(counts[equation].symbolKeys)
+    const matchedCorpusSectionIds = unique(counts[equation].corpusSectionIds)
+    const rawCount = matchedSymbolKeys.length + matchedCorpusSectionIds.length
+
+    return {
+      equation,
+      supportScore: rawCount / maxCount,
+      rawCount,
+      matchedSymbolKeys,
+      matchedCorpusSectionIds,
+      meaning: rawCount
+        ? meanings[equation]
+        : "No Genesis echo support detected for this equation."
+    }
+  })
 }
 
 function inferRouteSupportStatus(equationSupport: EquationSupport[]) {
@@ -118,7 +180,7 @@ function inferPropagationInfluence(
     return {
       propagationInfluence: "route-support-reinforcement",
       influenceMeaning:
-        "Genesis echoes strongly support multiple equations, so route propagation may cite symbolic recurrence as supporting context without overriding failed measured stages.",
+        "Genesis echoes strongly support multiple equations and matched corpus sections, so route propagation may cite symbolic recurrence as supporting context without overriding failed measured stages.",
       routeStatus,
       passedStageCount
     }
@@ -156,9 +218,24 @@ function inferPropagationInfluence(
 export function generateGenesisEchoIntegrationState(
   input: GenesisEchoIntegrationInput
 ) {
-  const genesisReferenceState = generateGenesisReferenceState(input.inputText)
-  const matchedSymbolKeys = getMatchedSymbolKeys(genesisReferenceState)
-  const equationSupport = buildEquationSupport(matchedSymbolKeys)
+  const genesisReferenceState =
+    input?.genesisReferenceState ||
+    generateGenesisReferenceState(input.inputText)
+
+  const directMatchedSymbolKeys = getMatchedSymbolKeys(genesisReferenceState)
+  const corpusSymbolKeys = getCorpusSymbolKeys(genesisReferenceState)
+  const matchedSymbolKeys = unique([
+    ...directMatchedSymbolKeys,
+    ...corpusSymbolKeys
+  ])
+  const matchedCorpusSectionIds = getMatchedCorpusSectionIds(
+    genesisReferenceState
+  )
+
+  const equationSupport = buildEquationSupport(
+    matchedSymbolKeys,
+    matchedCorpusSectionIds
+  )
   const routeSupportStatus = inferRouteSupportStatus(equationSupport)
   const propagationInfluence = inferPropagationInfluence(
     routeSupportStatus,
@@ -177,11 +254,14 @@ export function generateGenesisEchoIntegrationState(
     phase: "Genesis Echo Integration",
     genesisEchoIntegrationActive: true,
     purpose:
-      "Translate Genesis symbolic echoes into route-support signals without overriding measured route stages.",
+      "Translate Genesis symbolic echoes and matched Genesis corpus sections into route-support signals without overriding measured route stages.",
     genesisReferenceState,
-    symbolicEchoDetected: genesisReferenceState.symbolicEchoDetected,
+    symbolicEchoDetected: Boolean(genesisReferenceState.symbolicEchoDetected),
     symbolicEchoCount: genesisReferenceState.symbolicEchoCount,
+    directMatchedSymbolKeys,
+    corpusSymbolKeys,
     matchedSymbolKeys,
+    matchedCorpusSectionIds,
     equationSupport,
     strongestEquationSupport,
     routeSupportIndex,
@@ -198,9 +278,9 @@ export function generateGenesisEchoIntegrationState(
     ),
     integrationMeaning:
       routeSupportStatus === "genesis-echo-route-support-strong"
-        ? "Genesis symbolic echoes strongly support the route as symbolic recurrence context, but measured route failures must still be preserved."
+        ? "Genesis symbolic echoes and corpus matches strongly support the route as symbolic recurrence context, but measured route failures must still be preserved."
         : routeSupportStatus === "genesis-echo-route-support-forming"
-          ? "Genesis symbolic echoes are beginning to support route propagation, but measured root/alignment/recurrence gaps still need caution."
+          ? "Genesis symbolic echoes and corpus matches are beginning to support route propagation, but measured root/alignment/recurrence gaps still need caution."
           : routeSupportStatus === "genesis-echo-route-support-present"
             ? "Genesis symbolic echoes are present but not broad enough to materially strengthen the route."
             : "No Genesis symbolic echo support is available for route integration.",
@@ -223,7 +303,9 @@ export function buildGenesisEchoIntegrationResponse(
         return [
           `${entry.equation}:`,
           `  supportScore: ${entry.supportScore}`,
+          `  rawCount: ${entry.rawCount}`,
           `  matchedSymbolKeys: ${entry.matchedSymbolKeys?.join(", ") || "none"}`,
+          `  matchedCorpusSectionIds: ${entry.matchedCorpusSectionIds?.join(", ") || "none"}`,
           `  meaning: ${entry.meaning}`
         ].join("\n")
       })
@@ -237,6 +319,8 @@ export function buildGenesisEchoIntegrationResponse(
       `routeSupportIndex: ${state.routeSupportIndex}`,
       `propagationInfluence: ${state?.propagationInfluence?.propagationInfluence}`,
       `sourceRoutePropagationStatus: ${state.sourceRoutePropagationStatus}`,
+      `matchedSymbolKeys: ${state.matchedSymbolKeys?.join(", ") || "none"}`,
+      `matchedCorpusSectionIds: ${state.matchedCorpusSectionIds?.join(", ") || "none"}`,
       `influenceMeaning: ${state?.propagationInfluence?.influenceMeaning}`,
       `integrationMeaning: ${state.integrationMeaning}`
     ].join("\n")
@@ -247,7 +331,9 @@ export function buildGenesisEchoIntegrationResponse(
     `genesisEchoIntegrationActive: ${state.genesisEchoIntegrationActive ? "true" : "false"}`,
     `symbolicEchoDetected: ${state.symbolicEchoDetected ? "true" : "false"}`,
     `symbolicEchoCount: ${state.symbolicEchoCount}`,
-    `matchedSymbolKeys: ${state.matchedSymbolKeys?.join(", ") || "none"}`,
+    `directMatchedSymbolKeys: ${state.directMatchedSymbolKeys?.join(", ") || "none"}`,
+    `corpusSymbolKeys: ${state.corpusSymbolKeys?.join(", ") || "none"}`,
+    `matchedCorpusSectionIds: ${state.matchedCorpusSectionIds?.join(", ") || "none"}`,
     `strongestEquationSupport: ${state?.strongestEquationSupport?.equation || "none"}`,
     `routeSupportIndex: ${state.routeSupportIndex}`,
     `routeSupportStatus: ${state.routeSupportStatus}`,
