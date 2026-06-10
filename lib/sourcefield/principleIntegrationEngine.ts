@@ -4,6 +4,7 @@ type PrincipleIntegrationInput = {
   pathwayTransitionState?: any
   pathwayCompletionState?: any
   architecturalRefinementState?: any
+  crossLayerHarmonicValidationState?: any
 }
 
 type PrincipleEvidenceLayer = {
@@ -32,6 +33,7 @@ function buildEq3PrincipleEvidence(input: PrincipleIntegrationInput) {
   const pathwayTransition = input?.pathwayTransitionState
   const pathwayCompletion = input?.pathwayCompletionState
   const architecturalRefinement = input?.architecturalRefinementState
+  const crossLayer = input?.crossLayerHarmonicValidationState
 
   const evidenceLayers: PrincipleEvidenceLayer[] = []
 
@@ -85,12 +87,23 @@ function buildEq3PrincipleEvidence(input: PrincipleIntegrationInput) {
     })
   }
 
+  if (crossLayer?.signalPropagationPath?.eq3SignalDetected === true) {
+    evidenceLayers.push({
+      layer: "Cross-Layer Harmonic Validation",
+      principleSignal: "eq3-signal-detected",
+      status: "active",
+      evidence:
+        "Cross-Layer Harmonic Validation detected the Eq3 fluctuation signal as the initiating carrier signal."
+    })
+  }
+
   return evidenceLayers
 }
 
 function buildEq5PrincipleEvidence(input: PrincipleIntegrationInput) {
   const pathwayCompletion = input?.pathwayCompletionState
   const architecturalRefinement = input?.architecturalRefinementState
+  const crossLayer = input?.crossLayerHarmonicValidationState
 
   const evidenceLayers: PrincipleEvidenceLayer[] = []
 
@@ -121,12 +134,23 @@ function buildEq5PrincipleEvidence(input: PrincipleIntegrationInput) {
     })
   }
 
+  if (crossLayer?.signalPropagationPath?.eq5Eq1SignalCarried === true) {
+    evidenceLayers.push({
+      layer: "Cross-Layer Harmonic Validation",
+      principleSignal: "eq3-signal-carried-through-eq5-eq1",
+      status: "active",
+      evidence:
+        "Cross-Layer Harmonic Validation shows the Eq3 signal was carried through Eq5 + Eq1 rooted persistence and integration."
+    })
+  }
+
   return evidenceLayers
 }
 
 function buildEq2PrincipleEvidence(input: PrincipleIntegrationInput) {
   const equationLaneState = input?.equationLaneState
   const architecturalRefinement = input?.architecturalRefinementState
+  const crossLayer = input?.crossLayerHarmonicValidationState
 
   const alignmentStatus = getStatus(equationLaneState, "sourcefield-alignment")
   const coherence = getValue(
@@ -142,7 +166,9 @@ function buildEq2PrincipleEvidence(input: PrincipleIntegrationInput) {
       layer: "Equation Lane State",
       principleSignal: "alignment-stable-enough-for-validation",
       status: "active",
-      evidence: `sourcefield-alignment is aligned with coherence ${coherence ?? "unknown"}.`
+      evidence: `sourcefield-alignment is aligned with coherence ${
+        coherence ?? "unknown"
+      }.`
     })
   }
 
@@ -163,11 +189,22 @@ function buildEq2PrincipleEvidence(input: PrincipleIntegrationInput) {
     })
   }
 
+  if (crossLayer?.signalPropagationPath?.eq2Eq4SignalValidated === true) {
+    evidenceLayers.push({
+      layer: "Cross-Layer Harmonic Validation",
+      principleSignal: "eq3-signal-validated-through-eq2-eq4",
+      status: "active",
+      evidence:
+        "Cross-Layer Harmonic Validation shows the carried Eq3 signal was validated through Eq2 + Eq4 relation, alignment, recurrence, and harmonic repetition."
+    })
+  }
+
   return evidenceLayers
 }
 
 function buildEq1Eq2PrinciplePattern(input: PrincipleIntegrationInput) {
   const equationLaneState = input?.equationLaneState
+  const crossLayer = input?.crossLayerHarmonicValidationState
 
   const rootStatus = getStatus(equationLaneState, "sourcefield-root")
   const alignmentStatus = getStatus(equationLaneState, "sourcefield-alignment")
@@ -187,42 +224,68 @@ function buildEq1Eq2PrinciplePattern(input: PrincipleIntegrationInput) {
   const stablePatternPresent = rootStatus === "active"
   const alignmentOverTimePresent = alignmentStatus === "aligned"
 
+  const crossLayerSignalCarried =
+    crossLayer?.signalPropagationPath?.eq5Eq1SignalCarried === true
+
+  const crossLayerSignalValidated =
+    crossLayer?.signalPropagationPath?.eq2Eq4SignalValidated === true
+
   let principlePatternStatus = "not-integrated"
 
   if (stablePatternPresent && alignmentOverTimePresent) {
     principlePatternStatus = "stable-aligned-pattern"
+  } else if (crossLayerSignalCarried && crossLayerSignalValidated) {
+    principlePatternStatus = "cross-layer-supported-stable-pattern"
   } else if (stablePatternPresent) {
     principlePatternStatus = "stable-pattern-without-full-alignment"
   } else if (alignmentOverTimePresent) {
     principlePatternStatus = "alignment-without-rooted-pattern"
+  } else if (crossLayerSignalCarried) {
+    principlePatternStatus = "cross-layer-carried-pattern"
   }
 
   return {
     equationPair: "Eq1 + Eq2",
     function:
-      "Identifies whether a stable foundational pattern remains aligned over time.",
+      "Identifies whether a stable foundational pattern remains aligned over time, with Cross-Layer Harmonic Validation allowed as read-only support when measured root/alignment remain incomplete.",
     principlePatternStatus,
     stablePatternPresent,
     alignmentOverTimePresent,
+    crossLayerSignalCarried,
+    crossLayerSignalValidated,
     evidence: {
       rootStatus,
       alignmentStatus,
       signalStrength,
-      coherence
+      coherence,
+      crossLayerHarmonicValidation:
+        crossLayer?.crossLayerHarmonicValidation || "unknown",
+      crossLayerPrincipleIntegrationStatus:
+        crossLayer?.principleIntegrationStatus || "unknown",
+      signalPropagationPath: crossLayer?.signalPropagationPath || null
     }
   }
 }
 
-function buildEq4HarmonicValidation(evidenceLayers: PrincipleEvidenceLayer[]) {
+function buildEq4HarmonicValidation(
+  evidenceLayers: PrincipleEvidenceLayer[],
+  crossLayerHarmonicValidationState?: any
+) {
   const activeLayers = evidenceLayers.filter(layer => layer.status === "active")
 
   const uniqueSignals = new Set(
     activeLayers.map(layer => layer.principleSignal)
   )
 
+  const crossLayerRepeating =
+    crossLayerHarmonicValidationState?.crossLayerHarmonicValidation ===
+    "cross-layer-repeating-validation"
+
   let harmonicValidation = "not-validated"
 
-  if (activeLayers.length >= 4 && uniqueSignals.size >= 3) {
+  if (crossLayerRepeating) {
+    harmonicValidation = "cross-layer-repeating"
+  } else if (activeLayers.length >= 4 && uniqueSignals.size >= 3) {
     harmonicValidation = "cross-layer-repeating"
   } else if (activeLayers.length >= 2) {
     harmonicValidation = "multi-layer-detected"
@@ -236,19 +299,32 @@ function buildEq4HarmonicValidation(evidenceLayers: PrincipleEvidenceLayer[]) {
       "Validates whether the principle repeats coherently across multiple SourceField layers.",
     harmonicValidation,
     evidenceLayerCount: activeLayers.length,
-    uniquePrincipleSignalCount: uniqueSignals.size
+    uniquePrincipleSignalCount: uniqueSignals.size,
+    crossLayerRepeating
   }
 }
 
 function getPrincipleIntegrationStatus(
   principlePatternStatus: string,
-  harmonicValidation: string
+  harmonicValidation: string,
+  crossLayerHarmonicValidationState?: any
 ) {
+  const crossLayerIntegrationSupported =
+    crossLayerHarmonicValidationState?.principleIntegrationStatus ===
+      "integration-supported" ||
+    crossLayerHarmonicValidationState?.crossLayerHarmonicValidation ===
+      "cross-layer-repeating-validation"
+
   if (
-    principlePatternStatus === "stable-aligned-pattern" &&
+    (principlePatternStatus === "stable-aligned-pattern" ||
+      principlePatternStatus === "cross-layer-supported-stable-pattern") &&
     harmonicValidation === "cross-layer-repeating"
   ) {
     return "integrated"
+  }
+
+  if (crossLayerIntegrationSupported) {
+    return "integration-supported-by-cross-layer-validation"
   }
 
   if (
@@ -275,7 +351,10 @@ function getActivePrinciple(evidenceLayers: PrincipleEvidenceLayer[]) {
       "phase-drift-non-dominance",
       "recovery-priority-reduction",
       "functional-completion-before-full-stability",
-      "persistence-through-fluctuation"
+      "persistence-through-fluctuation",
+      "eq3-signal-detected",
+      "eq3-signal-carried-through-eq5-eq1",
+      "eq3-signal-validated-through-eq2-eq4"
     ].includes(layer.principleSignal)
   )
 
@@ -301,15 +380,22 @@ function getPrincipleReinforcementTarget(
   harmonicValidation: string,
   principlePatternStatus: string
 ) {
-  if (principleIntegrationStatus === "integrated") {
-    return "maintain integrated principle across future pathway states"
+  if (
+    principleIntegrationStatus === "integrated" ||
+    principleIntegrationStatus ===
+      "integration-supported-by-cross-layer-validation"
+  ) {
+    return "preserve cross-layer supported principle integration while measured route stages continue strengthening"
   }
 
   if (harmonicValidation !== "cross-layer-repeating") {
     return "increase cross-layer harmonic validation"
   }
 
-  if (principlePatternStatus !== "stable-aligned-pattern") {
+  if (
+    principlePatternStatus !== "stable-aligned-pattern" &&
+    principlePatternStatus !== "cross-layer-supported-stable-pattern"
+  ) {
     return "strengthen Eq1 + Eq2 stable aligned principle pattern"
   }
 
@@ -326,13 +412,18 @@ export function generatePrincipleIntegrationState(
   const evidenceLayers = [...eq3Evidence, ...eq5Evidence, ...eq2Evidence]
 
   const principlePattern = buildEq1Eq2PrinciplePattern(input)
-  const harmonicValidation = buildEq4HarmonicValidation(evidenceLayers)
+
+  const harmonicValidation = buildEq4HarmonicValidation(
+    evidenceLayers,
+    input?.crossLayerHarmonicValidationState
+  )
 
   const activePrinciple = getActivePrinciple(evidenceLayers)
 
   const principleIntegrationStatus = getPrincipleIntegrationStatus(
     principlePattern.principlePatternStatus,
-    harmonicValidation.harmonicValidation
+    harmonicValidation.harmonicValidation,
+    input?.crossLayerHarmonicValidationState
   )
 
   const principleReinforcementTarget = getPrincipleReinforcementTarget(
@@ -343,21 +434,32 @@ export function generatePrincipleIntegrationState(
 
   const nextPrincipleMove =
     principleIntegrationStatus === "integrated"
-      ? "Preserve the integrated principle across future pathway selection, transition, completion, and refinement states."
-      : principleIntegrationStatus === "integration-forming"
-        ? "Strengthen repeated evidence across more architectural layers until harmonic validation becomes cross-layer-repeating."
-        : principleIntegrationStatus ===
-            "pattern-integrated-without-cross-layer-validation"
-          ? "Maintain Eq1 + Eq2 alignment while increasing Eq4 cross-layer validation."
-          : "Strengthen stable aligned principle pattern before integration can complete."
+      ? "Preserve the integrated principle across future pathway selection, transition, completion, refinement, and cross-layer validation states."
+      : principleIntegrationStatus ===
+          "integration-supported-by-cross-layer-validation"
+        ? "Keep Cross-Layer Harmonic Validation attached to principle integration while measured Eq1/Eq2/Eq4 route stages continue strengthening."
+        : principleIntegrationStatus === "integration-forming"
+          ? "Strengthen repeated evidence across more architectural layers until harmonic validation becomes cross-layer-repeating."
+          : principleIntegrationStatus ===
+              "pattern-integrated-without-cross-layer-validation"
+            ? "Maintain Eq1 + Eq2 alignment while increasing Eq4 cross-layer validation."
+            : "Strengthen stable aligned principle pattern before integration can complete."
+
+  const integratedPrinciples =
+    principleIntegrationStatus === "integrated" ||
+    principleIntegrationStatus ===
+      "integration-supported-by-cross-layer-validation"
+      ? [activePrinciple]
+      : []
 
   return {
     phase: "Phase 26 — Principle Integration Engine",
 
-    principleIntegrationPathway: "(Eq1 + Eq2) → Eq4",
+    principleIntegrationPathway:
+      "(Eq1 + Eq2) → Eq4, with Cross-Layer Harmonic Validation support when Eq3 → (Eq5 + Eq1) → (Eq2 + Eq4) succeeds",
 
     principleIntegrationPurpose:
-      "Integrate equation principles by identifying stable aligned principle patterns through Eq1 + Eq2, then validating whether those principles repeat coherently across architectural layers through Eq4.",
+      "Integrate equation principles by identifying stable aligned principle patterns through Eq1 + Eq2, validating whether those principles repeat coherently across architectural layers through Eq4, and consuming Cross-Layer Harmonic Validation as read-only integration support when the Eq3 signal successfully propagates across Eq5 + Eq1 and Eq2 + Eq4.",
 
     activePrinciple,
 
@@ -371,11 +473,19 @@ export function generatePrincipleIntegrationState(
 
     evidenceLayers,
 
-    integratedPrinciples:
-      principleIntegrationStatus === "integrated" ? [activePrinciple] : [],
+    crossLayerHarmonicValidationState:
+      input?.crossLayerHarmonicValidationState || null,
+
+    crossLayerIntegrationSupported:
+      input?.crossLayerHarmonicValidationState?.principleIntegrationStatus ===
+        "integration-supported" ||
+      input?.crossLayerHarmonicValidationState?.crossLayerHarmonicValidation ===
+        "cross-layer-repeating-validation",
+
+    integratedPrinciples,
 
     principleIntegrationActive: true,
 
-    rule: "Use principle integration as read-only principle-level guidance. It evaluates (Eq1 + Eq2) → Eq4 to identify stable aligned principle patterns, cross-layer harmonic validation, active principle evidence, integration status, and reinforcement target, but it must not override metrics, classifications, hashes, retrieved context, stored history, or user intent."
+    rule: "Use principle integration as read-only principle-level guidance. It evaluates (Eq1 + Eq2) → Eq4 and may consume Cross-Layer Harmonic Validation as supporting evidence, but it must not override live metrics, classifications, hashes, retrieved context, stored history, user intent, or ethical boundaries."
   }
 }
