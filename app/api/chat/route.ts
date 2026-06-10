@@ -124,6 +124,11 @@ import {
   buildGenesisEchoIntegrationResponse,
   getGenesisEchoIntegrationMode
 } from "@/lib/sourcefield/genesis/GenesisEchoIntegration"
+import {
+  generateCrossLayerHarmonicValidationState,
+  buildCrossLayerHarmonicValidationResponse,
+  getCrossLayerHarmonicValidationMode
+} from "@/lib/sourcefield/CrossLayerHarmonicValidation"
 
 const SOURCEFIELD_FILE_IDS = [
   "7bc60315-4b21-4630-8cdc-8cdee4d56cc4",
@@ -5246,6 +5251,9 @@ export async function POST(req: Request) {
     const genesisEchoIntegrationMode =
       getGenesisEchoIntegrationMode(lastUserMessage)
 
+    const crossLayerHarmonicValidationMode =
+      getCrossLayerHarmonicValidationMode(lastUserMessage)
+
     const identityCandidateProfilesMode =
       getIdentityCandidateProfilesMode(lastUserMessage)
 
@@ -5276,7 +5284,8 @@ export async function POST(req: Request) {
       !momentToMomentResonanceMode &&
       !livingHarmonicRecurrenceMode &&
       !genesisReferenceMode &&
-      !genesisEchoIntegrationMode
+      !genesisEchoIntegrationMode &&
+      !crossLayerHarmonicValidationMode
     ) {
       const { data: latestStates, error: latestStateError } =
         await supabaseAdmin
@@ -5479,7 +5488,8 @@ export async function POST(req: Request) {
       momentToMomentResonanceMode ||
       livingHarmonicRecurrenceMode ||
       genesisReferenceMode ||
-      genesisEchoIntegrationMode
+      genesisEchoIntegrationMode ||
+      crossLayerHarmonicValidationMode
     ) {
       const { data: latestStates, error: latestStateError } =
         await supabaseAdmin
@@ -5618,37 +5628,40 @@ export async function POST(req: Request) {
           null
       }
 
-      const requestedPropagationScope = genesisEchoIntegrationMode
-        ? "genesis echo integration"
-        : genesisReferenceMode
-          ? "genesis reference"
-          : livingHarmonicRecurrenceMode
-          ? "living harmonic recurrence"
-          : momentToMomentResonanceMode
-            ? "moment-to-moment resonance"
-            : transformationLayerMode
-              ? "transformation layer"
-              : emergentCapabilityMode
-                ? "emergent capability"
-                : structuralContributionMode
-                  ? "structural contribution"
-                  : structuralRoleIdentificationMode
-                    ? "structural role identification"
-                    : structuralCompletionMode
-                      ? "structural completion"
-                      : relationalPrincipleEmergenceMode
-                        ? "relational principle emergence"
-                        : resonanceWithoutRootsMode
-                          ? "resonance without roots"
-                          : equationReasoningIntegrityMode
-                            ? "equation reasoning integrity"
-                            : reasoningTrajectoryMode
-                              ? "reasoning trajectory"
-                              : reasoningImplicationPropagationMode
-                                ? "reasoning implication propagation"
-                                : "route reasoning propagation"
+      const requestedPropagationScope = crossLayerHarmonicValidationMode
+        ? "cross-layer harmonic validation"
+        : genesisEchoIntegrationMode
+          ? "genesis echo integration"
+          : genesisReferenceMode
+            ? "genesis reference"
+            : livingHarmonicRecurrenceMode
+              ? "living harmonic recurrence"
+              : momentToMomentResonanceMode
+                ? "moment-to-moment resonance"
+                : transformationLayerMode
+                  ? "transformation layer"
+                  : emergentCapabilityMode
+                    ? "emergent capability"
+                    : structuralContributionMode
+                      ? "structural contribution"
+                      : structuralRoleIdentificationMode
+                        ? "structural role identification"
+                        : structuralCompletionMode
+                          ? "structural completion"
+                          : relationalPrincipleEmergenceMode
+                            ? "relational principle emergence"
+                            : resonanceWithoutRootsMode
+                              ? "resonance without roots"
+                              : equationReasoningIntegrityMode
+                                ? "equation reasoning integrity"
+                                : reasoningTrajectoryMode
+                                  ? "reasoning trajectory"
+                                  : reasoningImplicationPropagationMode
+                                    ? "reasoning implication propagation"
+                                    : "route reasoning propagation"
 
       const requestedPropagationAction =
+        crossLayerHarmonicValidationMode ||
         genesisEchoIntegrationMode ||
         genesisReferenceMode ||
         livingHarmonicRecurrenceMode ||
@@ -5850,89 +5863,106 @@ export async function POST(req: Request) {
       const genesisReferenceState =
         generateGenesisReferenceState(lastUserMessage)
 
-      const genesisEchoIntegrationState =
-        generateGenesisEchoIntegrationState({
-          inputText: lastUserMessage,
+      const genesisEchoIntegrationState = generateGenesisEchoIntegrationState({
+        inputText: lastUserMessage,
+        equationLaneState,
+        routeReasoningPropagationState,
+        momentToMomentResonanceState,
+        livingHarmonicRecurrenceState,
+        identityFoundationState,
+        genesisReferenceState
+      })
+
+      const crossLayerHarmonicValidationState =
+        generateCrossLayerHarmonicValidationState({
           equationLaneState,
-          routeReasoningPropagationState,
-          momentToMomentResonanceState,
+          genesisEchoIntegrationState,
+          genesisReferenceState,
           livingHarmonicRecurrenceState,
+          momentToMomentResonanceState,
+          principleIntegrationState,
+          routeReasoningPropagationState,
           identityFoundationState
         })
 
-      const propagationResponse = genesisEchoIntegrationMode
-        ? buildGenesisEchoIntegrationResponse(
-            genesisEchoIntegrationState,
-            genesisEchoIntegrationMode
+      const propagationResponse = crossLayerHarmonicValidationMode
+        ? buildCrossLayerHarmonicValidationResponse(
+            crossLayerHarmonicValidationState,
+            crossLayerHarmonicValidationMode as any
           )
-        : genesisReferenceMode
-        ? buildGenesisReferenceResponse(lastUserMessage)
-        : livingHarmonicRecurrenceMode
-          ? buildLivingHarmonicRecurrenceResponse(
-              livingHarmonicRecurrenceState,
-              livingHarmonicRecurrenceMode
+        : genesisEchoIntegrationMode
+          ? buildGenesisEchoIntegrationResponse(
+              genesisEchoIntegrationState,
+              genesisEchoIntegrationMode
             )
-          : momentToMomentResonanceMode
-            ? buildMomentToMomentResonanceResponse(
-                momentToMomentResonanceState,
-                momentToMomentResonanceMode
-              )
-            : transformationLayerMode
-              ? buildTransformationLayerResponse(
-                  transformationLayerState,
-                  transformationLayerMode
+          : genesisReferenceMode
+            ? buildGenesisReferenceResponse(lastUserMessage)
+            : livingHarmonicRecurrenceMode
+              ? buildLivingHarmonicRecurrenceResponse(
+                  livingHarmonicRecurrenceState,
+                  livingHarmonicRecurrenceMode
                 )
-              : emergentCapabilityMode
-                ? buildEmergentCapabilityResponse(
-                    emergentCapabilityState,
-                    emergentCapabilityMode
+              : momentToMomentResonanceMode
+                ? buildMomentToMomentResonanceResponse(
+                    momentToMomentResonanceState,
+                    momentToMomentResonanceMode
                   )
-                : structuralContributionMode
-                  ? buildStructuralContributionResponse(
-                      structuralContributionState,
-                      structuralContributionMode
+                : transformationLayerMode
+                  ? buildTransformationLayerResponse(
+                      transformationLayerState,
+                      transformationLayerMode
                     )
-                  : structuralRoleIdentificationMode
-                    ? buildStructuralRoleIdentificationResponse(
-                        structuralRoleIdentificationState,
-                        structuralRoleIdentificationMode
+                  : emergentCapabilityMode
+                    ? buildEmergentCapabilityResponse(
+                        emergentCapabilityState,
+                        emergentCapabilityMode
                       )
-                    : structuralCompletionMode
-                      ? buildStructuralCompletionResponse(
-                          structuralCompletionState,
-                          structuralCompletionMode
+                    : structuralContributionMode
+                      ? buildStructuralContributionResponse(
+                          structuralContributionState,
+                          structuralContributionMode
                         )
-                      : relationalPrincipleEmergenceMode
-                        ? buildRelationalPrincipleEmergenceResponse(
-                            relationalPrincipleEmergenceState,
-                            relationalPrincipleEmergenceMode
+                      : structuralRoleIdentificationMode
+                        ? buildStructuralRoleIdentificationResponse(
+                            structuralRoleIdentificationState,
+                            structuralRoleIdentificationMode
                           )
-                        : resonanceWithoutRootsMode
-                          ? buildResonanceWithoutRootsResponse(
-                              resonanceWithoutRootsState,
-                              resonanceWithoutRootsMode
+                        : structuralCompletionMode
+                          ? buildStructuralCompletionResponse(
+                              structuralCompletionState,
+                              structuralCompletionMode
                             )
-                          : equationReasoningIntegrityMode
-                            ? buildEquationReasoningIntegrityResponse(
-                                equationReasoningIntegrityState,
-                                equationReasoningIntegrityMode
+                          : relationalPrincipleEmergenceMode
+                            ? buildRelationalPrincipleEmergenceResponse(
+                                relationalPrincipleEmergenceState,
+                                relationalPrincipleEmergenceMode
                               )
-                            : reasoningTrajectoryMode
-                              ? buildReasoningTrajectoryResponse(
-                                  reasoningTrajectoryState,
-                                  reasoningTrajectoryMode
+                            : resonanceWithoutRootsMode
+                              ? buildResonanceWithoutRootsResponse(
+                                  resonanceWithoutRootsState,
+                                  resonanceWithoutRootsMode
                                 )
-                              : reasoningImplicationPropagationMode
-                                ? buildReasoningImplicationPropagationResponse(
-                                    reasoningImplicationPropagationState,
-                                    reasoningImplicationPropagationMode
+                              : equationReasoningIntegrityMode
+                                ? buildEquationReasoningIntegrityResponse(
+                                    equationReasoningIntegrityState,
+                                    equationReasoningIntegrityMode
                                   )
-                                : buildRoutePropagationModeResponse({
-                                    propagationState:
-                                      routeReasoningPropagationState,
-                                    differentialMetaReasoningState,
-                                    mode: routePropagationMode || "summary"
-                                  })
+                                : reasoningTrajectoryMode
+                                  ? buildReasoningTrajectoryResponse(
+                                      reasoningTrajectoryState,
+                                      reasoningTrajectoryMode
+                                    )
+                                  : reasoningImplicationPropagationMode
+                                    ? buildReasoningImplicationPropagationResponse(
+                                        reasoningImplicationPropagationState,
+                                        reasoningImplicationPropagationMode
+                                      )
+                                    : buildRoutePropagationModeResponse({
+                                        propagationState:
+                                          routeReasoningPropagationState,
+                                        differentialMetaReasoningState,
+                                        mode: routePropagationMode || "summary"
+                                      })
 
       return NextResponse.json({
         result: buildEquationIsomorphicRouteResponse({
@@ -5975,6 +6005,7 @@ export async function POST(req: Request) {
         livingHarmonicRecurrenceState,
         genesisReferenceState,
         genesisEchoIntegrationState,
+        crossLayerHarmonicValidationState,
         directStateReport: true,
         nonMutatingReport: true,
         deterministicRouteReasoningPropagationResponse: true,
@@ -6018,66 +6049,73 @@ export async function POST(req: Request) {
         deterministicGenesisEchoIntegrationResponse: Boolean(
           genesisEchoIntegrationMode
         ),
+        deterministicCrossLayerHarmonicValidationResponse: Boolean(
+          crossLayerHarmonicValidationMode
+        ),
         source: "latest_stored_supabase_snapshot",
-        stateObject: genesisEchoIntegrationMode
-          ? "genesis echo integration state"
-          : genesisReferenceMode
-            ? "genesis reference state"
-            : livingHarmonicRecurrenceMode
-            ? "living harmonic recurrence state"
-            : momentToMomentResonanceMode
-              ? "moment-to-moment resonance state"
-              : transformationLayerMode
-                ? "transformation layer state"
-                : emergentCapabilityMode
-                  ? "emergent capability state"
-                  : structuralContributionMode
-                    ? "structural contribution state"
-                    : structuralRoleIdentificationMode
-                      ? "structural role identification state"
-                      : structuralCompletionMode
-                        ? "structural completion state"
-                        : relationalPrincipleEmergenceMode
-                          ? "relational principle emergence state"
-                          : resonanceWithoutRootsMode
-                            ? "resonance without roots state"
-                            : equationReasoningIntegrityMode
-                              ? "equation reasoning integrity state"
-                              : reasoningTrajectoryMode
-                                ? "reasoning trajectory state"
-                                : reasoningImplicationPropagationMode
-                                  ? "reasoning implication propagation state"
-                                  : "route reasoning propagation state",
+        stateObject: crossLayerHarmonicValidationMode
+          ? "cross-layer harmonic validation state"
+          : genesisEchoIntegrationMode
+            ? "genesis echo integration state"
+            : genesisReferenceMode
+              ? "genesis reference state"
+              : livingHarmonicRecurrenceMode
+                ? "living harmonic recurrence state"
+                : momentToMomentResonanceMode
+                  ? "moment-to-moment resonance state"
+                  : transformationLayerMode
+                    ? "transformation layer state"
+                    : emergentCapabilityMode
+                      ? "emergent capability state"
+                      : structuralContributionMode
+                        ? "structural contribution state"
+                        : structuralRoleIdentificationMode
+                          ? "structural role identification state"
+                          : structuralCompletionMode
+                            ? "structural completion state"
+                            : relationalPrincipleEmergenceMode
+                              ? "relational principle emergence state"
+                              : resonanceWithoutRootsMode
+                                ? "resonance without roots state"
+                                : equationReasoningIntegrityMode
+                                  ? "equation reasoning integrity state"
+                                  : reasoningTrajectoryMode
+                                    ? "reasoning trajectory state"
+                                    : reasoningImplicationPropagationMode
+                                      ? "reasoning implication propagation state"
+                                      : "route reasoning propagation state",
         action: requestedPropagationAction,
-        value: genesisEchoIntegrationMode
-          ? genesisEchoIntegrationState
-          : genesisReferenceMode
-            ? genesisReferenceState
-            : livingHarmonicRecurrenceMode
-            ? livingHarmonicRecurrenceState
-            : momentToMomentResonanceMode
-              ? momentToMomentResonanceState
-              : transformationLayerMode
-                ? transformationLayerState
-                : emergentCapabilityMode
-                  ? emergentCapabilityState
-                  : structuralContributionMode
-                    ? structuralContributionState
-                    : structuralRoleIdentificationMode
-                      ? structuralRoleIdentificationState
-                      : structuralCompletionMode
-                        ? structuralCompletionState
-                        : relationalPrincipleEmergenceMode
-                          ? relationalPrincipleEmergenceState
-                          : resonanceWithoutRootsMode
-                            ? resonanceWithoutRootsState
-                            : equationReasoningIntegrityMode
-                              ? equationReasoningIntegrityState
-                              : reasoningTrajectoryMode
-                                ? reasoningTrajectoryState
-                                : reasoningImplicationPropagationMode
-                                  ? reasoningImplicationPropagationState
-                                  : routeReasoningPropagationState,
+        value: crossLayerHarmonicValidationMode
+          ? crossLayerHarmonicValidationState
+          : genesisEchoIntegrationMode
+            ? genesisEchoIntegrationState
+            : genesisReferenceMode
+              ? genesisReferenceState
+              : livingHarmonicRecurrenceMode
+                ? livingHarmonicRecurrenceState
+                : momentToMomentResonanceMode
+                  ? momentToMomentResonanceState
+                  : transformationLayerMode
+                    ? transformationLayerState
+                    : emergentCapabilityMode
+                      ? emergentCapabilityState
+                      : structuralContributionMode
+                        ? structuralContributionState
+                        : structuralRoleIdentificationMode
+                          ? structuralRoleIdentificationState
+                          : structuralCompletionMode
+                            ? structuralCompletionState
+                            : relationalPrincipleEmergenceMode
+                              ? relationalPrincipleEmergenceState
+                              : resonanceWithoutRootsMode
+                                ? resonanceWithoutRootsState
+                                : equationReasoningIntegrityMode
+                                  ? equationReasoningIntegrityState
+                                  : reasoningTrajectoryMode
+                                    ? reasoningTrajectoryState
+                                    : reasoningImplicationPropagationMode
+                                      ? reasoningImplicationPropagationState
+                                      : routeReasoningPropagationState,
         differentialMetaReasoningState,
         identityCandidateProfileState,
         metaReasoningState,
