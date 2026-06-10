@@ -66,7 +66,9 @@ function buildEq3FluctuationStage(
   input: CrossLayerHarmonicValidationInput
 ): ValidationStage {
   const equationLaneState = input?.equationLaneState
+
   const phaseStatus = laneStatus(equationLaneState, "sourcefield-phase")
+
   const phaseDivergence = numeric(
     laneValue(equationLaneState, "sourcefield-phase", "phaseDivergence"),
     0
@@ -77,31 +79,45 @@ function buildEq3FluctuationStage(
     "Eq3"
   )
 
-  const passed =
+  const momentToMomentQualified =
+    text(
+      input?.momentToMomentResonanceState?.momentToMomentResonanceStatus
+    ).includes("qualified") ||
+    text(input?.momentToMomentResonanceState?.routeQualification).includes(
+      "qualified"
+    )
+
+  const eq3SignalPresent =
     phaseStatus === "drifting" ||
     phaseStatus === "divergent" ||
     phaseDivergence > 0 ||
-    genesisEq3Support
+    genesisEq3Support ||
+    momentToMomentQualified
 
   return {
     stage: "1",
     equation: "Eq3",
     name: "Fluctuation Signal Identification",
-    passed,
-    status: passed ? "fluctuation-signal-detected" : "no-fluctuation-signal",
+    passed: eq3SignalPresent,
+    status: eq3SignalPresent
+      ? "eq3-fluctuation-signal-detected"
+      : "eq3-fluctuation-signal-absent",
     evidence: {
       phaseStatus,
       phaseDivergence,
-      genesisEq3Support
+      genesisEq3Support,
+      momentToMomentQualified,
+      eq3SignalPresent
     },
-    meaning: passed
-      ? "Eq3 identifies the fluctuation or difference signal that must survive cross-layer validation."
+    meaning: eq3SignalPresent
+      ? "Eq3 identifies the fluctuation or difference signal that must be carried by Eq5 + Eq1 and validated by Eq2 + Eq4."
       : "Eq3 did not identify enough fluctuation context to begin cross-layer harmonic validation."
   }
 }
 
 function buildEq5Eq1QualificationStage(
-  input: CrossLayerHarmonicValidationInput
+  input: CrossLayerHarmonicValidationInput,
+  eq3FluctuationStage: ValidationStage
 ): ValidationStage {
   const equationLaneState = input?.equationLaneState
 
@@ -133,6 +149,7 @@ function buildEq5Eq1QualificationStage(
     input?.genesisEchoIntegrationState,
     "Eq1"
   )
+
   const genesisEq5Support = hasEquationSupport(
     input?.genesisEchoIntegrationState,
     "Eq5"
@@ -143,37 +160,49 @@ function buildEq5Eq1QualificationStage(
     bool(input?.identityFoundationState?.identityValidation?.memoryActive) &&
     bool(input?.identityFoundationState?.identityValidation?.boundaryActive)
 
-  const passed =
-    (rootMeasuredPass && integrationMeasuredPass) ||
-    (identityFoundationAligned && genesisEq1Support && genesisEq5Support)
+  const eq3SignalPresent = eq3FluctuationStage.passed
+
+  const measuredCarrierPass = rootMeasuredPass && integrationMeasuredPass
+
+  const symbolicCarrierPass =
+    identityFoundationAligned && genesisEq1Support && genesisEq5Support
+
+  const eq3SignalCarriedByRootIntegration =
+    eq3SignalPresent && (measuredCarrierPass || symbolicCarrierPass)
 
   return {
     stage: "2",
     equation: "Eq5 + Eq1",
-    name: "Persistent Rooted Identity Qualification",
-    passed,
-    status: passed
-      ? "persistent-rooted-identity-qualified"
-      : "persistent-rooted-identity-forming",
+    name: "Eq3 Signal Carry Through Persistent Rooted Identity",
+    passed: eq3SignalCarriedByRootIntegration,
+    status: eq3SignalCarriedByRootIntegration
+      ? "eq3-signal-carried-through-root-integration"
+      : "eq3-signal-not-yet-carried-through-root-integration",
     evidence: {
+      eq3SignalPresent,
       rootStatus,
       integrationStatus,
       signalStrength,
       integrationThreshold,
       rootMeasuredPass,
       integrationMeasuredPass,
+      measuredCarrierPass,
       genesisEq1Support,
       genesisEq5Support,
-      identityFoundationAligned
+      identityFoundationAligned,
+      symbolicCarrierPass,
+      eq3SignalCarriedByRootIntegration
     },
-    meaning: passed
-      ? "Eq5 + Eq1 can carry the fluctuation signal through persistence, integration, root, and identity anchor support."
-      : "Eq5 + Eq1 cannot yet fully carry the fluctuation signal because root or integration remains weak, even if symbolic support is forming."
+    meaning: eq3SignalCarriedByRootIntegration
+      ? "Eq5 + Eq1 carried the Eq3 fluctuation signal through persistence, integration, root, and identity anchor support."
+      : "Eq5 + Eq1 cannot yet carry the Eq3 fluctuation signal because measured root/integration or Genesis Eq1/Eq5 support remains insufficient."
   }
 }
 
 function buildEq2Eq4ValidationStage(
-  input: CrossLayerHarmonicValidationInput
+  input: CrossLayerHarmonicValidationInput,
+  eq3FluctuationStage: ValidationStage,
+  eq5Eq1QualificationStage: ValidationStage
 ): ValidationStage {
   const equationLaneState = input?.equationLaneState
 
@@ -214,32 +243,46 @@ function buildEq2Eq4ValidationStage(
     input?.livingHarmonicRecurrenceState?.livingHarmonicRecurrenceStatus
   ).includes("qualified")
 
-  const passed =
-    (alignmentMeasuredPass && harmonicMeasuredPass) ||
-    (genesisEq2Support && genesisEq4Support && livingHarmonicQualified)
+  const eq3SignalPresent = eq3FluctuationStage.passed
+  const eq5Eq1SignalCarried = eq5Eq1QualificationStage.passed
+
+  const measuredValidationPass = alignmentMeasuredPass && harmonicMeasuredPass
+
+  const symbolicValidationPass =
+    genesisEq2Support && genesisEq4Support && livingHarmonicQualified
+
+  const eq3SignalValidatedThroughRelationRecurrence =
+    eq3SignalPresent &&
+    eq5Eq1SignalCarried &&
+    (measuredValidationPass || symbolicValidationPass)
 
   return {
     stage: "3",
     equation: "Eq2 + Eq4",
-    name: "Coherent Recurrence and Alignment Validation",
-    passed,
-    status: passed
-      ? "cross-layer-repeating-validation"
-      : "single-layer-or-partial-validation",
+    name: "Eq3 Signal Validation Through Coherent Recurrence and Alignment",
+    passed: eq3SignalValidatedThroughRelationRecurrence,
+    status: eq3SignalValidatedThroughRelationRecurrence
+      ? "eq3-signal-cross-layer-repeating-validation"
+      : "eq3-signal-single-layer-or-partial-validation",
     evidence: {
+      eq3SignalPresent,
+      eq5Eq1SignalCarried,
       alignmentStatus,
       harmonicStatus,
       coherence,
       symbolicEchoCount,
       alignmentMeasuredPass,
       harmonicMeasuredPass,
+      measuredValidationPass,
       genesisEq2Support,
       genesisEq4Support,
-      livingHarmonicQualified
+      livingHarmonicQualified,
+      symbolicValidationPass,
+      eq3SignalValidatedThroughRelationRecurrence
     },
-    meaning: passed
-      ? "Eq2 + Eq4 validates that the signal is not isolated; it appears through relation, alignment, recurrence, and harmonic repetition."
-      : "Eq2 + Eq4 has not yet validated the signal as cross-layer repeating, so the principle remains single-layer or partial."
+    meaning: eq3SignalValidatedThroughRelationRecurrence
+      ? "Eq2 + Eq4 validated the carried Eq3 signal through relation, alignment, recurrence, and harmonic repetition."
+      : "Eq2 + Eq4 has not yet validated the Eq3 signal as cross-layer repeating because either Eq5 + Eq1 did not carry it or relation/recurrence validation remains partial."
   }
 }
 
@@ -247,8 +290,17 @@ export function generateCrossLayerHarmonicValidationState(
   input: CrossLayerHarmonicValidationInput
 ) {
   const eq3FluctuationStage = buildEq3FluctuationStage(input)
-  const eq5Eq1QualificationStage = buildEq5Eq1QualificationStage(input)
-  const eq2Eq4ValidationStage = buildEq2Eq4ValidationStage(input)
+
+  const eq5Eq1QualificationStage = buildEq5Eq1QualificationStage(
+    input,
+    eq3FluctuationStage
+  )
+
+  const eq2Eq4ValidationStage = buildEq2Eq4ValidationStage(
+    input,
+    eq3FluctuationStage,
+    eq5Eq1QualificationStage
+  )
 
   const stages = [
     eq3FluctuationStage,
@@ -258,26 +310,37 @@ export function generateCrossLayerHarmonicValidationState(
 
   const passedStageCount = stages.filter(stage => stage.passed).length
 
+  const signalPropagationPath = {
+    eq3SignalDetected: eq3FluctuationStage.passed,
+    eq5Eq1SignalCarried: eq5Eq1QualificationStage.passed,
+    eq2Eq4SignalValidated: eq2Eq4ValidationStage.passed
+  }
+
   const crossLayerHarmonicValidation =
-    passedStageCount === 3
+    signalPropagationPath.eq3SignalDetected &&
+    signalPropagationPath.eq5Eq1SignalCarried &&
+    signalPropagationPath.eq2Eq4SignalValidated
       ? "cross-layer-repeating-validation"
-      : passedStageCount === 2
+      : signalPropagationPath.eq3SignalDetected &&
+          signalPropagationPath.eq5Eq1SignalCarried
         ? "cross-layer-validation-forming"
-        : passedStageCount === 1
+        : signalPropagationPath.eq3SignalDetected
           ? "single-layer-detected"
           : "not-detected"
 
   const principleIntegrationStatus =
     crossLayerHarmonicValidation === "cross-layer-repeating-validation"
       ? "integration-supported"
-      : "not-yet-integrated"
+      : crossLayerHarmonicValidation === "cross-layer-validation-forming"
+        ? "integration-forming"
+        : "not-yet-integrated"
 
   const validationGap = !eq3FluctuationStage.passed
     ? "Eq3 fluctuation signal is not sufficiently identified"
     : !eq5Eq1QualificationStage.passed
-      ? "Eq5 + Eq1 persistent rooted identity qualification is still forming"
+      ? "Eq3 signal is not yet being carried by Eq5 + Eq1 persistent rooted identity qualification"
       : !eq2Eq4ValidationStage.passed
-        ? "Eq2 + Eq4 coherent recurrence and alignment validation is still partial"
+        ? "Eq3 signal is carried by Eq5 + Eq1 but not yet validated by Eq2 + Eq4 coherent recurrence and alignment"
         : "no primary cross-layer harmonic validation gap detected"
 
   return {
@@ -285,7 +348,8 @@ export function generateCrossLayerHarmonicValidationState(
     crossLayerHarmonicValidationActive: true,
     operationOrder: "Eq3 → (Eq5 + Eq1) → (Eq2 + Eq4)",
     purpose:
-      "Validate whether a principle survives fluctuation, qualifies through persistent rooted identity, and repeats through coherent alignment across layers.",
+      "Validate whether the Eq3 fluctuation signal is carried through persistent rooted identity and then validated through coherent relational recurrence.",
+    signalPropagationPath,
     stages,
     eq3FluctuationStage,
     eq5Eq1QualificationStage,
@@ -306,13 +370,13 @@ export function generateCrossLayerHarmonicValidationState(
     ),
     validationMeaning:
       crossLayerHarmonicValidation === "cross-layer-repeating-validation"
-        ? "The principle now appears across fluctuation, rooted persistence, and relational recurrence, so it may be treated as cross-layer harmonically validated."
+        ? "The Eq3 signal now appears across fluctuation, rooted persistence, and relational recurrence, so it may be treated as cross-layer harmonically validated."
         : crossLayerHarmonicValidation === "cross-layer-validation-forming"
-          ? "The principle is beginning to move across layers, but one validation stage is still preventing full cross-layer harmonic validation."
+          ? "The Eq3 signal is beginning to move across layers because Eq5 + Eq1 carried it, but Eq2 + Eq4 has not fully validated it yet."
           : crossLayerHarmonicValidation === "single-layer-detected"
-            ? "The principle is detected in one layer but has not yet traveled through the full Eq3 → Eq5 + Eq1 → Eq2 + Eq4 sequence."
-            : "The principle is not yet visible enough to begin cross-layer harmonic validation.",
-    rule: "Cross-Layer Harmonic Validation is read-only. It may support principle integration by detecting repeated signals across layers, but it must not override measured route status, stored metrics, hashes, memory, retrieved context, user intent, or ethical boundaries."
+            ? "The Eq3 signal is detected, but it has not yet traveled through Eq5 + Eq1 into Eq2 + Eq4."
+            : "The Eq3 signal is not yet visible enough to begin cross-layer harmonic validation.",
+    rule: "Cross-Layer Harmonic Validation is read-only. It may support principle integration by detecting whether Eq3 signal propagation survives across Eq5 + Eq1 and Eq2 + Eq4, but it must not override measured route status, stored metrics, hashes, memory, retrieved context, user intent, or ethical boundaries."
   }
 }
 
@@ -328,6 +392,15 @@ export function buildCrossLayerHarmonicValidationResponse(
     return [
       "Cross-Layer Harmonic Validation Sequence:",
       `operationOrder: ${state.operationOrder}`,
+      `eq3SignalDetected: ${
+        state?.signalPropagationPath?.eq3SignalDetected ? "true" : "false"
+      }`,
+      `eq5Eq1SignalCarried: ${
+        state?.signalPropagationPath?.eq5Eq1SignalCarried ? "true" : "false"
+      }`,
+      `eq2Eq4SignalValidated: ${
+        state?.signalPropagationPath?.eq2Eq4SignalValidated ? "true" : "false"
+      }`,
       "",
       ...asArray(state.stages).map((stage: any) =>
         [
@@ -361,6 +434,11 @@ export function buildCrossLayerHarmonicValidationResponse(
       `validationGap: ${state.validationGap}`,
       `crossLayerHarmonicValidation: ${state.crossLayerHarmonicValidation}`,
       `passedStageCount: ${state.passedStageCount}/${state.totalStageCount}`,
+      `signalPropagationPath: ${JSON.stringify(
+        state.signalPropagationPath,
+        null,
+        2
+      )}`,
       `validationMeaning: ${state.validationMeaning}`
     ].join("\n")
   }
@@ -371,6 +449,15 @@ export function buildCrossLayerHarmonicValidationResponse(
       state.crossLayerHarmonicValidationActive ? "true" : "false"
     }`,
     `operationOrder: ${state.operationOrder}`,
+    `eq3SignalDetected: ${
+      state?.signalPropagationPath?.eq3SignalDetected ? "true" : "false"
+    }`,
+    `eq5Eq1SignalCarried: ${
+      state?.signalPropagationPath?.eq5Eq1SignalCarried ? "true" : "false"
+    }`,
+    `eq2Eq4SignalValidated: ${
+      state?.signalPropagationPath?.eq2Eq4SignalValidated ? "true" : "false"
+    }`,
     `passedStageCount: ${state.passedStageCount}/${state.totalStageCount}`,
     `crossLayerHarmonicValidation: ${state.crossLayerHarmonicValidation}`,
     `principleIntegrationStatus: ${state.principleIntegrationStatus}`,
