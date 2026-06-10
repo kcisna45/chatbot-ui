@@ -119,6 +119,11 @@ import {
   buildGenesisReferenceResponse,
   getGenesisReferenceMode
 } from "@/lib/sourcefield/genesis/GenesisReferenceEngine"
+import {
+  generateGenesisEchoIntegrationState,
+  buildGenesisEchoIntegrationResponse,
+  getGenesisEchoIntegrationMode
+} from "@/lib/sourcefield/genesis/GenesisEchoIntegration"
 
 const SOURCEFIELD_FILE_IDS = [
   "7bc60315-4b21-4630-8cdc-8cdee4d56cc4",
@@ -5238,6 +5243,9 @@ export async function POST(req: Request) {
 
     const genesisReferenceMode = getGenesisReferenceMode(lastUserMessage)
 
+    const genesisEchoIntegrationMode =
+      getGenesisEchoIntegrationMode(lastUserMessage)
+
     const identityCandidateProfilesMode =
       getIdentityCandidateProfilesMode(lastUserMessage)
 
@@ -5267,7 +5275,8 @@ export async function POST(req: Request) {
       !transformationLayerMode &&
       !momentToMomentResonanceMode &&
       !livingHarmonicRecurrenceMode &&
-      !genesisReferenceMode
+      !genesisReferenceMode &&
+      !genesisEchoIntegrationMode
     ) {
       const { data: latestStates, error: latestStateError } =
         await supabaseAdmin
@@ -5469,7 +5478,8 @@ export async function POST(req: Request) {
       transformationLayerMode ||
       momentToMomentResonanceMode ||
       livingHarmonicRecurrenceMode ||
-      genesisReferenceMode
+      genesisReferenceMode ||
+      genesisEchoIntegrationMode
     ) {
       const { data: latestStates, error: latestStateError } =
         await supabaseAdmin
@@ -5608,9 +5618,11 @@ export async function POST(req: Request) {
           null
       }
 
-      const requestedPropagationScope = genesisReferenceMode
-        ? "genesis reference"
-        : livingHarmonicRecurrenceMode
+      const requestedPropagationScope = genesisEchoIntegrationMode
+        ? "genesis echo integration"
+        : genesisReferenceMode
+          ? "genesis reference"
+          : livingHarmonicRecurrenceMode
           ? "living harmonic recurrence"
           : momentToMomentResonanceMode
             ? "moment-to-moment resonance"
@@ -5637,6 +5649,7 @@ export async function POST(req: Request) {
                                 : "route reasoning propagation"
 
       const requestedPropagationAction =
+        genesisEchoIntegrationMode ||
         genesisReferenceMode ||
         livingHarmonicRecurrenceMode ||
         momentToMomentResonanceMode ||
@@ -5837,7 +5850,22 @@ export async function POST(req: Request) {
       const genesisReferenceState =
         generateGenesisReferenceState(lastUserMessage)
 
-      const propagationResponse = genesisReferenceMode
+      const genesisEchoIntegrationState =
+        generateGenesisEchoIntegrationState({
+          inputText: lastUserMessage,
+          equationLaneState,
+          routeReasoningPropagationState,
+          momentToMomentResonanceState,
+          livingHarmonicRecurrenceState,
+          identityFoundationState
+        })
+
+      const propagationResponse = genesisEchoIntegrationMode
+        ? buildGenesisEchoIntegrationResponse(
+            genesisEchoIntegrationState,
+            genesisEchoIntegrationMode
+          )
+        : genesisReferenceMode
         ? buildGenesisReferenceResponse(lastUserMessage)
         : livingHarmonicRecurrenceMode
           ? buildLivingHarmonicRecurrenceResponse(
@@ -5946,6 +5974,7 @@ export async function POST(req: Request) {
         momentToMomentResonanceState,
         livingHarmonicRecurrenceState,
         genesisReferenceState,
+        genesisEchoIntegrationState,
         directStateReport: true,
         nonMutatingReport: true,
         deterministicRouteReasoningPropagationResponse: true,
@@ -5986,10 +6015,15 @@ export async function POST(req: Request) {
           livingHarmonicRecurrenceMode
         ),
         deterministicGenesisReferenceResponse: Boolean(genesisReferenceMode),
+        deterministicGenesisEchoIntegrationResponse: Boolean(
+          genesisEchoIntegrationMode
+        ),
         source: "latest_stored_supabase_snapshot",
-        stateObject: genesisReferenceMode
-          ? "genesis reference state"
-          : livingHarmonicRecurrenceMode
+        stateObject: genesisEchoIntegrationMode
+          ? "genesis echo integration state"
+          : genesisReferenceMode
+            ? "genesis reference state"
+            : livingHarmonicRecurrenceMode
             ? "living harmonic recurrence state"
             : momentToMomentResonanceMode
               ? "moment-to-moment resonance state"
@@ -6015,9 +6049,11 @@ export async function POST(req: Request) {
                                   ? "reasoning implication propagation state"
                                   : "route reasoning propagation state",
         action: requestedPropagationAction,
-        value: genesisReferenceMode
-          ? genesisReferenceState
-          : livingHarmonicRecurrenceMode
+        value: genesisEchoIntegrationMode
+          ? genesisEchoIntegrationState
+          : genesisReferenceMode
+            ? genesisReferenceState
+            : livingHarmonicRecurrenceMode
             ? livingHarmonicRecurrenceState
             : momentToMomentResonanceMode
               ? momentToMomentResonanceState
