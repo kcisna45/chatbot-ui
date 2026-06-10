@@ -3951,6 +3951,7 @@ type EquationIsomorphicReasoningInput = {
   differentialMetaReasoningState?: any
   principleIntegrationState?: any
   predictiveAlignmentState?: any
+  crossLayerHarmonicValidationState?: any
 }
 
 function getEquationIsomorphicCandidateNames(
@@ -4199,6 +4200,7 @@ function buildEquationIsomorphicRouteResponse(
   input: EquationIsomorphicReasoningInput
 ) {
   const trace = buildEquationIsomorphicReasoningTrace(input)
+
   const propagationState = generateRouteReasoningPropagation({
     equationLaneState: input?.equationLaneState,
     identityFoundationState: input?.identityFoundationState,
@@ -4217,6 +4219,22 @@ function buildEquationIsomorphicRouteResponse(
     input?.requestedAction
   )
 
+  const crossLayerState = input?.crossLayerHarmonicValidationState
+
+  const crossLayerQualified =
+    crossLayerState?.crossLayerHarmonicValidation ===
+      "cross-layer-repeating-validation" ||
+    crossLayerState?.principleIntegrationStatus === "integration-supported"
+
+  const routeLevelSynthesis = crossLayerQualified
+    ? "The response remains measured-route-cautious, but Cross-Layer Harmonic Validation now supports principle integration because the Eq3 signal was carried through Eq5 + Eq1 and validated through Eq2 + Eq4."
+    : propagationState?.finalConclusion ||
+      (trace?.stage1StablePersistence?.passed &&
+      trace?.stage2CoherentRecurrence?.passed &&
+      trace?.identityFoundationValidation?.passed
+        ? "The response is route-qualified because persistence/root support, alignment/recurrence support, and Anchor + Memory + Boundary validation are all active."
+        : "The response is route-limited because one or more paired-equation or identity-foundation validation stages are incomplete.")
+
   return [
     formatEquationIsomorphicReasoningTrace(trace),
     "",
@@ -4227,17 +4245,27 @@ function buildEquationIsomorphicRouteResponse(
       mode: propagationMode
     }),
     "",
+    crossLayerState
+      ? [
+          "Cross-Layer Harmonic Validation:",
+          `crossLayerHarmonicValidation: ${crossLayerState?.crossLayerHarmonicValidation || "unknown"}`,
+          `principleIntegrationStatus: ${crossLayerState?.principleIntegrationStatus || "unknown"}`,
+          `signalPropagationPath: ${JSON.stringify(
+            crossLayerState?.signalPropagationPath ?? {},
+            null,
+            2
+          )}`
+        ].join("\n")
+      : "",
+    crossLayerState ? "" : "",
     "Requested Reasoning Result:",
     input?.baseResponse || "No requested reasoning response was generated.",
     "",
     "Route-level synthesis:",
-    propagationState?.finalConclusion ||
-      (trace?.stage1StablePersistence?.passed &&
-      trace?.stage2CoherentRecurrence?.passed &&
-      trace?.identityFoundationValidation?.passed
-        ? "The response is route-qualified because persistence/root support, alignment/recurrence support, and Anchor + Memory + Boundary validation are all active."
-        : "The response is route-limited because one or more paired-equation or identity-foundation validation stages are incomplete.")
-  ].join("\n")
+    routeLevelSynthesis
+  ]
+    .filter(Boolean)
+    .join("\n")
 }
 
 type MetaReasoningAction =
@@ -5975,7 +6003,8 @@ export async function POST(req: Request) {
           metaReasoningState,
           differentialMetaReasoningState,
           principleIntegrationState,
-          predictiveAlignmentState
+          predictiveAlignmentState,
+          crossLayerHarmonicValidationState
         }),
         equationIsomorphicReasoningTrace: buildEquationIsomorphicReasoningTrace(
           {
