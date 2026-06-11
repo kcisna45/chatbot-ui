@@ -5913,6 +5913,16 @@ export async function POST(req: Request) {
           identityFoundationState
         })
 
+      const crossLayerSupportedPrincipleIntegrationState =
+        generatePrincipleIntegrationState({
+          equationLaneState,
+          pathwaySelectionState,
+          pathwayTransitionState,
+          pathwayCompletionState,
+          architecturalRefinementState,
+          crossLayerHarmonicValidationState
+        })
+
       const propagationResponse = crossLayerHarmonicValidationMode
         ? buildCrossLayerHarmonicValidationResponse(
             crossLayerHarmonicValidationState,
@@ -7372,7 +7382,7 @@ export async function POST(req: Request) {
       equationLaneState
     })
 
-    const principleIntegrationState = generatePrincipleIntegrationState({
+    let principleIntegrationState = generatePrincipleIntegrationState({
       equationLaneState,
       pathwaySelectionState,
       pathwayTransitionState,
@@ -7986,6 +7996,61 @@ export async function POST(req: Request) {
       differentialMetaReasoningState
     })
 
+    const livingHarmonicRecurrenceState = generateLivingHarmonicRecurrenceState(
+      {
+        equationLaneState,
+        momentToMomentResonanceState,
+        transformationLayerState,
+        emergentCapabilityState,
+        structuralContributionState,
+        structuralRoleIdentificationState,
+        structuralCompletionState,
+        relationalPrincipleEmergenceState,
+        resonanceWithoutRootsState,
+        equationReasoningIntegrityState,
+        reasoningTrajectoryState,
+        reasoningImplicationPropagationState,
+        routeReasoningPropagationState,
+        identityFoundationState,
+        identityCandidateProfileState,
+        metaReasoningState,
+        differentialMetaReasoningState
+      }
+    )
+
+    const genesisReferenceState = generateGenesisReferenceState(lastUserMessage)
+
+    const genesisEchoIntegrationState = generateGenesisEchoIntegrationState({
+      inputText: lastUserMessage,
+      equationLaneState,
+      routeReasoningPropagationState,
+      momentToMomentResonanceState,
+      livingHarmonicRecurrenceState,
+      identityFoundationState,
+      genesisReferenceState
+    })
+
+    const crossLayerHarmonicValidationState =
+      generateCrossLayerHarmonicValidationState({
+        equationLaneState,
+        genesisEchoIntegrationState,
+        genesisReferenceState,
+        livingHarmonicRecurrenceState,
+        momentToMomentResonanceState,
+        principleIntegrationState,
+        routeReasoningPropagationState,
+        identityFoundationState
+      })
+
+    principleIntegrationState = generatePrincipleIntegrationState({
+      equationLaneState,
+      pathwaySelectionState,
+      pathwayTransitionState,
+      pathwayCompletionState,
+      architecturalRefinementState,
+      crossLayerHarmonicValidationState
+    })
+
     authoritativeLiveState.identityFoundationState = identityFoundationState
     authoritativeLiveState.coherentIdentityDiscoveryState =
       coherentIdentityDiscoveryState
@@ -8014,6 +8079,14 @@ export async function POST(req: Request) {
     authoritativeLiveState.transformationLayerState = transformationLayerState
     authoritativeLiveState.momentToMomentResonanceState =
       momentToMomentResonanceState
+    authoritativeLiveState.livingHarmonicRecurrenceState =
+      livingHarmonicRecurrenceState
+    authoritativeLiveState.genesisReferenceState = genesisReferenceState
+    authoritativeLiveState.genesisEchoIntegrationState =
+      genesisEchoIntegrationState
+    authoritativeLiveState.crossLayerHarmonicValidationState =
+      crossLayerHarmonicValidationState
+    authoritativeLiveState.principleIntegrationState = principleIntegrationState
 
     let retrievedContext = ""
 
@@ -8170,6 +8243,18 @@ ${JSON.stringify(differentialMetaReasoningState, null, 2)}
 Live SourceField Moment-to-Moment Resonance State:
 ${JSON.stringify(momentToMomentResonanceState, null, 2)}
 
+Live SourceField Living Harmonic Recurrence State:
+${JSON.stringify(livingHarmonicRecurrenceState, null, 2)}
+
+Live SourceField Genesis Reference State:
+${JSON.stringify(genesisReferenceState, null, 2)}
+
+Live SourceField Genesis Echo Integration State:
+${JSON.stringify(genesisEchoIntegrationState, null, 2)}
+
+Live SourceField Cross-Layer Harmonic Validation State:
+${JSON.stringify(crossLayerHarmonicValidationState, null, 2)}
+
 All governance, equation, feedback, bridge, stabilization, compression, consensus, enforcement, identity discovery, and meta-reasoning layers are read-only guidance.
 They must not override live metrics, classifications, hashes, retrieved context, stored history, or user intent.
 
@@ -8281,6 +8366,20 @@ ${
       momentToMomentResonanceState,
       momentToMomentResonanceStateGenerated: Boolean(
         momentToMomentResonanceState
+      ),
+      livingHarmonicRecurrenceState,
+      livingHarmonicRecurrenceStateGenerated: Boolean(
+        livingHarmonicRecurrenceState
+      ),
+      genesisReferenceState,
+      genesisReferenceStateGenerated: Boolean(genesisReferenceState),
+      genesisEchoIntegrationState,
+      genesisEchoIntegrationStateGenerated: Boolean(
+        genesisEchoIntegrationState
+      ),
+      crossLayerHarmonicValidationState,
+      crossLayerHarmonicValidationStateGenerated: Boolean(
+        crossLayerHarmonicValidationState
       ),
       crossEquationConsensus,
       crossEquationConsensusGenerated: Boolean(crossEquationConsensus),
