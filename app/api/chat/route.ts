@@ -6012,7 +6012,8 @@ export async function POST(req: Request) {
           coherentIdentityDiscoveryState,
           metaReasoningState,
           differentialMetaReasoningState,
-          principleIntegrationState,
+          principleIntegrationState:
+            crossLayerSupportedPrincipleIntegrationState,
           predictiveAlignmentState,
           crossLayerHarmonicValidationState
         }),
@@ -6025,7 +6026,8 @@ export async function POST(req: Request) {
             coherentIdentityDiscoveryState,
             metaReasoningState,
             differentialMetaReasoningState,
-            principleIntegrationState,
+            principleIntegrationState:
+              crossLayerSupportedPrincipleIntegrationState,
             predictiveAlignmentState
           }
         ),
@@ -6160,7 +6162,7 @@ export async function POST(req: Request) {
         metaReasoningState,
         coherentIdentityDiscoveryState,
         identityFoundationState,
-        principleIntegrationState,
+        principleIntegrationState: crossLayerSupportedPrincipleIntegrationState,
         predictiveAlignmentState,
         agentId: AGENT_ID,
         runtimeAgentId: RUNTIME_AGENT_ID,
