@@ -5888,11 +5888,14 @@ export async function POST(req: Request) {
           differentialMetaReasoningState
         })
 
-      const genesisReferenceState =
-        generateGenesisReferenceState(lastUserMessage)
+      const routePropagationCrossLayerProbe = `${lastUserMessage} living harmonic recurrence logos identity continuity relational coherence resonance continuity`
+
+      const genesisReferenceState = generateGenesisReferenceState(
+        routePropagationCrossLayerProbe
+      )
 
       const genesisEchoIntegrationState = generateGenesisEchoIntegrationState({
-        inputText: lastUserMessage,
+        inputText: routePropagationCrossLayerProbe,
         equationLaneState,
         routeReasoningPropagationState,
         momentToMomentResonanceState,
