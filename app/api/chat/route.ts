@@ -7266,162 +7266,165 @@ export async function POST(req: Request) {
         : null
 
       const basePrincipleIntegrationState = pathwaySelectionState
-  ? generatePrincipleIntegrationState({
-      equationLaneState,
-      pathwaySelectionState,
-      pathwayTransitionState,
-      pathwayCompletionState,
-      architecturalRefinementState
-    })
-  : null
+        ? generatePrincipleIntegrationState({
+            equationLaneState,
+            pathwaySelectionState,
+            pathwayTransitionState,
+            pathwayCompletionState,
+            architecturalRefinementState
+          })
+        : null
 
-const identityFoundationState = buildIdentityFoundationState({
-  resonanceHash: currentRecord?.resonance_hash ?? null,
-  ledgerHash: currentRecord?.ledger_hash ?? null,
-  previousLedgerHash: currentRecord?.previous_hash ?? null,
-  equationLaneState,
-  principleIntegrationState: basePrincipleIntegrationState,
-  recentContinuityScores: compactNumbers([
-    currentRecord?.coherence,
-    currentRecord?.integration_threshold,
-    currentRecord?.resonance_level
-  ])
-})
+      const identityFoundationState = buildIdentityFoundationState({
+        resonanceHash: currentRecord?.resonance_hash ?? null,
+        ledgerHash: currentRecord?.ledger_hash ?? null,
+        previousLedgerHash: currentRecord?.previous_hash ?? null,
+        equationLaneState,
+        principleIntegrationState: basePrincipleIntegrationState,
+        recentContinuityScores: compactNumbers([
+          currentRecord?.coherence,
+          currentRecord?.integration_threshold,
+          currentRecord?.resonance_level
+        ])
+      })
 
-const coherentIdentityDiscoveryState =
-  generateCoherentIdentityDiscoveryState({
-    equationLaneState,
-    identityFoundationState,
-    principleIntegrationState: basePrincipleIntegrationState,
-    architecturalRefinementState,
-    pathwayCompletionState
-  })
+      const coherentIdentityDiscoveryState =
+        generateCoherentIdentityDiscoveryState({
+          equationLaneState,
+          identityFoundationState,
+          principleIntegrationState: basePrincipleIntegrationState,
+          architecturalRefinementState,
+          pathwayCompletionState
+        })
 
-const metaReasoningState = generateMetaReasoningState({
-  coherentIdentityDiscoveryState,
-  principleIntegrationState: basePrincipleIntegrationState,
-  identityFoundationState,
-  equationLaneState,
-  predictiveAlignmentState: currentRecord?.predictive_alignment_engine ?? null
-})
+      const metaReasoningState = generateMetaReasoningState({
+        coherentIdentityDiscoveryState,
+        principleIntegrationState: basePrincipleIntegrationState,
+        identityFoundationState,
+        equationLaneState,
+        predictiveAlignmentState:
+          currentRecord?.predictive_alignment_engine ?? null
+      })
 
-let differentialMetaReasoningState =
-  generateDifferentialMetaReasoningState({
-    metaReasoningState,
-    coherentIdentityDiscoveryState,
-    principleIntegrationState: basePrincipleIntegrationState,
-    identityFoundationState,
-    equationLaneState
-  })
+      let differentialMetaReasoningState =
+        generateDifferentialMetaReasoningState({
+          metaReasoningState,
+          coherentIdentityDiscoveryState,
+          principleIntegrationState: basePrincipleIntegrationState,
+          identityFoundationState,
+          equationLaneState
+        })
 
-const identityCandidateProfileState = generateIdentityCandidateProfiles({
-  coherentIdentityDiscoveryState,
-  metaReasoningState,
-  differentialMetaReasoningState
-})
+      const identityCandidateProfileState = generateIdentityCandidateProfiles({
+        coherentIdentityDiscoveryState,
+        metaReasoningState,
+        differentialMetaReasoningState
+      })
 
-differentialMetaReasoningState = {
-  ...(differentialMetaReasoningState || {}),
-  differentialCandidateProfiles:
-    identityCandidateProfileState?.candidateProfiles ?? [],
-  dominantDifferentialCandidate:
-    identityCandidateProfileState?.dominantProfile ??
-    differentialMetaReasoningState?.dominantDifferentialCandidate ??
-    null
-}
+      differentialMetaReasoningState = {
+        ...(differentialMetaReasoningState || {}),
+        differentialCandidateProfiles:
+          identityCandidateProfileState?.candidateProfiles ?? [],
+        dominantDifferentialCandidate:
+          identityCandidateProfileState?.dominantProfile ??
+          differentialMetaReasoningState?.dominantDifferentialCandidate ??
+          null
+      }
 
-const routeReasoningPropagationState = generateRouteReasoningPropagation({
-  equationLaneState,
-  identityFoundationState,
-  coherentIdentityDiscoveryState,
-  metaReasoningState,
-  differentialMetaReasoningState,
-  requestedScope: "principle integration",
-  requestedAction: principleIntegrationAction
-})
+      const routeReasoningPropagationState = generateRouteReasoningPropagation({
+        equationLaneState,
+        identityFoundationState,
+        coherentIdentityDiscoveryState,
+        metaReasoningState,
+        differentialMetaReasoningState,
+        requestedScope: "principle integration",
+        requestedAction: principleIntegrationAction
+      })
 
-const momentToMomentResonanceState =
-  generateMomentToMomentResonanceState({
-    equationLaneState,
-    identityFoundationState,
-    routeReasoningPropagationState,
-    identityCandidateProfileState,
-    metaReasoningState,
-    differentialMetaReasoningState
-  })
+      const momentToMomentResonanceState = generateMomentToMomentResonanceState(
+        {
+          equationLaneState,
+          identityFoundationState,
+          routeReasoningPropagationState,
+          identityCandidateProfileState,
+          metaReasoningState,
+          differentialMetaReasoningState
+        }
+      )
 
-const livingHarmonicRecurrenceState =
-  generateLivingHarmonicRecurrenceState({
-    equationLaneState,
-    momentToMomentResonanceState,
-    routeReasoningPropagationState,
-    identityFoundationState,
-    identityCandidateProfileState,
-    metaReasoningState,
-    differentialMetaReasoningState
-  })
+      const livingHarmonicRecurrenceState =
+        generateLivingHarmonicRecurrenceState({
+          equationLaneState,
+          momentToMomentResonanceState,
+          routeReasoningPropagationState,
+          identityFoundationState,
+          identityCandidateProfileState,
+          metaReasoningState,
+          differentialMetaReasoningState
+        })
 
-const principleIntegrationCrossLayerProbe =
-  `${lastUserMessage} living harmonic recurrence logos identity continuity relational coherence resonance continuity`
+      const principleIntegrationCrossLayerProbe = `${lastUserMessage} living harmonic recurrence logos identity continuity relational coherence resonance continuity`
 
-const genesisReferenceState =
-  generateGenesisReferenceState(principleIntegrationCrossLayerProbe)
+      const genesisReferenceState = generateGenesisReferenceState(
+        principleIntegrationCrossLayerProbe
+      )
 
-const genesisEchoIntegrationState = generateGenesisEchoIntegrationState({
-  inputText: principleIntegrationCrossLayerProbe,
-  equationLaneState,
-  routeReasoningPropagationState,
-  momentToMomentResonanceState,
-  livingHarmonicRecurrenceState,
-  identityFoundationState,
-  genesisReferenceState
-})
+      const genesisEchoIntegrationState = generateGenesisEchoIntegrationState({
+        inputText: principleIntegrationCrossLayerProbe,
+        equationLaneState,
+        routeReasoningPropagationState,
+        momentToMomentResonanceState,
+        livingHarmonicRecurrenceState,
+        identityFoundationState,
+        genesisReferenceState
+      })
 
-const crossLayerHarmonicValidationState =
-  generateCrossLayerHarmonicValidationState({
-    equationLaneState,
-    genesisEchoIntegrationState,
-    genesisReferenceState,
-    livingHarmonicRecurrenceState,
-    momentToMomentResonanceState,
-    principleIntegrationState: basePrincipleIntegrationState,
-    routeReasoningPropagationState,
-    identityFoundationState
-  })
+      const crossLayerHarmonicValidationState =
+        generateCrossLayerHarmonicValidationState({
+          equationLaneState,
+          genesisEchoIntegrationState,
+          genesisReferenceState,
+          livingHarmonicRecurrenceState,
+          momentToMomentResonanceState,
+          principleIntegrationState: basePrincipleIntegrationState,
+          routeReasoningPropagationState,
+          identityFoundationState
+        })
 
-const principleIntegrationState = pathwaySelectionState
-  ? generatePrincipleIntegrationState({
-      equationLaneState,
-      pathwaySelectionState,
-      pathwayTransitionState,
-      pathwayCompletionState,
-      architecturalRefinementState,
-      crossLayerHarmonicValidationState
-    })
-  : basePrincipleIntegrationState
+      const principleIntegrationState = pathwaySelectionState
+        ? generatePrincipleIntegrationState({
+            equationLaneState,
+            pathwaySelectionState,
+            pathwayTransitionState,
+            pathwayCompletionState,
+            architecturalRefinementState,
+            crossLayerHarmonicValidationState
+          })
+        : basePrincipleIntegrationState
 
-return NextResponse.json({
-  result: buildPrincipleIntegrationResponse(
-    principleIntegrationAction,
-    principleIntegrationState
-  ),
-  directStateReport: true,
-  nonMutatingReport: true,
-  deterministicPrincipleIntegrationResponse: true,
-  source: "latest_stored_supabase_snapshot",
-  stateObject: "principle integration state",
-  action: principleIntegrationAction,
-  value: principleIntegrationState,
-  basePrincipleIntegrationState,
-  crossLayerHarmonicValidationState,
-  genesisEchoIntegrationState,
-  genesisReferenceState,
-  agentId: AGENT_ID,
-  runtimeAgentId: RUNTIME_AGENT_ID,
-  ledgerHash: currentRecord?.ledger_hash ?? null,
-  resonanceHash: currentRecord?.resonance_hash ?? null,
-  createdAt: currentRecord?.created_at ?? null
-})
+      return NextResponse.json({
+        result: buildPrincipleIntegrationResponse(
+          principleIntegrationAction,
+          principleIntegrationState
+        ),
+        directStateReport: true,
+        nonMutatingReport: true,
+        deterministicPrincipleIntegrationResponse: true,
+        source: "latest_stored_supabase_snapshot",
+        stateObject: "principle integration state",
+        action: principleIntegrationAction,
+        value: principleIntegrationState,
+        basePrincipleIntegrationState,
+        crossLayerHarmonicValidationState,
+        genesisEchoIntegrationState,
+        genesisReferenceState,
+        agentId: AGENT_ID,
+        runtimeAgentId: RUNTIME_AGENT_ID,
+        ledgerHash: currentRecord?.ledger_hash ?? null,
+        resonanceHash: currentRecord?.resonance_hash ?? null,
+        createdAt: currentRecord?.created_at ?? null
+      })
+    }
 
     const resonanceHash = createResonanceHash({
       agent: AGENT_ID,
