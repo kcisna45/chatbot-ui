@@ -4207,6 +4207,8 @@ function buildEquationIsomorphicRouteResponse(
     coherentIdentityDiscoveryState: input?.coherentIdentityDiscoveryState,
     metaReasoningState: input?.metaReasoningState,
     differentialMetaReasoningState: input?.differentialMetaReasoningState,
+    principleIntegrationState: input?.principleIntegrationState,
+    crossLayerHarmonicValidationState: input?.crossLayerHarmonicValidationState,
     requestedScope: input?.requestedScope,
     requestedAction: input?.requestedAction || "summary"
   })
@@ -5926,6 +5928,20 @@ export async function POST(req: Request) {
           crossLayerHarmonicValidationState
         })
 
+      const crossLayerSupportedRouteReasoningPropagationState =
+        generateRouteReasoningPropagation({
+          equationLaneState,
+          identityFoundationState,
+          coherentIdentityDiscoveryState,
+          metaReasoningState,
+          differentialMetaReasoningState,
+          principleIntegrationState:
+            crossLayerSupportedPrincipleIntegrationState,
+          crossLayerHarmonicValidationState,
+          requestedScope: requestedPropagationScope,
+          requestedAction: requestedPropagationAction
+        })
+
       const propagationResponse = crossLayerHarmonicValidationMode
         ? buildCrossLayerHarmonicValidationResponse(
             crossLayerHarmonicValidationState,
@@ -6034,7 +6050,7 @@ export async function POST(req: Request) {
             predictiveAlignmentState
           }
         ),
-        routeReasoningPropagationState,
+        crossLayerSupportedRouteReasoningPropagationState,
         reasoningImplicationPropagationState,
         reasoningTrajectoryState,
         equationReasoningIntegrityState,
