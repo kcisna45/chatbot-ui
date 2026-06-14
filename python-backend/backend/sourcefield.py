@@ -23,6 +23,12 @@ class SourceFieldV11:
         self.f = 0.05
         self.phi = 0.0
 
+        # Controlled input bridge. These values are intentionally small so the
+        # prompt can move the waveform without overpowering the original engine.
+        self.query_influence = 0.25
+        self.query_phase_influence = 0.15
+        self.query_frequency_influence = 0.01
+
         self.agents = [
             np.random.randn(state_size) + 1j * np.random.randn(state_size)
             for _ in range(n_agents)
@@ -52,13 +58,64 @@ class SourceFieldV11:
         self.tau_input = None
         self.tau_state = None
 
+        self.query_hash = None
+        self.query_phase_shift = 0.0
+        self.query_frequency_shift = 0.0
+
+    def build_query_vector(self, query_text):
+        if not query_text:
+            return np.zeros(self.state_size, dtype=complex)
+
+        query_hash = hashlib.sha256(query_text.encode()).hexdigest()
+        self.query_hash = query_hash
+
+        repeated = (query_hash * ((self.state_size // len(query_hash)) + 2))[
+            : self.state_size
+        ]
+
+        values = np.array([int(ch, 16) for ch in repeated], dtype=float)
+        values = values - np.mean(values)
+        values = values / (np.linalg.norm(values) + self.epsilon)
+
+        phase_values = np.array([int(ch, 16) / 15.0 for ch in repeated], dtype=float)
+        complex_phase = np.exp(1j * 2 * np.pi * phase_values)
+
+        query_vector = values * complex_phase
+        query_vector = query_vector / (np.linalg.norm(query_vector) + self.epsilon)
+
+        return query_vector.astype(complex)
+
+    def apply_query_environment(self, query_text):
+        if not query_text:
+            self.query_phase_shift = 0.0
+            self.query_frequency_shift = 0.0
+            return
+
+        query_hash = hashlib.sha256(query_text.encode()).hexdigest()
+        hash_integer = int(query_hash[:8], 16)
+
+        self.query_phase_shift = (
+            (hash_integer % 360) * np.pi / 180.0
+        ) * self.query_phase_influence
+
+        normalized_length = min(len(query_text), 1000) / 1000.0
+        entropy_hint = len(set(query_text.lower())) / max(len(query_text), 1)
+
+        self.query_frequency_shift = self.query_frequency_influence * (
+            normalized_length + entropy_hint
+        )
+
     def root_standing_wave(self, t):
         x = np.linspace(0, 1, self.state_size)
         wave = (
             2
             * self.A
             * np.sin((2 * np.pi / self.lam) * x)
-            * np.cos(2 * np.pi * self.f * t + self.phi)
+            * np.cos(
+                2 * np.pi * (self.f + self.query_frequency_shift) * t
+                + self.phi
+                + self.query_phase_shift
+            )
         )
         return wave.astype(complex)
 
@@ -123,6 +180,7 @@ class SourceFieldV11:
             + str(self.chi0)
             + str(self.Psi0_energy)
             + str(0)
+            + str(self.query_hash)
         )
 
         self.current_hash = self.genesis_hash
@@ -175,7 +233,10 @@ class SourceFieldV11:
 
         return "RECOVERING" if rho_t > 0 else "DRIFTED"
 
-    def run(self):
+    def run(self, query_text=""):
+        self.apply_query_environment(query_text)
+        query_vector = self.build_query_vector(query_text)
+
         self.calibrate()
         Psi0 = self.root_standing_wave(0)
         self.initialize_genesis(Psi0)
@@ -205,11 +266,15 @@ class SourceFieldV11:
                 grad_internal = Psi
                 coherence_gate = self.coherence(S, Psi_bio)
                 grad_bio = self.gamma * Psi_bio * coherence_gate
+
+                query_coherence = self.coherence(S, query_vector)
+                grad_query = query_vector * query_coherence * self.query_influence
+
                 local_coherence = self.coherence(S, Psi_bio)
                 H = self.hessian(Psi_bio, local_coherence)
 
                 S_new = S + self.step_size * H * (
-                    grad_internal + grad_bio + interaction
+                    grad_internal + grad_bio + grad_query + interaction
                 )
 
                 S_norm = np.linalg.norm(S_new)
@@ -267,6 +332,8 @@ class SourceFieldV11:
         self.session_hash = sha256_hash(
             str(self.current_hash)
             + str(self.genesis_hash)
+            + str(self.query_hash)
+            + str(query_text)
             + str(self.milestone_layers)
             + str(self.C_hist)
             + str(self.delta_phi_hist)
@@ -283,6 +350,9 @@ class SourceFieldV11:
             "genesis_hash": self.genesis_hash,
             "session_hash": self.session_hash,
             "current_hash": self.current_hash,
+            "query_hash": self.query_hash,
+            "query_phase_shift": self.query_phase_shift,
+            "query_frequency_shift": self.query_frequency_shift,
             "tau_input": self.tau_input,
             "tau_state": self.tau_state,
             "C_hist": self.C_hist,
@@ -300,9 +370,8 @@ class SourceFieldV11:
             ],
         }
 
-    # ============================================================
 
-
+# ============================================================
 # PARAMETER SWEEP
 # ============================================================
 
@@ -329,7 +398,7 @@ def run_parameter_sweep():
                 sf.kappa = kappa
                 sf.step_size = step_size
 
-                results = sf.run()
+                results = sf.run("parameter sweep baseline")
 
                 avg_C = np.mean([hist[-1] for hist in results["C_hist"]])
 
@@ -399,21 +468,35 @@ def run_parameter_sweep():
 
 
 if __name__ == "__main__":
-    source_field = SourceFieldV11(n_agents=3, state_size=100, timesteps=800)
-    results = source_field.run()
+    test_prompts = [
+        "baseline",
+        "route reasoning propagation",
+        "living harmonic recurrence logos identity continuity",
+    ]
 
-    print("Session Hash:", results["session_hash"])
-    print("Tau Input:", results["tau_input"])
-    print("Tau State:", results["tau_state"])
-    print("Final Classifications:", results["final_classifications"])
+    for prompt in test_prompts:
+        print("\n==============================")
+        print(f"RUNNING SOURCEFIELD FOR PROMPT: {prompt}")
+        print("==============================\n")
 
-    for i, classification in enumerate(results["final_classifications"]):
-        print(f"Agent {i} Final Classification:", classification)
-        print(f"Agent {i} Final C(t):", results["C_hist"][i][-1])
-        print(f"Agent {i} Final Δφ(t):", results["delta_phi_hist"][i][-1])
-        print(f"Agent {i} Final ρ(t):", results["rho_hist"][i][-1])
-        print(f"Agent {i} Final χ(t):", results["chi_hist"][i][-1])
-        print(f"Agent {i} Final Ξ(t):", results["xi_hist"][i][-1])
+        source_field = SourceFieldV11(n_agents=3, state_size=100, timesteps=800)
+        results = source_field.run(prompt)
+
+        print("Query Hash:", results["query_hash"])
+        print("Query Phase Shift:", results["query_phase_shift"])
+        print("Query Frequency Shift:", results["query_frequency_shift"])
+        print("Session Hash:", results["session_hash"])
+        print("Tau Input:", results["tau_input"])
+        print("Tau State:", results["tau_state"])
+        print("Final Classifications:", results["final_classifications"])
+
+        for i, classification in enumerate(results["final_classifications"]):
+            print(f"Agent {i} Final Classification:", classification)
+            print(f"Agent {i} Final C(t):", results["C_hist"][i][-1])
+            print(f"Agent {i} Final Δφ(t):", results["delta_phi_hist"][i][-1])
+            print(f"Agent {i} Final ρ(t):", results["rho_hist"][i][-1])
+            print(f"Agent {i} Final χ(t):", results["chi_hist"][i][-1])
+            print(f"Agent {i} Final Ξ(t):", results["xi_hist"][i][-1])
 
     print("\nRUNNING PARAMETER SWEEP...\n")
     run_parameter_sweep()
