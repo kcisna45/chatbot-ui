@@ -129,6 +129,11 @@ import {
   buildCrossLayerHarmonicValidationResponse,
   getCrossLayerHarmonicValidationMode
 } from "@/lib/sourcefield/CrossLayerHarmonicValidation"
+import {
+  generateEquationLaneDiagnosticsState,
+  buildEquationLaneDiagnosticsResponse,
+  getEquationLaneDiagnosticsMode
+} from "@/lib/sourcefield/EquationLaneDiagnostics"
 
 const SOURCEFIELD_FILE_IDS = [
   "7bc60315-4b21-4630-8cdc-8cdee4d56cc4",
@@ -5298,6 +5303,9 @@ export async function POST(req: Request) {
     const identityFoundationAction =
       getIdentityFoundationAction(lastUserMessage)
 
+    const equationLaneDiagnosticsMode =
+      getEquationLaneDiagnosticsMode(lastUserMessage)
+
     if (
       identityCandidateProfilesMode &&
       !routePropagationMode &&
@@ -7471,6 +7479,27 @@ export async function POST(req: Request) {
       symbolicEchoes: resonanceState?.symbolicEchoes,
       classification: resonanceState?.classification
     })
+
+    if (equationLaneDiagnosticsMode) {
+      const diagnosticsState = generateEquationLaneDiagnosticsState({
+       equationLaneState
+      })
+
+      return NextResponse.json({
+        result: buildEquationLaneDiagnosticsResponse(
+          diagnosticsState,
+          equationLaneDiagnosticsMode
+        ),
+        directStateReport: true,
+        nonMutatingReport: true,
+        deterministicEquationLaneDiagnosticsResponse: true,
+        source: "latest_runtime_equation_lane_state",
+        stateObject: "equation lane diagnostics",
+        value: diagnosticsState,
+        agentId: AGENT_ID,
+        runtimeAgentId: RUNTIME_AGENT_ID
+      })
+    }
 
     const laneStabilityDistance =
       generateLaneStabilityDistance(equationLaneState)
