@@ -6016,7 +6016,7 @@ export async function POST(req: Request) {
                                       )
                                     : buildRoutePropagationModeResponse({
                                         propagationState:
-                                          routeReasoningPropagationState,
+                                          crossLayerSupportedRouteReasoningPropagationState,
                                         differentialMetaReasoningState,
                                         mode: routePropagationMode || "summary"
                                       })
