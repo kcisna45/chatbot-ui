@@ -134,6 +134,11 @@ import {
   buildEquationLaneDiagnosticsResponse,
   getEquationLaneDiagnosticsMode
 } from "@/lib/sourcefield/EquationLaneDiagnostics"
+import {
+  generatePathwayConvergenceState,
+  buildPathwayConvergenceResponse,
+  getPathwayConvergenceMode
+} from "@/lib/sourcefield/pathwayConvergenceEngine"
 
 const SOURCEFIELD_FILE_IDS = [
   "7bc60315-4b21-4630-8cdc-8cdee4d56cc4",
@@ -5253,6 +5258,9 @@ export async function POST(req: Request) {
 
     const reasoningTrajectoryMode = getReasoningTrajectoryMode(lastUserMessage)
 
+    const pathwayConvergenceMode =
+      getPathwayConvergenceMode(lastUserMessage)
+
     const equationReasoningIntegrityMode =
       getEquationReasoningIntegrityMode(lastUserMessage)
 
@@ -7484,6 +7492,27 @@ export async function POST(req: Request) {
       const diagnosticsState = generateEquationLaneDiagnosticsState({
        equationLaneState
       })
+
+      const pathwayConvergenceState = generatePathwayConvergenceState({
+        equationLaneState
+      })
+
+    if (pathwayConvergenceMode) {
+      return NextResponse.json({
+        result: buildPathwayConvergenceResponse(
+          pathwayConvergenceState,
+          pathwayConvergenceMode
+        ),
+        directStateReport: true,
+        nonMutatingReport: true,
+        pathwayConvergenceEngineResponse: true,
+        source: "latest_runtime_pathway_convergence",
+        stateObject: "pathway convergence",
+        value: pathwayConvergenceState,
+        agentId: AGENT_ID,
+        runtimeAgentId: RUNTIME_AGENT_ID
+      })
+    }
 
       return NextResponse.json({
         result: buildEquationLaneDiagnosticsResponse(
