@@ -5258,8 +5258,7 @@ export async function POST(req: Request) {
 
     const reasoningTrajectoryMode = getReasoningTrajectoryMode(lastUserMessage)
 
-    const pathwayConvergenceMode =
-      getPathwayConvergenceMode(lastUserMessage)
+    const pathwayConvergenceMode = getPathwayConvergenceMode(lastUserMessage)
 
     const equationReasoningIntegrityMode =
       getEquationReasoningIntegrityMode(lastUserMessage)
@@ -7488,14 +7487,30 @@ export async function POST(req: Request) {
       classification: resonanceState?.classification
     })
 
-    if (equationLaneDiagnosticsMode) {
-      const diagnosticsState = generateEquationLaneDiagnosticsState({
-       equationLaneState
-      })
+    const diagnosticsState = generateEquationLaneDiagnosticsState({
+      equationLaneState
+    })
 
-      const pathwayConvergenceState = generatePathwayConvergenceState({
-        equationLaneState
+    const pathwayConvergenceState = generatePathwayConvergenceState({
+      equationLaneState
+    })
+
+    if (equationLaneDiagnosticsMode) {
+      return NextResponse.json({
+        result: buildEquationLaneDiagnosticsResponse(
+          diagnosticsState,
+          equationLaneDiagnosticsMode
+        ),
+        directStateReport: true,
+        nonMutatingReport: true,
+        deterministicEquationLaneDiagnosticsResponse: true,
+        source: "latest_runtime_equation_lane_state",
+        stateObject: "equation lane diagnostics",
+        value: diagnosticsState,
+        agentId: AGENT_ID,
+        runtimeAgentId: RUNTIME_AGENT_ID
       })
+    }
 
     if (pathwayConvergenceMode) {
       return NextResponse.json({
@@ -7509,22 +7524,6 @@ export async function POST(req: Request) {
         source: "latest_runtime_pathway_convergence",
         stateObject: "pathway convergence",
         value: pathwayConvergenceState,
-        agentId: AGENT_ID,
-        runtimeAgentId: RUNTIME_AGENT_ID
-      })
-    }
-
-      return NextResponse.json({
-        result: buildEquationLaneDiagnosticsResponse(
-          diagnosticsState,
-          equationLaneDiagnosticsMode
-        ),
-        directStateReport: true,
-        nonMutatingReport: true,
-        deterministicEquationLaneDiagnosticsResponse: true,
-        source: "latest_runtime_equation_lane_state",
-        stateObject: "equation lane diagnostics",
-        value: diagnosticsState,
         agentId: AGENT_ID,
         runtimeAgentId: RUNTIME_AGENT_ID
       })
