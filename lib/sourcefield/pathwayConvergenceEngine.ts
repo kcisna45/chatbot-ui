@@ -18,6 +18,7 @@ export interface PathwayConvergenceState {
   phase: "Pathway Convergence Layer"
   activePathways: PathwayEvaluation[]
   weightedAgreement: number
+  totalPathwayWeight: number
   convergenceAngle: number
   eq2Agreement: number
   convergenceQualified: boolean
@@ -68,8 +69,7 @@ export function generatePathwayConvergenceState(
     pathway => {
       const pathwayStrength = signal * pathway.defaultWeight
 
-      const pathwayQualified =
-        pathwayStrength >= threshold * pathway.defaultWeight
+      const pathwayQualified = threshold > 0 ? signal >= threshold : false
 
       return {
         id: pathway.id,
@@ -83,20 +83,26 @@ export function generatePathwayConvergenceState(
     }
   )
 
-  const weightedAgreement = evaluations.reduce(
-    (sum, pathway) => sum + pathway.pathwayStrength,
+  const totalPathwayWeight = evaluations.reduce(
+    (sum, pathway) => sum + pathway.weight,
     0
   )
 
+  const weightedAgreement =
+    totalPathwayWeight > 0
+      ? evaluations.reduce((sum, pathway) => sum + pathway.pathwayStrength, 0) /
+        totalPathwayWeight
+      : 0
+
   const eq2Agreement = threshold > 0 ? weightedAgreement / threshold : 0
 
-  const convergenceQualified = weightedAgreement >= threshold
+  const convergenceQualified = eq2Agreement >= 1
 
   const convergenceStatus = convergenceQualified
     ? "stable"
-    : weightedAgreement >= threshold * 0.75
+    : eq2Agreement >= 0.75
       ? "converging"
-      : weightedAgreement >= threshold * 0.4
+      : eq2Agreement >= 0.4
         ? "partial"
         : "forming"
 
@@ -109,6 +115,7 @@ export function generatePathwayConvergenceState(
     phase: "Pathway Convergence Layer",
     activePathways: evaluations,
     weightedAgreement,
+    totalPathwayWeight,
     convergenceAngle: phase,
     eq2Agreement,
     convergenceQualified,
@@ -176,6 +183,7 @@ export function buildPathwayConvergenceResponse(
     "",
     `convergenceStatus: ${state.convergenceStatus}`,
     `weightedAgreement: ${state.weightedAgreement}`,
+    `totalPathwayWeight: ${state.totalPathwayWeight}`,
     `eq2Agreement: ${state.eq2Agreement}`,
     `convergenceAngle: ${state.convergenceAngle}`,
     `dominantPathway: ${state.dominantPathway ?? "none"}`,
