@@ -16,6 +16,9 @@ export interface PathwayEvaluation {
 
 export interface PathwayConvergenceState {
   phase: "Pathway Convergence Layer"
+  sourceSignalStrength: number
+  sourceIntegrationThreshold: number
+  sourcePhaseDivergence: number
   activePathways: PathwayEvaluation[]
   weightedAgreement: number
   totalPathwayWeight: number
@@ -68,7 +71,6 @@ export function generatePathwayConvergenceState(
   const evaluations: PathwayEvaluation[] = REGISTERED_SOURCEFIELD_PATHWAYS.map(
     pathway => {
       const pathwayStrength = signal * pathway.defaultWeight
-
       const pathwayQualified = threshold > 0 ? signal >= threshold : false
 
       return {
@@ -113,6 +115,9 @@ export function generatePathwayConvergenceState(
 
   return {
     phase: "Pathway Convergence Layer",
+    sourceSignalStrength: signal,
+    sourceIntegrationThreshold: threshold,
+    sourcePhaseDivergence: phase,
     activePathways: evaluations,
     weightedAgreement,
     totalPathwayWeight,
@@ -180,6 +185,10 @@ export function buildPathwayConvergenceResponse(
 
   return [
     `phase: ${state.phase}`,
+    "",
+    `sourceSignalStrength: ${state.sourceSignalStrength}`,
+    `sourceIntegrationThreshold: ${state.sourceIntegrationThreshold}`,
+    `sourcePhaseDivergence: ${state.sourcePhaseDivergence}`,
     "",
     `convergenceStatus: ${state.convergenceStatus}`,
     `weightedAgreement: ${state.weightedAgreement}`,
