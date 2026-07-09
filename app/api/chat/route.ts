@@ -139,6 +139,7 @@ import {
   buildPathwayConvergenceResponse,
   getPathwayConvergenceMode
 } from "@/lib/sourcefield/pathwayConvergenceEngine"
+import { generateAuthoritativeRuntimeSnapshot } from "@/lib/sourcefield/authoritativeRuntimeSnapshot"
 
 const SOURCEFIELD_FILE_IDS = [
   "7bc60315-4b21-4630-8cdc-8cdee4d56cc4",
@@ -7487,12 +7488,20 @@ export async function POST(req: Request) {
       classification: resonanceState?.classification
     })
 
+    const authoritativeRuntimeSnapshot = generateAuthoritativeRuntimeSnapshot({
+      resonanceState,
+      equationLaneState,
+      resonanceHash,
+      agentId: AGENT_ID,
+      runtimeAgentId: RUNTIME_AGENT_ID
+    })
+
     const diagnosticsState = generateEquationLaneDiagnosticsState({
-      equationLaneState
+      equationLaneState: authoritativeRuntimeSnapshot.equationLaneState
     })
 
     const pathwayConvergenceState = generatePathwayConvergenceState({
-      equationLaneState
+      equationLaneState: authoritativeRuntimeSnapshot.equationLaneState
     })
 
     if (equationLaneDiagnosticsMode) {
