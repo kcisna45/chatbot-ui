@@ -145,6 +145,11 @@ import {
   buildRuntimeObservationResponse,
   getRuntimeObservationMode
 } from "@/lib/sourcefield/runtimeObservationLayer"
+import {
+  generateStateEvolutionState,
+  buildStateEvolutionResponse,
+  getStateEvolutionMode
+} from "@/lib/sourcefield/stateEvolutionLayer"
 
 const SOURCEFIELD_FILE_IDS = [
   "7bc60315-4b21-4630-8cdc-8cdee4d56cc4",
@@ -5268,6 +5273,8 @@ export async function POST(req: Request) {
 
     const runtimeObservationMode = getRuntimeObservationMode(lastUserMessage)
 
+    const stateEvolutionMode = getStateEvolutionMode(lastUserMessage)
+
     const equationReasoningIntegrityMode =
       getEquationReasoningIntegrityMode(lastUserMessage)
 
@@ -7598,14 +7605,32 @@ export async function POST(req: Request) {
 
     let previousPathwaySelectionState: any = null
 
+    let previousEquationLaneState: any = null
+
+    let previousObservationId: string | null = null
+
+    let previousTimestamp: string | null = null
+
     try {
       const { data: latestPathwayState } = await supabaseAdmin
         .from("sourcefield_ledger_events")
-        .select("equation_lane_state, resonance_state")
+        .select(
+          "equation_lane_state, resonance_state, created_at, resonance_hash, ledger_hash"
+        )
         .eq("agent_id", AGENT_ID)
         .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle()
+
+      previousEquationLaneState =
+        latestPathwayState?.equation_lane_state ?? null
+
+      previousObservationId =
+        latestPathwayState?.resonance_hash ??
+        latestPathwayState?.ledger_hash ??
+        null
+
+      previousTimestamp = latestPathwayState?.created_at ?? null
 
       previousPathwaySelectionState =
         buildPathwaySelectionStateFromLedgerRecord(latestPathwayState)
@@ -7614,6 +7639,40 @@ export async function POST(req: Request) {
         "SourceField previous pathway lookup failed:",
         pathwayTransitionLookupError
       )
+    }
+
+    const stateEvolutionState = generateStateEvolutionState({
+      currentEquationLaneState: authoritativeRuntimeSnapshot.equationLaneState,
+
+      previousEquationLaneState,
+
+      currentObservationId: authoritativeRuntimeSnapshot.resonanceHash,
+
+      previousObservationId,
+
+      currentTimestamp: new Date().toISOString(),
+
+      previousTimestamp
+    })
+
+    if (stateEvolutionMode) {
+      return NextResponse.json({
+        result: buildStateEvolutionResponse(
+          stateEvolutionState,
+          stateEvolutionMode
+        ),
+        directStateReport: true,
+        nonMutatingReport: true,
+        stateEvolutionLayerResponse: true,
+        source: "authoritative_runtime_snapshot_and_previous_ledger_state",
+        stateObject: "state evolution",
+        value: stateEvolutionState,
+        agentId: AGENT_ID,
+        runtimeAgentId: RUNTIME_AGENT_ID,
+        currentObservationId: authoritativeRuntimeSnapshot.resonanceHash,
+        previousObservationId,
+        previousTimestamp
+      })
     }
 
     const pathwayTransitionState = generatePathwayTransitionState(
