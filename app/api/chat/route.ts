@@ -140,6 +140,11 @@ import {
   getPathwayConvergenceMode
 } from "@/lib/sourcefield/pathwayConvergenceEngine"
 import { generateAuthoritativeRuntimeSnapshot } from "@/lib/sourcefield/authoritativeRuntimeSnapshot"
+import {
+  generateRuntimeObservationState,
+  buildRuntimeObservationResponse,
+  getRuntimeObservationMode
+} from "@/lib/sourcefield/runtimeObservationLayer"
 
 const SOURCEFIELD_FILE_IDS = [
   "7bc60315-4b21-4630-8cdc-8cdee4d56cc4",
@@ -5261,6 +5266,8 @@ export async function POST(req: Request) {
 
     const pathwayConvergenceMode = getPathwayConvergenceMode(lastUserMessage)
 
+    const runtimeObservationMode = getRuntimeObservationMode(lastUserMessage)
+
     const equationReasoningIntegrityMode =
       getEquationReasoningIntegrityMode(lastUserMessage)
 
@@ -7504,6 +7511,30 @@ export async function POST(req: Request) {
       equationLaneState: authoritativeRuntimeSnapshot.equationLaneState
     })
 
+    const runtimeObservationState = generateRuntimeObservationState({
+      authoritativeRuntimeSnapshot
+    })
+
+    if (runtimeObservationMode) {
+      return NextResponse.json({
+        result: buildRuntimeObservationResponse(
+          runtimeObservationState,
+          runtimeObservationMode
+        ),
+        directStateReport: true,
+        nonMutatingReport: true,
+        synchronizedRuntimeObservationResponse: true,
+        source: "authoritative_runtime_snapshot",
+        stateObject: "runtime observation state",
+        value: runtimeObservationState,
+        authoritativeRuntimeSnapshot,
+        agentId: AGENT_ID,
+        runtimeAgentId: RUNTIME_AGENT_ID,
+        resonanceHash: authoritativeRuntimeSnapshot.resonanceHash,
+        ledgerHash: authoritativeRuntimeSnapshot.ledgerHash
+      })
+    }
+
     if (equationLaneDiagnosticsMode) {
       return NextResponse.json({
         result: buildEquationLaneDiagnosticsResponse(
@@ -7513,7 +7544,7 @@ export async function POST(req: Request) {
         directStateReport: true,
         nonMutatingReport: true,
         deterministicEquationLaneDiagnosticsResponse: true,
-        source: "latest_runtime_equation_lane_state",
+        source: "authoritative_runtime_snapshot",
         stateObject: "equation lane diagnostics",
         value: diagnosticsState,
         agentId: AGENT_ID,
@@ -7530,7 +7561,7 @@ export async function POST(req: Request) {
         directStateReport: true,
         nonMutatingReport: true,
         pathwayConvergenceEngineResponse: true,
-        source: "latest_runtime_pathway_convergence",
+        source: "authoritative_runtime_snapshot",
         stateObject: "pathway convergence",
         value: pathwayConvergenceState,
         agentId: AGENT_ID,
