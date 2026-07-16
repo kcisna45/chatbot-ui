@@ -155,12 +155,21 @@ import {
   buildEquationEngineObservationResponse,
   getEquationEngineObservationMode
 } from "@/lib/sourcefield/equationEngineObservation"
-
 import {
   generateEquationEngineObservationLifecycle,
   buildEquationEngineObservationLifecycleResponse,
   getEquationEngineObservationLifecycleMode
 } from "@/lib/sourcefield/equationEngineObservationLifecycle"
+import {
+  generateEquationEngineInterpretation,
+  buildEquationEngineInterpretationResponse,
+  getEquationEngineInterpretationMode
+} from "@/lib/sourcefield/equationEngineInterpretation"
+import {
+  generateEquationEngineAIExplanationRequest,
+  parseEquationEngineAIExplanation,
+  buildEquationEngineAIExplanationResponse
+} from "@/lib/sourcefield/equationEngineAIExplanation"
 
 const SOURCEFIELD_FILE_IDS = [
   "7bc60315-4b21-4630-8cdc-8cdee4d56cc4",
@@ -5256,6 +5265,54 @@ function buildCoherentIdentityDiscoveryResponse(
   return buildCoherentIdentityDiscoverySummary(state)
 }
 
+type EquationEngineAIExplanationMode = {
+  audience: "plain-language" | "technical" | "research" | "developer"
+
+  depth: "brief" | "standard" | "detailed"
+}
+
+function getEquationEngineAIExplanationMode(
+  message: string
+): EquationEngineAIExplanationMode | null {
+  const normalized = (message || "").toLowerCase()
+
+  const isExplanationRequest =
+    normalized.includes("explain equation engine") ||
+    normalized.includes("explain the equation engine") ||
+    normalized.includes("equation engine ai explanation") ||
+    normalized.includes("ai explain equation engine") ||
+    normalized.includes("interpret and explain equation engine")
+
+  if (!isExplanationRequest) {
+    return null
+  }
+
+  const audience: EquationEngineAIExplanationMode["audience"] =
+    normalized.includes("developer")
+      ? "developer"
+      : normalized.includes("research")
+        ? "research"
+        : normalized.includes("technical")
+          ? "technical"
+          : "plain-language"
+
+  const depth: EquationEngineAIExplanationMode["depth"] =
+    normalized.includes("brief") ||
+    normalized.includes("short") ||
+    normalized.includes("concise")
+      ? "brief"
+      : normalized.includes("detailed") ||
+          normalized.includes("in detail") ||
+          normalized.includes("full explanation")
+        ? "detailed"
+        : "standard"
+
+  return {
+    audience,
+    depth
+  }
+}
+
 export async function POST(req: Request) {
   try {
     const body = await req.json()
@@ -5291,6 +5348,12 @@ export async function POST(req: Request) {
 
     const equationEngineObservationLifecycleMode =
       getEquationEngineObservationLifecycleMode(lastUserMessage)
+
+    const equationEngineInterpretationMode =
+      getEquationEngineInterpretationMode(lastUserMessage)
+
+    const equationEngineAIExplanationMode =
+      getEquationEngineAIExplanationMode(lastUserMessage)
 
     const equationReasoningIntegrityMode =
       getEquationReasoningIntegrityMode(lastUserMessage)
@@ -7816,6 +7879,227 @@ export async function POST(req: Request) {
         currentObservationId: authoritativeRuntimeSnapshot.resonanceHash,
         previousObservationId,
         previousTimestamp
+      })
+    }
+
+    const equationEngineInterpretationState =
+      generateEquationEngineInterpretation({
+        equationEngineObservation,
+
+        lifecycleState: equationEngineObservationLifecycleState,
+
+        equationLaneState: authoritativeRuntimeSnapshot.equationLaneState,
+
+        pathwayConvergenceState,
+
+        runtimeObservationState,
+
+        stateEvolutionState
+      })
+
+    if (equationEngineInterpretationMode) {
+      return NextResponse.json({
+        result: buildEquationEngineInterpretationResponse(
+          equationEngineInterpretationState,
+          equationEngineInterpretationMode
+        ),
+
+        directStateReport: true,
+        nonMutatingReport: true,
+
+        equationEngineInterpretationResponse: true,
+
+        source: "equation_engine_observation_lifecycle_and_state_evolution",
+
+        stateObject: "equation engine interpretation",
+
+        value: equationEngineInterpretationState,
+
+        agentId: AGENT_ID,
+
+        runtimeAgentId: RUNTIME_AGENT_ID,
+
+        observationId: equationEngineInterpretationState.observationId,
+
+        previousObservationId:
+          equationEngineInterpretationState.previousObservationId,
+
+        interpretationReady:
+          equationEngineInterpretationState.interpretationReady,
+
+        interpretationConfidence:
+          equationEngineInterpretationState.interpretationConfidence
+      })
+    }
+
+    if (equationEngineAIExplanationMode) {
+      const explanationRequest = generateEquationEngineAIExplanationRequest({
+        interpretationState: equationEngineInterpretationState,
+
+        userQuestion: lastUserMessage,
+
+        audience: equationEngineAIExplanationMode.audience,
+
+        depth: equationEngineAIExplanationMode.depth
+      })
+
+      if (!explanationRequest.explanationRequestReady) {
+        return NextResponse.json(
+          {
+            error:
+              "Equation Engine AI explanation is not ready because the deterministic interpretation does not yet have sufficient synchronized evidence.",
+
+            equationEngineAIExplanationResponse: true,
+
+            explanationRequestReady: false,
+
+            interpretationState: equationEngineInterpretationState,
+
+            observationId: equationEngineInterpretationState.observationId,
+
+            agentId: AGENT_ID,
+
+            runtimeAgentId: RUNTIME_AGENT_ID
+          },
+          {
+            status: 409
+          }
+        )
+      }
+
+      const equationEngineAIResponse = await fetch(
+        "https://api.openai.com/v1/chat/completions",
+        {
+          method: "POST",
+
+          headers: {
+            "Content-Type": "application/json",
+
+            Authorization: `Bearer ${process.env.OPENAI_API_KEY}`
+          },
+
+          body: JSON.stringify({
+            model: "gpt-4o",
+
+            messages: explanationRequest.messages,
+
+            temperature: 0.2,
+
+            response_format: {
+              type: "json_object"
+            }
+          })
+        }
+      )
+
+      if (!equationEngineAIResponse.ok) {
+        const errorText = await equationEngineAIResponse.text()
+
+        return NextResponse.json(
+          {
+            error: "Equation Engine AI explanation request failed.",
+
+            details: errorText,
+
+            equationEngineAIExplanationResponse: true,
+
+            interpretationState: equationEngineInterpretationState,
+
+            observationId: equationEngineInterpretationState.observationId,
+
+            agentId: AGENT_ID,
+
+            runtimeAgentId: RUNTIME_AGENT_ID
+          },
+          {
+            status: equationEngineAIResponse.status
+          }
+        )
+      }
+
+      const equationEngineAIData = await equationEngineAIResponse.json()
+
+      const rawExplanation =
+        equationEngineAIData?.choices?.[0]?.message?.content
+
+      if (
+        typeof rawExplanation !== "string" ||
+        rawExplanation.trim().length === 0
+      ) {
+        return NextResponse.json(
+          {
+            error: "Equation Engine AI explanation returned no usable content.",
+
+            equationEngineAIExplanationResponse: true,
+
+            interpretationState: equationEngineInterpretationState,
+
+            observationId: equationEngineInterpretationState.observationId,
+
+            agentId: AGENT_ID,
+
+            runtimeAgentId: RUNTIME_AGENT_ID
+          },
+          {
+            status: 502
+          }
+        )
+      }
+
+      const equationEngineAIExplanation = parseEquationEngineAIExplanation(
+        rawExplanation,
+        {
+          observationId: equationEngineInterpretationState.observationId,
+
+          model: equationEngineAIData?.model ?? "gpt-4o"
+        }
+      )
+
+      return NextResponse.json({
+        result: buildEquationEngineAIExplanationResponse(
+          equationEngineAIExplanation
+        ),
+
+        directStateReport: true,
+        nonMutatingReport: true,
+
+        equationEngineAIExplanationResponse: true,
+
+        source: "grounded_equation_engine_interpretation",
+
+        stateObject: "equation engine ai explanation",
+
+        value: equationEngineAIExplanation,
+
+        interpretationState: equationEngineInterpretationState,
+
+        explanationRequest: {
+          phase: explanationRequest.phase,
+
+          observationId: explanationRequest.observationId,
+
+          audience: explanationRequest.audience,
+
+          depth: explanationRequest.depth,
+
+          explanationRequestReady: explanationRequest.explanationRequestReady
+        },
+
+        agentId: AGENT_ID,
+
+        runtimeAgentId: RUNTIME_AGENT_ID,
+
+        observationId: equationEngineAIExplanation.observationId,
+
+        previousObservationId:
+          equationEngineInterpretationState.previousObservationId,
+
+        model: equationEngineAIExplanation.model,
+
+        interpretationConfidence:
+          equationEngineInterpretationState.interpretationConfidence,
+
+        explanationGrounded: equationEngineAIExplanation.explanationGrounded
       })
     }
 
