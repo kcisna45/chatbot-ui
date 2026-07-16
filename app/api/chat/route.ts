@@ -5363,15 +5363,12 @@ function getEquationEngineAIExperimentMode(
   const mentionsEquationEngine = normalized.includes("equation engine")
 
   const requestsExperiment =
-    normalized.includes("equation engine experiment") ||
-    normalized.includes("experiment with the equation engine") ||
-    normalized.includes("run an equation engine experiment") ||
-    normalized.includes("run equation engine experiment") ||
-    normalized.includes("analyze equation engine experimentally") ||
-    normalized.includes("generate equation engine hypothesis") ||
-    normalized.includes("form an equation engine hypothesis") ||
-    normalized.includes("predict the next equation engine") ||
-    normalized.includes("make an equation engine prediction")
+    normalized.includes("experiment") ||
+    normalized.includes("experimental") ||
+    normalized.includes("hypothesis") ||
+    normalized.includes("hypothesize") ||
+    normalized.includes("prediction") ||
+    normalized.includes("predict")
 
   if (!mentionsEquationEngine || !requestsExperiment) {
     return null
