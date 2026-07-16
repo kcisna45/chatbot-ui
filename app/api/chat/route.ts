@@ -8049,6 +8049,10 @@ export async function POST(req: Request) {
       const equationEngineAIExplanation = parseEquationEngineAIExplanation(
         rawExplanation,
         {
+          interpretationState: equationEngineInterpretationState,
+
+          request: explanationRequest,
+
           observationId: equationEngineInterpretationState.observationId,
 
           model: equationEngineAIData?.model ?? "gpt-4o"
