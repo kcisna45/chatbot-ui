@@ -150,6 +150,17 @@ import {
   buildStateEvolutionResponse,
   getStateEvolutionMode
 } from "@/lib/sourcefield/stateEvolutionLayer"
+import {
+  generateEquationEngineObservation,
+  buildEquationEngineObservationResponse,
+  getEquationEngineObservationMode
+} from "@/lib/sourcefield/equationEngineObservation"
+
+import {
+  generateEquationEngineObservationLifecycle,
+  buildEquationEngineObservationLifecycleResponse,
+  getEquationEngineObservationLifecycleMode
+} from "@/lib/sourcefield/equationEngineObservationLifecycle"
 
 const SOURCEFIELD_FILE_IDS = [
   "7bc60315-4b21-4630-8cdc-8cdee4d56cc4",
@@ -5275,6 +5286,12 @@ export async function POST(req: Request) {
 
     const stateEvolutionMode = getStateEvolutionMode(lastUserMessage)
 
+    const equationEngineObservationMode =
+      getEquationEngineObservationMode(lastUserMessage)
+
+    const equationEngineObservationLifecycleMode =
+      getEquationEngineObservationLifecycleMode(lastUserMessage)
+
     const equationReasoningIntegrityMode =
       getEquationReasoningIntegrityMode(lastUserMessage)
 
@@ -7522,6 +7539,45 @@ export async function POST(req: Request) {
       authoritativeRuntimeSnapshot
     })
 
+    const equationEngineObservation = generateEquationEngineObservation({
+      observationId: authoritativeRuntimeSnapshot.resonanceHash,
+
+      agentId: AGENT_ID,
+      runtimeAgentId: RUNTIME_AGENT_ID,
+
+      createdAt: new Date().toISOString(),
+
+      resonanceHash: authoritativeRuntimeSnapshot.resonanceHash,
+
+      ledgerHash: authoritativeRuntimeSnapshot.ledgerHash,
+
+      equationLaneState: authoritativeRuntimeSnapshot.equationLaneState,
+
+      equationLaneDiagnosticsState: diagnosticsState,
+
+      pathwayConvergenceState,
+
+      runtimeObservationState
+    })
+
+    if (equationEngineObservationMode) {
+      return NextResponse.json({
+        result: buildEquationEngineObservationResponse(
+          equationEngineObservation,
+          equationEngineObservationMode
+        ),
+        directStateReport: true,
+        nonMutatingReport: true,
+        equationEngineObservationResponse: true,
+        source: "authoritative_runtime_snapshot",
+        stateObject: "equation engine observation",
+        value: equationEngineObservation,
+        agentId: AGENT_ID,
+        runtimeAgentId: RUNTIME_AGENT_ID,
+        observationId: equationEngineObservation.observationId
+      })
+    }
+
     if (runtimeObservationMode) {
       return NextResponse.json({
         result: buildRuntimeObservationResponse(
@@ -7639,6 +7695,94 @@ export async function POST(req: Request) {
         "SourceField previous pathway lookup failed:",
         pathwayTransitionLookupError
       )
+    }
+
+    const previousAuthoritativeRuntimeSnapshot = previousEquationLaneState
+      ? generateAuthoritativeRuntimeSnapshot({
+          resonanceState: null,
+          equationLaneState: previousEquationLaneState,
+          resonanceHash: previousObservationId,
+          ledgerHash: null,
+          agentId: AGENT_ID,
+          runtimeAgentId: RUNTIME_AGENT_ID
+        })
+      : null
+
+    const previousDiagnosticsState = previousAuthoritativeRuntimeSnapshot
+      ? generateEquationLaneDiagnosticsState({
+          equationLaneState:
+            previousAuthoritativeRuntimeSnapshot.equationLaneState
+        })
+      : null
+
+    const previousPathwayConvergenceState = previousAuthoritativeRuntimeSnapshot
+      ? generatePathwayConvergenceState({
+          equationLaneState:
+            previousAuthoritativeRuntimeSnapshot.equationLaneState
+        })
+      : null
+
+    const previousRuntimeObservationState = previousAuthoritativeRuntimeSnapshot
+      ? generateRuntimeObservationState({
+          authoritativeRuntimeSnapshot: previousAuthoritativeRuntimeSnapshot
+        })
+      : null
+
+    const previousEquationEngineObservation =
+      previousAuthoritativeRuntimeSnapshot
+        ? generateEquationEngineObservation({
+            observationId: previousObservationId,
+
+            agentId: AGENT_ID,
+            runtimeAgentId: RUNTIME_AGENT_ID,
+
+            createdAt: previousTimestamp,
+
+            resonanceHash: previousObservationId,
+
+            ledgerHash: null,
+
+            equationLaneState:
+              previousAuthoritativeRuntimeSnapshot.equationLaneState,
+
+            equationLaneDiagnosticsState: previousDiagnosticsState,
+
+            pathwayConvergenceState: previousPathwayConvergenceState,
+
+            runtimeObservationState: previousRuntimeObservationState
+          })
+        : null
+
+    const equationEngineObservationLifecycleState =
+      generateEquationEngineObservationLifecycle({
+        currentObservation: equationEngineObservation,
+
+        previousObservation: previousEquationEngineObservation,
+
+        closureCommitted: false
+      })
+
+    if (equationEngineObservationLifecycleMode) {
+      return NextResponse.json({
+        result: buildEquationEngineObservationLifecycleResponse(
+          equationEngineObservationLifecycleState,
+          equationEngineObservationLifecycleMode
+        ),
+        directStateReport: true,
+        nonMutatingReport: true,
+        equationEngineObservationLifecycleResponse: true,
+        source: "current_and_previous_equation_engine_observations",
+        stateObject: "equation engine observation lifecycle",
+        value: equationEngineObservationLifecycleState,
+        symbolicOperation:
+          equationEngineObservationLifecycleState.symbolicOperation,
+        agentId: AGENT_ID,
+        runtimeAgentId: RUNTIME_AGENT_ID,
+        currentObservationId:
+          equationEngineObservationLifecycleState.currentObservationId,
+        previousObservationId:
+          equationEngineObservationLifecycleState.previousObservationId
+      })
     }
 
     const stateEvolutionState = generateStateEvolutionState({
