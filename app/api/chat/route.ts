@@ -170,6 +170,11 @@ import {
   parseEquationEngineAIExplanation,
   buildEquationEngineAIExplanationResponse
 } from "@/lib/sourcefield/equationEngineAIExplanation"
+import {
+  generateEquationEngineAIExperimentRequest,
+  parseEquationEngineAIExperiment,
+  buildEquationEngineAIExperimentResponse
+} from "@/lib/sourcefield/equationEngineAIExperiment"
 
 const SOURCEFIELD_FILE_IDS = [
   "7bc60315-4b21-4630-8cdc-8cdee4d56cc4",
@@ -5276,6 +5281,17 @@ function getEquationEngineAIExplanationMode(
 ): EquationEngineAIExplanationMode | null {
   const normalized = (message || "").toLowerCase().replace(/\s+/g, " ").trim()
 
+  const requestsExperiment =
+    normalized.includes("experiment") ||
+    normalized.includes("hypothesis") ||
+    normalized.includes("hypothesize") ||
+    normalized.includes("prediction") ||
+    normalized.includes("predict")
+
+  if (requestsExperiment) {
+    return null
+  }
+
   const mentionsEquationEngine = normalized.includes("equation engine")
 
   const requestsExplanation =
@@ -5322,6 +5338,94 @@ function getEquationEngineAIExplanationMode(
   }
 }
 
+type EquationEngineAIExperimentMode = {
+  experimentType:
+    | "snapshot-analysis"
+    | "hypothesis-generation"
+    | "bounded-prediction"
+
+  audience: "plain-language" | "technical" | "research" | "developer"
+
+  depth: "brief" | "standard" | "detailed"
+
+  predictionWindow:
+    | "next-observation"
+    | "next-3-observations"
+    | "next-5-observations"
+    | "unspecified-future-observation"
+}
+
+function getEquationEngineAIExperimentMode(
+  message: string
+): EquationEngineAIExperimentMode | null {
+  const normalized = (message || "").toLowerCase().replace(/\s+/g, " ").trim()
+
+  const mentionsEquationEngine = normalized.includes("equation engine")
+
+  const requestsExperiment =
+    normalized.includes("equation engine experiment") ||
+    normalized.includes("experiment with the equation engine") ||
+    normalized.includes("run an equation engine experiment") ||
+    normalized.includes("run equation engine experiment") ||
+    normalized.includes("analyze equation engine experimentally") ||
+    normalized.includes("generate equation engine hypothesis") ||
+    normalized.includes("form an equation engine hypothesis") ||
+    normalized.includes("predict the next equation engine") ||
+    normalized.includes("make an equation engine prediction")
+
+  if (!mentionsEquationEngine || !requestsExperiment) {
+    return null
+  }
+
+  const experimentType: EquationEngineAIExperimentMode["experimentType"] =
+    normalized.includes("predict") || normalized.includes("prediction")
+      ? "bounded-prediction"
+      : normalized.includes("hypothesis") || normalized.includes("hypothesize")
+        ? "hypothesis-generation"
+        : "snapshot-analysis"
+
+  const audience: EquationEngineAIExperimentMode["audience"] =
+    normalized.includes("developer")
+      ? "developer"
+      : normalized.includes("technical")
+        ? "technical"
+        : normalized.includes("plain language") ||
+            normalized.includes("plain-language")
+          ? "plain-language"
+          : "research"
+
+  const depth: EquationEngineAIExperimentMode["depth"] =
+    normalized.includes("brief") ||
+    normalized.includes("short") ||
+    normalized.includes("concise")
+      ? "brief"
+      : normalized.includes("detailed") ||
+          normalized.includes("in detail") ||
+          normalized.includes("comprehensive") ||
+          normalized.includes("thorough")
+        ? "detailed"
+        : "standard"
+
+  const predictionWindow: EquationEngineAIExperimentMode["predictionWindow"] =
+    normalized.includes("next 5 observations") ||
+    normalized.includes("next five observations")
+      ? "next-5-observations"
+      : normalized.includes("next 3 observations") ||
+          normalized.includes("next three observations")
+        ? "next-3-observations"
+        : normalized.includes("future observation") &&
+            !normalized.includes("next observation")
+          ? "unspecified-future-observation"
+          : "next-observation"
+
+  return {
+    experimentType,
+    audience,
+    depth,
+    predictionWindow
+  }
+}
+
 export async function POST(req: Request) {
   try {
     const body = await req.json()
@@ -5363,6 +5467,9 @@ export async function POST(req: Request) {
 
     const equationEngineAIExplanationMode =
       getEquationEngineAIExplanationMode(lastUserMessage)
+
+    const equationEngineAIExperimentMode =
+      getEquationEngineAIExperimentMode(lastUserMessage)
 
     const equationReasoningIntegrityMode =
       getEquationReasoningIntegrityMode(lastUserMessage)
@@ -8113,6 +8220,268 @@ export async function POST(req: Request) {
           equationEngineInterpretationState.interpretationConfidence,
 
         explanationGrounded: equationEngineAIExplanation.explanationGrounded
+      })
+    }
+
+    if (equationEngineAIExperimentMode) {
+      const experimentRequest = generateEquationEngineAIExperimentRequest({
+        interpretationState: equationEngineInterpretationState,
+
+        // Snapshot integration only.
+        // Historical states will be supplied later
+        // through ledger integration.
+        historicalStates: [],
+
+        experimentType: equationEngineAIExperimentMode.experimentType,
+
+        experimentQuestion: lastUserMessage,
+
+        audience: equationEngineAIExperimentMode.audience,
+
+        depth: equationEngineAIExperimentMode.depth,
+
+        predictionWindow: equationEngineAIExperimentMode.predictionWindow
+      })
+
+      if (!experimentRequest.experimentRequestReady) {
+        return NextResponse.json(
+          {
+            error:
+              "Equation Engine AI experiment is not ready because the deterministic interpretation does not yet have sufficient synchronized evidence.",
+
+            equationEngineAIExperimentResponse: true,
+
+            experimentRequestReady: false,
+
+            experimentId: experimentRequest.experimentId,
+
+            experimentType: experimentRequest.experimentType,
+
+            interpretationState: equationEngineInterpretationState,
+
+            observationId: equationEngineInterpretationState.observationId,
+
+            authoritative: false,
+
+            stateMutating: false,
+
+            agentId: AGENT_ID,
+
+            runtimeAgentId: RUNTIME_AGENT_ID
+          },
+          {
+            status: 409
+          }
+        )
+      }
+
+      if (!process.env.OPENAI_API_KEY) {
+        return NextResponse.json(
+          {
+            error:
+              "Equation Engine AI experiment cannot run because OPENAI_API_KEY is unavailable.",
+
+            equationEngineAIExperimentResponse: true,
+
+            experimentRequestReady: experimentRequest.experimentRequestReady,
+
+            experimentId: experimentRequest.experimentId,
+
+            observationId: experimentRequest.provenance.observationId,
+
+            authoritative: false,
+
+            stateMutating: false,
+
+            agentId: AGENT_ID,
+
+            runtimeAgentId: RUNTIME_AGENT_ID
+          },
+          {
+            status: 503
+          }
+        )
+      }
+
+      const equationEngineAIExperimentResponse = await fetch(
+        "https://api.openai.com/v1/chat/completions",
+        {
+          method: "POST",
+
+          headers: {
+            "Content-Type": "application/json",
+
+            Authorization: `Bearer ${process.env.OPENAI_API_KEY}`
+          },
+
+          body: JSON.stringify({
+            model: "gpt-4o",
+
+            messages: experimentRequest.messages,
+
+            // Experimental reasoning needs some
+            // interpretive freedom, but should remain
+            // more disciplined than ordinary dialogue.
+            temperature: 0.3,
+
+            response_format: {
+              type: "json_object"
+            }
+          })
+        }
+      )
+
+      if (!equationEngineAIExperimentResponse.ok) {
+        const errorText = await equationEngineAIExperimentResponse.text()
+
+        return NextResponse.json(
+          {
+            error: "Equation Engine AI experiment request failed.",
+
+            details: errorText,
+
+            equationEngineAIExperimentResponse: true,
+
+            experimentRequestReady: experimentRequest.experimentRequestReady,
+
+            experimentId: experimentRequest.experimentId,
+
+            experimentType: experimentRequest.experimentType,
+
+            interpretationState: equationEngineInterpretationState,
+
+            observationId: experimentRequest.provenance.observationId,
+
+            authoritative: false,
+
+            stateMutating: false,
+
+            agentId: AGENT_ID,
+
+            runtimeAgentId: RUNTIME_AGENT_ID
+          },
+          {
+            status: equationEngineAIExperimentResponse.status
+          }
+        )
+      }
+
+      const equationEngineAIExperimentData =
+        await equationEngineAIExperimentResponse.json()
+
+      const rawExperiment =
+        equationEngineAIExperimentData?.choices?.[0]?.message?.content
+
+      if (
+        typeof rawExperiment !== "string" ||
+        rawExperiment.trim().length === 0
+      ) {
+        return NextResponse.json(
+          {
+            error: "Equation Engine AI experiment returned no usable content.",
+
+            equationEngineAIExperimentResponse: true,
+
+            experimentRequestReady: experimentRequest.experimentRequestReady,
+
+            experimentId: experimentRequest.experimentId,
+
+            experimentType: experimentRequest.experimentType,
+
+            interpretationState: equationEngineInterpretationState,
+
+            observationId: experimentRequest.provenance.observationId,
+
+            authoritative: false,
+
+            stateMutating: false,
+
+            agentId: AGENT_ID,
+
+            runtimeAgentId: RUNTIME_AGENT_ID
+          },
+          {
+            status: 502
+          }
+        )
+      }
+
+      const equationEngineAIExperiment = parseEquationEngineAIExperiment(
+        rawExperiment,
+        {
+          request: experimentRequest,
+
+          model: equationEngineAIExperimentData?.model ?? "gpt-4o"
+        }
+      )
+
+      return NextResponse.json({
+        result: buildEquationEngineAIExperimentResponse(
+          equationEngineAIExperiment
+        ),
+
+        directStateReport: true,
+
+        nonMutatingReport: true,
+
+        equationEngineAIExperimentResponse: true,
+
+        source: "grounded_equation_engine_interpretation",
+
+        stateObject: "equation engine ai experiment",
+
+        value: equationEngineAIExperiment,
+
+        interpretationState: equationEngineInterpretationState,
+
+        experimentRequest: {
+          phase: experimentRequest.phase,
+
+          experimentId: experimentRequest.experimentId,
+
+          experimentType: experimentRequest.experimentType,
+
+          experimentQuestion: experimentRequest.experimentQuestion,
+
+          audience: experimentRequest.audience,
+
+          depth: experimentRequest.depth,
+
+          predictionWindow: experimentRequest.predictionWindow,
+
+          experimentRequestReady: experimentRequest.experimentRequestReady,
+
+          historicalObservationCount:
+            experimentRequest.provenance.historicalObservationCount
+        },
+
+        experimentId: equationEngineAIExperiment.experimentId,
+
+        experimentType: equationEngineAIExperiment.experimentType,
+
+        observationId: equationEngineAIExperiment.observationId,
+
+        previousObservationId: equationEngineAIExperiment.previousObservationId,
+
+        historicalObservationIds:
+          equationEngineAIExperiment.historicalObservationIds,
+
+        model: equationEngineAIExperiment.model,
+
+        interpretationConfidence:
+          equationEngineAIExperiment.interpretationConfidence,
+
+        modelConfidence: equationEngineAIExperiment.modelConfidence,
+
+        experimentGrounded: equationEngineAIExperiment.experimentGrounded,
+
+        authoritative: equationEngineAIExperiment.authoritative,
+
+        stateMutating: equationEngineAIExperiment.stateMutating,
+
+        agentId: AGENT_ID,
+
+        runtimeAgentId: RUNTIME_AGENT_ID
       })
     }
 
