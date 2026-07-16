@@ -5274,14 +5274,20 @@ type EquationEngineAIExplanationMode = {
 function getEquationEngineAIExplanationMode(
   message: string
 ): EquationEngineAIExplanationMode | null {
-  const normalized = (message || "").toLowerCase()
+  const normalized = (message || "").toLowerCase().replace(/\s+/g, " ").trim()
 
-  const isExplanationRequest =
-    normalized.includes("explain equation engine") ||
-    normalized.includes("explain the equation engine") ||
-    normalized.includes("equation engine ai explanation") ||
-    normalized.includes("ai explain equation engine") ||
-    normalized.includes("interpret and explain equation engine")
+  const mentionsEquationEngine = normalized.includes("equation engine")
+
+  const requestsExplanation =
+    normalized.includes("explain") ||
+    normalized.includes("explanation") ||
+    normalized.includes("interpretation of") ||
+    normalized.includes("interpret and explain") ||
+    normalized.includes("walk me through") ||
+    normalized.includes("break down") ||
+    normalized.includes("breakdown")
+
+  const isExplanationRequest = mentionsEquationEngine && requestsExplanation
 
   if (!isExplanationRequest) {
     return null
@@ -5299,11 +5305,14 @@ function getEquationEngineAIExplanationMode(
   const depth: EquationEngineAIExplanationMode["depth"] =
     normalized.includes("brief") ||
     normalized.includes("short") ||
-    normalized.includes("concise")
+    normalized.includes("concise") ||
+    normalized.includes("summarize")
       ? "brief"
       : normalized.includes("detailed") ||
           normalized.includes("in detail") ||
-          normalized.includes("full explanation")
+          normalized.includes("full explanation") ||
+          normalized.includes("comprehensive") ||
+          normalized.includes("thorough")
         ? "detailed"
         : "standard"
 
