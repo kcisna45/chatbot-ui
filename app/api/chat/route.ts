@@ -173,7 +173,8 @@ import {
 import {
   generateEquationEngineAIExperimentRequest,
   parseEquationEngineAIExperiment,
-  buildEquationEngineAIExperimentResponse
+  buildEquationEngineAIExperimentResponse,
+  type EquationEngineAIExperimentHistoricalState
 } from "@/lib/sourcefield/equationEngineAIExperiment"
 
 const SOURCEFIELD_FILE_IDS = [
@@ -5423,6 +5424,159 @@ function getEquationEngineAIExperimentMode(
   }
 }
 
+type EquationEngineHistoryWriteInput = {
+  agentId: string
+  runtimeAgentId: string
+  observationId: string | null
+  previousObservationId: string | null
+  resonanceHash: string | null
+  ledgerHash: string | null
+  userMessage: string
+  equationEngineObservation: unknown
+  equationEngineLifecycleState: unknown
+  stateEvolutionState: unknown
+  equationEngineInterpretationState: unknown
+  symbolicEchoes: unknown
+}
+
+async function writeEquationEngineObservationHistory(
+  supabaseAdmin: any,
+  input: EquationEngineHistoryWriteInput
+): Promise<{
+  stored: boolean
+  error: string | null
+}> {
+  if (!input.observationId) {
+    return {
+      stored: false,
+      error: "The current Equation Engine observation has no observation ID."
+    }
+  }
+
+  const { error } = await supabaseAdmin
+    .from("equation_engine_observation_history")
+    .upsert(
+      {
+        agent_id: input.agentId,
+        runtime_agent_id: input.runtimeAgentId,
+        observation_id: input.observationId,
+        previous_observation_id: input.previousObservationId,
+        resonance_hash: input.resonanceHash,
+        ledger_hash: input.ledgerHash,
+        user_message: input.userMessage,
+        equation_engine_observation: input.equationEngineObservation,
+        equation_engine_lifecycle_state: input.equationEngineLifecycleState,
+        state_evolution_state: input.stateEvolutionState,
+        equation_engine_interpretation_state:
+          input.equationEngineInterpretationState,
+        symbolic_echoes: input.symbolicEchoes ?? []
+      },
+      {
+        onConflict: "observation_id",
+        ignoreDuplicates: false
+      }
+    )
+
+  if (error) {
+    return {
+      stored: false,
+      error: error.message
+    }
+  }
+
+  return {
+    stored: true,
+    error: null
+  }
+}
+
+async function loadEquationEngineHistoricalStates(
+  supabaseAdmin: any,
+  options: {
+    agentId: string
+    currentObservationId: string | null
+    limit?: number
+  }
+): Promise<{
+  historicalStates: EquationEngineAIExperimentHistoricalState[]
+  error: string | null
+}> {
+  const limit = Math.min(Math.max(options.limit ?? 20, 1), 20)
+
+  let query = supabaseAdmin
+    .from("equation_engine_observation_history")
+    .select(
+      `
+        observation_id,
+        previous_observation_id,
+        equation_engine_interpretation_state,
+        created_at
+      `
+    )
+    .eq("agent_id", options.agentId)
+    .not("equation_engine_interpretation_state", "is", null)
+    .order("created_at", { ascending: false })
+    .limit(limit)
+
+  if (options.currentObservationId) {
+    query = query.neq("observation_id", options.currentObservationId)
+  }
+
+  const { data, error } = await query
+
+  if (error) {
+    return {
+      historicalStates: [],
+      error: error.message
+    }
+  }
+
+  const historicalStates: EquationEngineAIExperimentHistoricalState[] =
+    Array.isArray(data)
+      ? data
+          .map((record): EquationEngineAIExperimentHistoricalState | null => {
+            const interpretationState =
+              record?.equation_engine_interpretation_state
+
+            if (
+              !interpretationState ||
+              interpretationState.phase !== "Equation Engine Interpretation"
+            ) {
+              return null
+            }
+
+            return {
+              observationId:
+                typeof record.observation_id === "string"
+                  ? record.observation_id
+                  : (interpretationState.observationId ?? null),
+
+              previousObservationId:
+                typeof record.previous_observation_id === "string"
+                  ? record.previous_observation_id
+                  : (interpretationState.previousObservationId ?? null),
+
+              generatedAt:
+                typeof record.created_at === "string"
+                  ? record.created_at
+                  : null,
+
+              interpretationState
+            }
+          })
+          .filter(
+            (state): state is EquationEngineAIExperimentHistoricalState =>
+              state !== null
+          )
+          .reverse()
+      : []
+
+  return {
+    historicalStates,
+    error: null
+  }
+}
+
 export async function POST(req: Request) {
   try {
     const body = await req.json()
@@ -8050,6 +8204,40 @@ export async function POST(req: Request) {
         stateEvolutionState
       })
 
+    const equationEngineHistoryWrite =
+      await writeEquationEngineObservationHistory(supabaseAdmin, {
+        agentId: AGENT_ID,
+        runtimeAgentId: RUNTIME_AGENT_ID,
+
+        observationId: equationEngineInterpretationState.observationId,
+
+        previousObservationId:
+          equationEngineInterpretationState.previousObservationId,
+
+        resonanceHash: authoritativeRuntimeSnapshot.resonanceHash ?? null,
+
+        ledgerHash: null,
+
+        userMessage: lastUserMessage,
+
+        equationEngineObservation,
+
+        equationEngineLifecycleState: equationEngineObservationLifecycleState,
+
+        stateEvolutionState,
+
+        equationEngineInterpretationState,
+
+        symbolicEchoes: resonanceState?.symbolicEchoes ?? []
+      })
+
+    if (equationEngineHistoryWrite.error) {
+      console.error(
+        "Equation Engine history write failed:",
+        equationEngineHistoryWrite.error
+      )
+    }
+
     if (equationEngineInterpretationMode && !equationEngineAIExperimentMode) {
       return NextResponse.json({
         result: buildEquationEngineInterpretationResponse(
@@ -8261,13 +8449,27 @@ export async function POST(req: Request) {
     }
 
     if (equationEngineAIExperimentMode) {
+      const equationEngineHistory = await loadEquationEngineHistoricalStates(
+        supabaseAdmin,
+        {
+          agentId: AGENT_ID,
+          currentObservationId: equationEngineInterpretationState.observationId,
+          limit: 20
+        }
+      )
+
+      if (equationEngineHistory.error) {
+        console.error(
+          "Equation Engine historical retrieval failed:",
+          equationEngineHistory.error
+        )
+      }
       const experimentRequest = generateEquationEngineAIExperimentRequest({
         interpretationState: equationEngineInterpretationState,
 
-        // Snapshot integration only.
-        // Historical states will be supplied later
-        // through ledger integration.
-        historicalStates: [],
+        // Historical deterministic interpretations are loaded
+        // from the Equation Engine observation history.
+        historicalStates: equationEngineHistory.historicalStates,
 
         experimentType: equationEngineAIExperimentMode.experimentType,
 
@@ -8489,8 +8691,21 @@ export async function POST(req: Request) {
           experimentRequestReady: experimentRequest.experimentRequestReady,
 
           historicalObservationCount:
-            experimentRequest.provenance.historicalObservationCount
+            experimentRequest.provenance.historicalObservationCount,
+
+          historicalMemory: {
+            retrievalSucceeded: equationEngineHistory.error === null,
+
+            historicalObservationCount:
+              equationEngineHistory.historicalStates.length,
+
+            retrievalError: equationEngineHistory.error
+          }
         },
+
+        currentObservationHistoryStored: equationEngineHistoryWrite.stored,
+
+        currentObservationHistoryWriteError: equationEngineHistoryWrite.error,
 
         experimentId: equationEngineAIExperiment.experimentId,
 
