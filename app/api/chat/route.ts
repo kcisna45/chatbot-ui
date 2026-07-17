@@ -7719,6 +7719,7 @@ export async function POST(req: Request) {
       observationId: authoritativeRuntimeSnapshot.resonanceHash,
 
       agentId: AGENT_ID,
+
       runtimeAgentId: RUNTIME_AGENT_ID,
 
       createdAt: new Date().toISOString(),
@@ -7736,74 +7737,110 @@ export async function POST(req: Request) {
       runtimeObservationState
     })
 
-    if (equationEngineObservationMode) {
+    if (equationEngineObservationMode && !equationEngineAIExperimentMode) {
       return NextResponse.json({
         result: buildEquationEngineObservationResponse(
           equationEngineObservation,
           equationEngineObservationMode
         ),
+
         directStateReport: true,
+
         nonMutatingReport: true,
+
         equationEngineObservationResponse: true,
+
         source: "authoritative_runtime_snapshot",
+
         stateObject: "equation engine observation",
+
         value: equationEngineObservation,
+
         agentId: AGENT_ID,
+
         runtimeAgentId: RUNTIME_AGENT_ID,
+
         observationId: equationEngineObservation.observationId
       })
     }
 
-    if (runtimeObservationMode) {
+    if (runtimeObservationMode && !equationEngineAIExperimentMode) {
       return NextResponse.json({
         result: buildRuntimeObservationResponse(
           runtimeObservationState,
           runtimeObservationMode
         ),
+
         directStateReport: true,
+
         nonMutatingReport: true,
+
         synchronizedRuntimeObservationResponse: true,
+
         source: "authoritative_runtime_snapshot",
+
         stateObject: "runtime observation state",
+
         value: runtimeObservationState,
+
         authoritativeRuntimeSnapshot,
+
         agentId: AGENT_ID,
+
         runtimeAgentId: RUNTIME_AGENT_ID,
+
         resonanceHash: authoritativeRuntimeSnapshot.resonanceHash,
+
         ledgerHash: authoritativeRuntimeSnapshot.ledgerHash
       })
     }
 
-    if (equationLaneDiagnosticsMode) {
+    if (equationLaneDiagnosticsMode && !equationEngineAIExperimentMode) {
       return NextResponse.json({
         result: buildEquationLaneDiagnosticsResponse(
           diagnosticsState,
           equationLaneDiagnosticsMode
         ),
+
         directStateReport: true,
+
         nonMutatingReport: true,
+
         deterministicEquationLaneDiagnosticsResponse: true,
+
         source: "authoritative_runtime_snapshot",
+
         stateObject: "equation lane diagnostics",
+
         value: diagnosticsState,
+
         agentId: AGENT_ID,
+
         runtimeAgentId: RUNTIME_AGENT_ID
       })
     }
 
-    if (pathwayConvergenceMode) {
+    if (pathwayConvergenceMode && !equationEngineAIExperimentMode) {
       return NextResponse.json({
         result: buildPathwayConvergenceResponse(
           pathwayConvergenceState,
           pathwayConvergenceMode
         ),
+
         directStateReport: true,
+
         nonMutatingReport: true,
+
         pathwayConvergenceEngineResponse: true,
+
         source: "authoritative_runtime_snapshot",
+
         stateObject: "pathway convergence",
+
         value: pathwayConvergenceState,
+
         agentId: AGENT_ID,
+
         runtimeAgentId: RUNTIME_AGENT_ID
       })
     }
@@ -7938,7 +7975,10 @@ export async function POST(req: Request) {
         closureCommitted: false
       })
 
-    if (equationEngineObservationLifecycleMode) {
+    if (
+      equationEngineObservationLifecycleMode &&
+      !equationEngineAIExperimentMode
+    ) {
       return NextResponse.json({
         result: buildEquationEngineObservationLifecycleResponse(
           equationEngineObservationLifecycleState,
@@ -7975,7 +8015,7 @@ export async function POST(req: Request) {
       previousTimestamp
     })
 
-    if (stateEvolutionMode) {
+    if (stateEvolutionMode && !equationEngineAIExperimentMode) {
       return NextResponse.json({
         result: buildStateEvolutionResponse(
           stateEvolutionState,
@@ -8010,7 +8050,7 @@ export async function POST(req: Request) {
         stateEvolutionState
       })
 
-    if (equationEngineInterpretationMode) {
+    if (equationEngineInterpretationMode && !equationEngineAIExperimentMode) {
       return NextResponse.json({
         result: buildEquationEngineInterpretationResponse(
           equationEngineInterpretationState,
@@ -8045,7 +8085,7 @@ export async function POST(req: Request) {
       })
     }
 
-    if (equationEngineAIExplanationMode) {
+    if (equationEngineAIExplanationMode && !equationEngineAIExperimentMode) {
       const explanationRequest = generateEquationEngineAIExplanationRequest({
         interpretationState: equationEngineInterpretationState,
 
