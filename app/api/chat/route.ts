@@ -5344,6 +5344,7 @@ type EquationEngineAIExperimentMode = {
     | "snapshot-analysis"
     | "hypothesis-generation"
     | "bounded-prediction"
+    | "longitudinal-analysis"
 
   audience: "plain-language" | "technical" | "research" | "developer"
 
@@ -5363,24 +5364,57 @@ function getEquationEngineAIExperimentMode(
 
   const mentionsEquationEngine = normalized.includes("equation engine")
 
+  const requestsLongitudinalAnalysis =
+    normalized.includes("longitudinal") ||
+    normalized.includes("across observations") ||
+    normalized.includes("across historical observations") ||
+    normalized.includes("historical observations") ||
+    normalized.includes("over time") ||
+    normalized.includes("recurring pattern") ||
+    normalized.includes("recurring patterns") ||
+    normalized.includes("recurrent pattern") ||
+    normalized.includes("recurrent patterns") ||
+    normalized.includes("compare observations") ||
+    normalized.includes("compare all available observations") ||
+    normalized.includes("historical trend") ||
+    normalized.includes("historical trends")
+
+  const requestsPrediction =
+    normalized.includes("prediction") ||
+    normalized.includes("predict") ||
+    normalized.includes("forecast") ||
+    normalized.includes("next observation") ||
+    normalized.includes("future observation")
+
+  const requestsHypothesis =
+    normalized.includes("hypothesis") || normalized.includes("hypothesize")
+
   const requestsExperiment =
     normalized.includes("experiment") ||
     normalized.includes("experimental") ||
-    normalized.includes("hypothesis") ||
-    normalized.includes("hypothesize") ||
-    normalized.includes("prediction") ||
-    normalized.includes("predict")
+    requestsLongitudinalAnalysis ||
+    requestsPrediction ||
+    requestsHypothesis
 
   if (!mentionsEquationEngine || !requestsExperiment) {
     return null
   }
 
+  /*
+   * Explicit longitudinal intent has priority over prediction intent.
+   *
+   * A longitudinal request may also ask the experiment to evaluate
+   * prior predictions. That secondary prediction language must not
+   * downgrade the overall experiment to bounded-prediction.
+   */
   const experimentType: EquationEngineAIExperimentMode["experimentType"] =
-    normalized.includes("predict") || normalized.includes("prediction")
-      ? "bounded-prediction"
-      : normalized.includes("hypothesis") || normalized.includes("hypothesize")
-        ? "hypothesis-generation"
-        : "snapshot-analysis"
+    requestsLongitudinalAnalysis
+      ? "longitudinal-analysis"
+      : requestsPrediction
+        ? "bounded-prediction"
+        : requestsHypothesis
+          ? "hypothesis-generation"
+          : "snapshot-analysis"
 
   const audience: EquationEngineAIExperimentMode["audience"] =
     normalized.includes("developer")
@@ -8035,15 +8069,33 @@ export async function POST(req: Request) {
     let previousTimestamp: string | null = null
 
     try {
-      const { data: latestPathwayState } = await supabaseAdmin
-        .from("sourcefield_ledger_events")
-        .select(
-          "equation_lane_state, resonance_state, created_at, resonance_hash, ledger_hash"
+      /*
+       * The ordinary SourceField ledger remains the fallback source for
+       * pathway and equation-lane continuity.
+       */
+      const { data: latestPathwayState, error: latestPathwayStateError } =
+        await supabaseAdmin
+          .from("sourcefield_ledger_events")
+          .select(
+            `
+        equation_lane_state,
+        resonance_state,
+        created_at,
+        resonance_hash,
+        ledger_hash
+      `
+          )
+          .eq("agent_id", AGENT_ID)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle()
+
+      if (latestPathwayStateError) {
+        console.error(
+          "SourceField previous pathway ledger lookup failed:",
+          latestPathwayStateError
         )
-        .eq("agent_id", AGENT_ID)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle()
+      }
 
       previousEquationLaneState =
         latestPathwayState?.equation_lane_state ?? null
@@ -8057,9 +8109,66 @@ export async function POST(req: Request) {
 
       previousPathwaySelectionState =
         buildPathwaySelectionStateFromLedgerRecord(latestPathwayState)
+
+      /*
+       * Equation Engine requests may return before the ordinary ledger
+       * insertion runs. The observation-history table is therefore the
+       * authoritative source for the immediately preceding Equation
+       * Engine observation.
+       *
+       * This query runs before the current observation is written, so
+       * the newest row is always the preceding observation.
+       */
+      const {
+        data: latestEquationEngineHistory,
+        error: latestEquationEngineHistoryError
+      } = await supabaseAdmin
+        .from("equation_engine_observation_history")
+        .select(
+          `
+        observation_id,
+        equation_engine_observation,
+        created_at
+      `
+        )
+        .eq("agent_id", AGENT_ID)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle()
+
+      if (latestEquationEngineHistoryError) {
+        console.error(
+          "Equation Engine previous observation lookup failed:",
+          latestEquationEngineHistoryError
+        )
+      }
+
+      if (
+        typeof latestEquationEngineHistory?.observation_id === "string" &&
+        latestEquationEngineHistory.observation_id.length > 0
+      ) {
+        previousObservationId = latestEquationEngineHistory.observation_id
+
+        previousTimestamp =
+          typeof latestEquationEngineHistory.created_at === "string"
+            ? latestEquationEngineHistory.created_at
+            : previousTimestamp
+
+        const previousStoredObservation =
+          latestEquationEngineHistory.equation_engine_observation
+
+        if (
+          previousStoredObservation &&
+          typeof previousStoredObservation === "object" &&
+          previousStoredObservation.equationLaneState
+        ) {
+          previousEquationLaneState =
+            previousStoredObservation.equationLaneState
+        }
+      }
     } catch (pathwayTransitionLookupError) {
       console.error(
-        "SourceField previous pathway lookup failed:",
+        "SourceField previous observation lookup failed:",
         pathwayTransitionLookupError
       )
     }
