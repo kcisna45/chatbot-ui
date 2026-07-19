@@ -5460,16 +5460,27 @@ function getEquationEngineAIExperimentMode(
 
 type EquationEngineHistoryWriteInput = {
   agentId: string
+
   runtimeAgentId: string
+
   observationId: string | null
+
   previousObservationId: string | null
+
   resonanceHash: string | null
+
   ledgerHash: string | null
+
   userMessage: string
+
   equationEngineObservation: unknown
+
   equationEngineLifecycleState: unknown
+
   stateEvolutionState: unknown
+
   equationEngineInterpretationState: unknown
+
   symbolicEchoes: unknown
 }
 
@@ -5487,6 +5498,10 @@ async function writeEquationEngineObservationHistory(
     }
   }
 
+  const symbolicEchoes = Array.isArray(input.symbolicEchoes)
+    ? input.symbolicEchoes
+    : []
+
   const { error } = await supabaseAdmin
     .from("equation_engine_observation_history")
     .upsert(
@@ -5499,11 +5514,12 @@ async function writeEquationEngineObservationHistory(
         ledger_hash: input.ledgerHash,
         user_message: input.userMessage,
         equation_engine_observation: input.equationEngineObservation,
-        equation_engine_lifecycle_state: input.equationEngineLifecycleState,
+        equation_engine_lifecycle_state:
+          input.equationEngineLifecycleState,
         state_evolution_state: input.stateEvolutionState,
         equation_engine_interpretation_state:
           input.equationEngineInterpretationState,
-        symbolic_echoes: input.symbolicEchoes ?? []
+        symbolic_echoes: symbolicEchoes
       },
       {
         onConflict: "observation_id",
@@ -5528,14 +5544,20 @@ async function loadEquationEngineHistoricalStates(
   supabaseAdmin: any,
   options: {
     agentId: string
+
     currentObservationId: string | null
+
     limit?: number
   }
 ): Promise<{
   historicalStates: EquationEngineAIExperimentHistoricalState[]
+
   error: string | null
 }> {
-  const limit = Math.min(Math.max(options.limit ?? 20, 1), 20)
+  const limit = Math.min(
+    Math.max(options.limit ?? 20, 1),
+    20
+  )
 
   let query = supabaseAdmin
     .from("equation_engine_observation_history")
@@ -5543,17 +5565,32 @@ async function loadEquationEngineHistoricalStates(
       `
         observation_id,
         previous_observation_id,
+        resonance_hash,
+        ledger_hash,
+        equation_engine_observation,
+        equation_engine_lifecycle_state,
+        state_evolution_state,
         equation_engine_interpretation_state,
+        symbolic_echoes,
         created_at
       `
     )
     .eq("agent_id", options.agentId)
-    .not("equation_engine_interpretation_state", "is", null)
-    .order("created_at", { ascending: false })
+    .not(
+      "equation_engine_interpretation_state",
+      "is",
+      null
+    )
+    .order("created_at", {
+      ascending: false
+    })
     .limit(limit)
 
   if (options.currentObservationId) {
-    query = query.neq("observation_id", options.currentObservationId)
+    query = query.neq(
+      "observation_id",
+      options.currentObservationId
+    )
   }
 
   const { data, error } = await query
@@ -5565,45 +5602,88 @@ async function loadEquationEngineHistoricalStates(
     }
   }
 
-  const historicalStates: EquationEngineAIExperimentHistoricalState[] =
-    Array.isArray(data)
-      ? data
-          .map((record): EquationEngineAIExperimentHistoricalState | null => {
-            const interpretationState =
-              record?.equation_engine_interpretation_state
+  if (!Array.isArray(data)) {
+    return {
+      historicalStates: [],
+      error: null
+    }
+  }
 
-            if (
-              !interpretationState ||
-              interpretationState.phase !== "Equation Engine Interpretation"
-            ) {
-              return null
-            }
+  const historicalStates = data
+    .map(
+      (
+        record
+      ): EquationEngineAIExperimentHistoricalState | null => {
+        const interpretationState =
+          record?.equation_engine_interpretation_state
 
-            return {
-              observationId:
-                typeof record.observation_id === "string"
-                  ? record.observation_id
-                  : (interpretationState.observationId ?? null),
+        if (
+          !interpretationState ||
+          interpretationState.phase !==
+            "Equation Engine Interpretation"
+        ) {
+          return null
+        }
 
-              previousObservationId:
-                typeof record.previous_observation_id === "string"
-                  ? record.previous_observation_id
-                  : (interpretationState.previousObservationId ?? null),
+        const observationId =
+          typeof record.observation_id === "string"
+            ? record.observation_id
+            : typeof interpretationState.observationId === "string"
+              ? interpretationState.observationId
+              : null
 
-              generatedAt:
-                typeof record.created_at === "string"
-                  ? record.created_at
-                  : null,
+        const previousObservationId =
+          typeof record.previous_observation_id === "string"
+            ? record.previous_observation_id
+            : typeof interpretationState.previousObservationId ===
+                "string"
+              ? interpretationState.previousObservationId
+              : null
 
-              interpretationState
-            }
-          })
-          .filter(
-            (state): state is EquationEngineAIExperimentHistoricalState =>
-              state !== null
-          )
-          .reverse()
-      : []
+        return {
+          observationId,
+
+          previousObservationId,
+
+          generatedAt:
+            typeof record.created_at === "string"
+              ? record.created_at
+              : null,
+
+          resonanceHash:
+            typeof record.resonance_hash === "string"
+              ? record.resonance_hash
+              : null,
+
+          ledgerHash:
+            typeof record.ledger_hash === "string"
+              ? record.ledger_hash
+              : null,
+
+          interpretationState,
+
+          equationEngineObservation:
+            record.equation_engine_observation ?? null,
+
+          equationEngineLifecycleState:
+            record.equation_engine_lifecycle_state ?? null,
+
+          stateEvolutionState:
+            record.state_evolution_state ?? null,
+
+          symbolicEchoes: Array.isArray(record.symbolic_echoes)
+            ? record.symbolic_echoes
+            : []
+        }
+      }
+    )
+    .filter(
+      (
+        state
+      ): state is EquationEngineAIExperimentHistoricalState =>
+        state !== null
+    )
+    .reverse()
 
   return {
     historicalStates,

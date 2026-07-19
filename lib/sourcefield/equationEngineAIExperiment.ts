@@ -54,11 +54,23 @@ export type EquationEngineAIExperimentPredictionWindow =
 export interface EquationEngineAIExperimentHistoricalState {
   observationId: string | null
 
-  previousObservationId?: string | null
+  previousObservationId: string | null
 
-  generatedAt?: string | null
+  generatedAt: string | null
+
+  resonanceHash: string | null
+
+  ledgerHash: string | null
 
   interpretationState: EquationEngineInterpretationState
+
+  equationEngineObservation: unknown
+
+  equationEngineLifecycleState: unknown
+
+  stateEvolutionState: unknown
+
+  symbolicEchoes: unknown[]
 }
 
 export interface EquationEngineAIExperimentInput {
