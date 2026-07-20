@@ -5544,19 +5544,16 @@ async function loadEquationEngineHistoricalStates(
   supabaseAdmin: any,
   options: {
     agentId: string
-
     currentObservationId: string | null
-
     limit?: number
   }
 ): Promise<{
   historicalStates: EquationEngineAIExperimentHistoricalState[]
-
   error: string | null
 }> {
   const limit = Math.min(
-    Math.max(options.limit ?? 20, 1),
-    20
+    Math.max(options.limit ?? 10, 1),
+    10
   )
 
   let query = supabaseAdmin
@@ -5567,11 +5564,7 @@ async function loadEquationEngineHistoricalStates(
         previous_observation_id,
         resonance_hash,
         ledger_hash,
-        equation_engine_observation,
-        equation_engine_lifecycle_state,
-        state_evolution_state,
         equation_engine_interpretation_state,
-        symbolic_echoes,
         created_at
       `
     )
@@ -5660,20 +5653,7 @@ async function loadEquationEngineHistoricalStates(
               ? record.ledger_hash
               : null,
 
-          interpretationState,
-
-          equationEngineObservation:
-            record.equation_engine_observation ?? null,
-
-          equationEngineLifecycleState:
-            record.equation_engine_lifecycle_state ?? null,
-
-          stateEvolutionState:
-            record.state_evolution_state ?? null,
-
-          symbolicEchoes: Array.isArray(record.symbolic_echoes)
-            ? record.symbolic_echoes
-            : []
+          interpretationState
         }
       }
     )

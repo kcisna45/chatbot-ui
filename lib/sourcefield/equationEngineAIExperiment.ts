@@ -63,14 +63,6 @@ export interface EquationEngineAIExperimentHistoricalState {
   ledgerHash: string | null
 
   interpretationState: EquationEngineInterpretationState
-
-  equationEngineObservation: unknown
-
-  equationEngineLifecycleState: unknown
-
-  stateEvolutionState: unknown
-
-  symbolicEchoes: unknown[]
 }
 
 export interface EquationEngineAIExperimentInput {
