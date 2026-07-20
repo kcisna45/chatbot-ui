@@ -5552,8 +5552,8 @@ async function loadEquationEngineHistoricalStates(
   error: string | null
 }> {
   const limit = Math.min(
-    Math.max(options.limit ?? 10, 1),
-    10
+    Math.max(options.limit ?? 4, 1),
+    4
   )
 
   let query = supabaseAdmin

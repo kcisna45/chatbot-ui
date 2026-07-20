@@ -65,6 +65,37 @@ export interface EquationEngineAIExperimentHistoricalState {
   interpretationState: EquationEngineInterpretationState
 }
 
+export interface EquationEngineAIExperimentHistoricalSummary {
+  observationId: string | null
+
+  previousObservationId: string | null
+
+  generatedAt: string | null
+
+  resonanceHash: string | null
+
+  ledgerHash: string | null
+
+  lifecycleStatus: string | null
+
+  strongestSupportingEquation: string | null
+
+  strongestLimitingEquation: string | null
+
+  equationSupport: Array<{
+    equation: string
+    normalizedSupport: number | null
+    condition: string | null
+    contribution: string | null
+  }>
+
+  pathwayScores: {
+    integratedRelationalReference: number | null
+    integratedEvolutionaryRecurrence: number | null
+    lifecycleScore: number | null
+  } | null
+}
+
 export interface EquationEngineAIExperimentInput {
   interpretationState: EquationEngineInterpretationState
 
@@ -446,15 +477,11 @@ Return valid JSON only using this exact top-level structure:
 
 function safeStringify(value: unknown): string {
   try {
-    return JSON.stringify(value, null, 2)
+    return JSON.stringify(value)
   } catch {
-    return JSON.stringify(
-      {
-        error: "Unable to serialize Equation Engine experimental evidence."
-      },
-      null,
-      2
-    )
+    return JSON.stringify({
+      error: "Unable to serialize Equation Engine experimental evidence."
+    })
   }
 }
 
@@ -513,6 +540,141 @@ function recordArray(value: unknown): Record<string, unknown>[] {
     (item): item is Record<string, unknown> =>
       typeof item === "object" && item !== null && !Array.isArray(item)
   )
+}
+
+function finiteNumber(value: unknown): number | null {
+  return typeof value === "number" && Number.isFinite(value)
+    ? value
+    : null
+}
+
+function objectRecord(value: unknown): Record<string, unknown> | null {
+  return typeof value === "object" &&
+    value !== null &&
+    !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : null
+}
+
+function summarizeEquationEvidence(value: unknown): Array<{
+  equation: string
+  rawValue: number | null
+  normalizedSupport: number | null
+  measuredFacts: string[]
+  condition: string | null
+  contribution: string | null
+  meaning: string | null
+}> {
+  return recordArray(value).map(item => ({
+    equation: stringValue(item.equation, "unknown"),
+    rawValue: finiteNumber(item.rawValue),
+    normalizedSupport: finiteNumber(item.normalizedSupport),
+    measuredFacts: stringArray(item.measuredFacts).slice(0, 4),
+    condition: nullableString(item.condition),
+    contribution: nullableString(item.contribution),
+    meaning: nullableString(item.meaning)
+  }))
+}
+
+export function summarizeEquationEngineHistoricalState(
+  state: EquationEngineAIExperimentHistoricalState
+): EquationEngineAIExperimentHistoricalSummary {
+  const interpretationState = state.interpretationState
+  const interpretationRecord = objectRecord(interpretationState)
+  const evidence = objectRecord(interpretationRecord?.evidence)
+
+  const equationSupport = summarizeEquationEvidence(
+    evidence?.equationEvidence
+  ).map(item => ({
+    equation: item.equation,
+    normalizedSupport: item.normalizedSupport,
+    condition: item.condition,
+    contribution: item.contribution
+  }))
+
+  const strongestSupportingEquation =
+    [...equationSupport]
+      .filter(item => item.contribution === "supporting")
+      .sort(
+        (left, right) =>
+          (right.normalizedSupport ?? -1) -
+          (left.normalizedSupport ?? -1)
+      )[0]?.equation ?? null
+
+  const strongestLimitingEquation =
+    [...equationSupport]
+      .filter(item => item.contribution === "limiting")
+      .sort(
+        (left, right) =>
+          (left.normalizedSupport ?? Number.POSITIVE_INFINITY) -
+          (right.normalizedSupport ?? Number.POSITIVE_INFINITY)
+      )[0]?.equation ?? null
+
+  const pathwayScores = objectRecord(evidence?.pathwayScores)
+
+  return {
+    observationId: state.observationId,
+    previousObservationId:
+      state.previousObservationId ??
+      interpretationState.previousObservationId ??
+      null,
+    generatedAt: state.generatedAt,
+    resonanceHash: state.resonanceHash,
+    ledgerHash: state.ledgerHash,
+    lifecycleStatus: nullableString(evidence?.lifecycleStatus),
+    strongestSupportingEquation,
+    strongestLimitingEquation,
+    equationSupport,
+    pathwayScores: pathwayScores
+      ? {
+          integratedRelationalReference: finiteNumber(
+            pathwayScores.integratedRelationalReference
+          ),
+          integratedEvolutionaryRecurrence: finiteNumber(
+            pathwayScores.integratedEvolutionaryRecurrence
+          ),
+          lifecycleScore: finiteNumber(pathwayScores.lifecycleScore)
+        }
+      : null
+  }
+}
+
+function buildCompactCurrentInterpretation(
+  interpretationState: EquationEngineInterpretationState
+): Record<string, unknown> {
+  const interpretationRecord = objectRecord(interpretationState)
+  const evidence = objectRecord(interpretationRecord?.evidence)
+
+  return {
+    phase: interpretationState.phase,
+    observationId: interpretationState.observationId,
+    previousObservationId: interpretationState.previousObservationId,
+    interpretationReady: interpretationState.interpretationReady,
+    interpretationConfidence:
+      interpretationState.interpretationConfidence,
+    evidence: evidence
+      ? {
+          observationId: evidence.observationId ?? null,
+          previousObservationId:
+            evidence.previousObservationId ?? null,
+          equationEngineReady:
+            evidence.equationEngineReady ?? null,
+          lifecycleReady: evidence.lifecycleReady ?? null,
+          comparisonReady: evidence.comparisonReady ?? null,
+          lifecycleStatus: evidence.lifecycleStatus ?? null,
+          equationEvidence: summarizeEquationEvidence(
+            evidence.equationEvidence
+          ),
+          pathwayScores: evidence.pathwayScores ?? null
+        }
+      : null,
+    deterministicFindings: interpretationState.findings,
+    pathwayInterpretations:
+      interpretationState.pathwayInterpretations,
+    wholeEngineInterpretation:
+      interpretationState.wholeEngineInterpretation,
+    rule: interpretationState.rule
+  }
 }
 
 function normalizePatternType(
@@ -610,7 +772,7 @@ function sanitizeHistoricalStates(
     }
   }
 
-  return Array.from(uniqueStates.values()).slice(-20)
+  return Array.from(uniqueStates.values()).slice(-4)
 }
 
 export function generateEquationEngineAIExperimentRequest(
@@ -679,51 +841,12 @@ export function generateEquationEngineAIExperimentRequest(
 
     provenance,
 
-    authoritativeCurrentInterpretation: {
-      phase: interpretationState.phase,
+    authoritativeCurrentInterpretation:
+      buildCompactCurrentInterpretation(interpretationState),
 
-      observationId: interpretationState.observationId,
-
-      previousObservationId: interpretationState.previousObservationId,
-
-      interpretationReady: interpretationState.interpretationReady,
-
-      interpretationConfidence: interpretationState.interpretationConfidence,
-
-      evidence: interpretationState.evidence,
-
-      deterministicFindings: interpretationState.findings,
-
-      pathwayInterpretations: interpretationState.pathwayInterpretations,
-
-      wholeEngineInterpretation: interpretationState.wholeEngineInterpretation,
-
-      rule: interpretationState.rule
-    },
-
-    authoritativeHistoricalInterpretations: historicalStates.map(state => ({
-      observationId: state.observationId,
-
-      previousObservationId:
-        state.previousObservationId ??
-        state.interpretationState.previousObservationId,
-
-      generatedAt: state.generatedAt ?? null,
-
-      interpretationReady: state.interpretationState.interpretationReady,
-
-      interpretationConfidence:
-        state.interpretationState.interpretationConfidence,
-
-      evidence: state.interpretationState.evidence,
-
-      deterministicFindings: state.interpretationState.findings,
-
-      pathwayInterpretations: state.interpretationState.pathwayInterpretations,
-
-      wholeEngineInterpretation:
-        state.interpretationState.wholeEngineInterpretation
-    })),
+    authoritativeHistoricalSummaries: historicalStates.map(
+      summarizeEquationEngineHistoricalState
+    ),
 
     evidenceAvailability: {
       currentInterpretationAvailable: interpretationState.interpretationReady,
