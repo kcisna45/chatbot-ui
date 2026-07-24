@@ -65,6 +65,86 @@ export interface EquationEngineAIExperimentHistoricalState {
   interpretationState: EquationEngineInterpretationState
 }
 
+export type EquationEngineAIRelationshipType =
+  | "support-ordering"
+  | "shared-support-dominance"
+  | "shared-limiting-bottleneck"
+  | "pathway-score-ordering"
+  | "lifecycle-co-occurrence"
+  | "insufficient-evidence"
+
+export type EquationEngineAIRelationshipOperator =
+  | "greater-than"
+  | "less-than"
+  | "equal-to"
+  | "co-occurs-with"
+  | "supports"
+  | "constrains"
+  | "unknown"
+
+export interface EquationEngineAIDeterministicRelationshipSummary {
+  relationId: string
+
+  relationType:
+    | "support-ordering"
+    | "shared-support-dominance"
+    | "shared-limiting-bottleneck"
+    | "insufficient-evidence"
+
+  statement: string
+
+  leftField: string
+
+  operator: "greater-than" | "less-than" | "equal-to" | "unknown"
+
+  rightField: string
+
+  supportingObservationIds: string[]
+
+  contradictingObservationIds: string[]
+
+  equalObservationIds: string[]
+
+  unavailableObservationIds: string[]
+
+  supportingObservationCount: number
+
+  contradictingObservationCount: number
+
+  equalObservationCount: number
+
+  unavailableObservationCount: number
+
+  evaluableObservationCount: number
+
+  supportRatio: number | null
+
+  contradictionRatio: number | null
+
+  equalityRatio: number | null
+
+  authoritative: true
+}
+
+export interface EquationEngineAIWithinObservationRelationship {
+  relationId: string
+
+  relationType:
+    | "support-ordering"
+    | "shared-support-dominance"
+    | "shared-limiting-bottleneck"
+
+  statement: string
+
+  leftField: string
+
+  operator: "greater-than" | "less-than" | "equal-to"
+
+  rightField: string
+
+  authoritative: true
+}
+
 export interface EquationEngineAIExperimentHistoricalSummary {
   observationId: string | null
 
@@ -78,9 +158,17 @@ export interface EquationEngineAIExperimentHistoricalSummary {
 
   lifecycleStatus: string | null
 
-  strongestSupportingEquation: string | null
+  strongestSupportingEquations: string[]
 
-  strongestLimitingEquation: string | null
+  strongestLimitingEquations: string[]
+
+  supportingEquationTie: boolean
+
+  limitingEquationTie: boolean
+
+  highestSupportingValue: number | null
+
+  lowestLimitingValue: number | null
 
   equationSupport: Array<{
     equation: string
@@ -88,6 +176,8 @@ export interface EquationEngineAIExperimentHistoricalSummary {
     condition: string | null
     contribution: string | null
   }>
+
+  withinObservationRelationships: EquationEngineAIWithinObservationRelationship[]
 
   pathwayScores: {
     integratedRelationalReference: number | null
@@ -147,6 +237,8 @@ export interface EquationEngineAIExperimentRequest {
 
   predictionWindow: EquationEngineAIExperimentPredictionWindow
 
+  experimentModeInstruction: string
+
   provenance: EquationEngineAIExperimentProvenance
 
   systemInstruction: string
@@ -187,6 +279,16 @@ export interface EquationEngineAIObservedPattern {
 
   persistenceCount: number | null
 
+  contradictingObservationIds: string[]
+
+  supportingObservationCount: number | null
+
+  contradictingObservationCount: number | null
+
+  evaluableObservationCount: number | null
+
+  supportRatio: number | null
+
   competingExplanation: string | null
 
   confidence: number
@@ -206,6 +308,8 @@ export interface EquationEngineAIHypothesis {
   observationIds: string[]
 
   rationale: string
+
+  weakeningCondition: string
 
   falsificationCondition: string
 
@@ -286,6 +390,8 @@ export interface EquationEngineAIExperimentResult {
   unavailableEvidence: string[]
 
   uncertaintyNotes: string[]
+
+  modeComplianceNotes: string[]
 
   interpretationConfidence: number | null
 
@@ -419,6 +525,38 @@ STATUS RULES
     falsified, or inconclusive. Those statuses require later evaluation against
     authoritative evidence.
 
+26. When describing recurrence, persistence, direction, or consistency,
+    explicitly identify the supplied observation window and state the
+    supporting count out of the evaluable count.
+
+27. Do not use "always", "never", "consistently", "persistent", or equivalent
+    unbounded language unless the claim is immediately limited to the supplied
+    observation window.
+
+28. Deterministic relationship summaries are authoritative derived evidence.
+    Do not describe them as AI-generated patterns or learned relationships.
+
+29. If no contradictory observations are supplied, state that contradiction
+    could not be fully evaluated. Do not conclude that no contradiction exists
+    outside the supplied evidence.
+
+30. Distinguish weakening evidence from falsifying evidence. Weakening evidence
+    reduces support. Falsifying evidence satisfies the stated falsification
+    condition.
+
+31. For snapshot-analysis, do not return recurrent, directional, historical,
+    or longitudinal patterns.
+
+32. For hypothesis-generation, hypotheses are the primary output. Avoid
+    predictions unless they are necessary to test a returned hypothesis.
+
+33. For bounded-prediction, predictions are the primary output. Avoid
+    unnecessary hypotheses.
+
+34. For longitudinal-analysis, use deterministic relationship summaries when
+    available and report supporting, contradicting, equal, and evaluable
+    observation counts.
+
 RESPONSE FORMAT
 
 Return valid JSON only using this exact top-level structure:
@@ -433,6 +571,11 @@ Return valid JSON only using this exact top-level structure:
       "evidenceBasis": ["string"],
       "observationIds": ["string"],
       "persistenceCount": 1,
+      "contradictingObservationIds": ["string"],
+      "supportingObservationCount": 1,
+      "contradictingObservationCount": 0,
+      "evaluableObservationCount": 1,
+      "supportRatio": 1.0,
       "competingExplanation": "string or null",
       "confidence": 0.0
     }
@@ -444,6 +587,7 @@ Return valid JSON only using this exact top-level structure:
       "evidenceBasis": ["string"],
       "observationIds": ["string"],
       "rationale": "string",
+      "weakeningCondition": "string",
       "falsificationCondition": "string",
       "supportingFutureEvidence": ["string"],
       "weakeningFutureEvidence": ["string"],
@@ -543,15 +687,17 @@ function recordArray(value: unknown): Record<string, unknown>[] {
 }
 
 function finiteNumber(value: unknown): number | null {
+  return typeof value === "number" && Number.isFinite(value) ? value : null
+}
+
+function nullableNonNegativeInteger(value: unknown): number | null {
   return typeof value === "number" && Number.isFinite(value)
-    ? value
+    ? Math.max(0, Math.floor(value))
     : null
 }
 
 function objectRecord(value: unknown): Record<string, unknown> | null {
-  return typeof value === "object" &&
-    value !== null &&
-    !Array.isArray(value)
+  return typeof value === "object" && value !== null && !Array.isArray(value)
     ? (value as Record<string, unknown>)
     : null
 }
@@ -576,6 +722,155 @@ function summarizeEquationEvidence(value: unknown): Array<{
   }))
 }
 
+function findExtremeEquations(
+  equationSupport: Array<{
+    equation: string
+    normalizedSupport: number | null
+    condition: string | null
+    contribution: string | null
+  }>,
+  contribution: "supporting" | "limiting"
+): {
+  equations: string[]
+  tie: boolean
+  value: number | null
+} {
+  const candidates = equationSupport.filter(
+    item =>
+      item.contribution === contribution &&
+      typeof item.normalizedSupport === "number"
+  )
+
+  if (candidates.length === 0) {
+    return {
+      equations: [],
+      tie: false,
+      value: null
+    }
+  }
+
+  const candidateValues = candidates.map(
+    item => item.normalizedSupport as number
+  )
+
+  const extremeValue =
+    contribution === "supporting"
+      ? Math.max(...candidateValues)
+      : Math.min(...candidateValues)
+
+  const equations = candidates
+    .filter(item => item.normalizedSupport === extremeValue)
+    .map(item => item.equation)
+    .sort()
+
+  return {
+    equations,
+    tie: equations.length > 1,
+    value: extremeValue
+  }
+}
+
+function buildWithinObservationRelationships(
+  equationSupport: Array<{
+    equation: string
+    normalizedSupport: number | null
+    condition: string | null
+    contribution: string | null
+  }>,
+  strongestSupportingEquations: string[],
+  strongestLimitingEquations: string[]
+): EquationEngineAIWithinObservationRelationship[] {
+  const relationships: EquationEngineAIWithinObservationRelationship[] = []
+
+  const numericSupport = equationSupport.filter(
+    item => typeof item.normalizedSupport === "number"
+  )
+
+  for (let leftIndex = 0; leftIndex < numericSupport.length; leftIndex += 1) {
+    for (
+      let rightIndex = leftIndex + 1;
+      rightIndex < numericSupport.length;
+      rightIndex += 1
+    ) {
+      const left = numericSupport[leftIndex]
+      const right = numericSupport[rightIndex]
+
+      const leftValue = left.normalizedSupport as number
+      const rightValue = right.normalizedSupport as number
+
+      const operator: EquationEngineAIWithinObservationRelationship["operator"] =
+        leftValue > rightValue
+          ? "greater-than"
+          : leftValue < rightValue
+            ? "less-than"
+            : "equal-to"
+
+      const symbol =
+        operator === "greater-than" ? ">" : operator === "less-than" ? "<" : "="
+
+      relationships.push({
+        relationId: `relation-${sanitizeIdentifierPart(
+          left.equation
+        )}-${operator}-${sanitizeIdentifierPart(right.equation)}`,
+
+        relationType: "support-ordering",
+
+        statement: `${left.equation} normalized support ${symbol} ${right.equation} normalized support.`,
+
+        leftField: `${left.equation}.normalizedSupport`,
+
+        operator,
+
+        rightField: `${right.equation}.normalizedSupport`,
+
+        authoritative: true
+      })
+    }
+  }
+
+  if (strongestSupportingEquations.length > 1) {
+    relationships.push({
+      relationId: "relation-shared-support-dominance",
+
+      relationType: "shared-support-dominance",
+
+      statement: `${strongestSupportingEquations.join(
+        " and "
+      )} shared the highest supporting normalized value.`,
+
+      leftField: strongestSupportingEquations.join("|"),
+
+      operator: "equal-to",
+
+      rightField: "highestSupportingNormalizedValue",
+
+      authoritative: true
+    })
+  }
+
+  if (strongestLimitingEquations.length > 1) {
+    relationships.push({
+      relationId: "relation-shared-limiting-bottleneck",
+
+      relationType: "shared-limiting-bottleneck",
+
+      statement: `${strongestLimitingEquations.join(
+        " and "
+      )} shared the lowest limiting normalized value.`,
+
+      leftField: strongestLimitingEquations.join("|"),
+
+      operator: "equal-to",
+
+      rightField: "lowestLimitingNormalizedValue",
+
+      authoritative: true
+    })
+  }
+
+  return relationships
+}
+
 export function summarizeEquationEngineHistoricalState(
   state: EquationEngineAIExperimentHistoricalState
 ): EquationEngineAIExperimentHistoricalSummary {
@@ -592,23 +887,18 @@ export function summarizeEquationEngineHistoricalState(
     contribution: item.contribution
   }))
 
-  const strongestSupportingEquation =
-    [...equationSupport]
-      .filter(item => item.contribution === "supporting")
-      .sort(
-        (left, right) =>
-          (right.normalizedSupport ?? -1) -
-          (left.normalizedSupport ?? -1)
-      )[0]?.equation ?? null
+  const strongestSupporting = findExtremeEquations(
+    equationSupport,
+    "supporting"
+  )
 
-  const strongestLimitingEquation =
-    [...equationSupport]
-      .filter(item => item.contribution === "limiting")
-      .sort(
-        (left, right) =>
-          (left.normalizedSupport ?? Number.POSITIVE_INFINITY) -
-          (right.normalizedSupport ?? Number.POSITIVE_INFINITY)
-      )[0]?.equation ?? null
+  const strongestLimiting = findExtremeEquations(equationSupport, "limiting")
+
+  const withinObservationRelationships = buildWithinObservationRelationships(
+    equationSupport,
+    strongestSupporting.equations,
+    strongestLimiting.equations
+  )
 
   const pathwayScores = objectRecord(evidence?.pathwayScores)
 
@@ -622,9 +912,14 @@ export function summarizeEquationEngineHistoricalState(
     resonanceHash: state.resonanceHash,
     ledgerHash: state.ledgerHash,
     lifecycleStatus: nullableString(evidence?.lifecycleStatus),
-    strongestSupportingEquation,
-    strongestLimitingEquation,
+    strongestSupportingEquations: strongestSupporting.equations,
+    strongestLimitingEquations: strongestLimiting.equations,
+    supportingEquationTie: strongestSupporting.tie,
+    limitingEquationTie: strongestLimiting.tie,
+    highestSupportingValue: strongestSupporting.value,
+    lowestLimitingValue: strongestLimiting.value,
     equationSupport,
+    withinObservationRelationships,
     pathwayScores: pathwayScores
       ? {
           integratedRelationalReference: finiteNumber(
@@ -650,15 +945,12 @@ function buildCompactCurrentInterpretation(
     observationId: interpretationState.observationId,
     previousObservationId: interpretationState.previousObservationId,
     interpretationReady: interpretationState.interpretationReady,
-    interpretationConfidence:
-      interpretationState.interpretationConfidence,
+    interpretationConfidence: interpretationState.interpretationConfidence,
     evidence: evidence
       ? {
           observationId: evidence.observationId ?? null,
-          previousObservationId:
-            evidence.previousObservationId ?? null,
-          equationEngineReady:
-            evidence.equationEngineReady ?? null,
+          previousObservationId: evidence.previousObservationId ?? null,
+          equationEngineReady: evidence.equationEngineReady ?? null,
           lifecycleReady: evidence.lifecycleReady ?? null,
           comparisonReady: evidence.comparisonReady ?? null,
           lifecycleStatus: evidence.lifecycleStatus ?? null,
@@ -669,10 +961,8 @@ function buildCompactCurrentInterpretation(
         }
       : null,
     deterministicFindings: interpretationState.findings,
-    pathwayInterpretations:
-      interpretationState.pathwayInterpretations,
-    wholeEngineInterpretation:
-      interpretationState.wholeEngineInterpretation,
+    pathwayInterpretations: interpretationState.pathwayInterpretations,
+    wholeEngineInterpretation: interpretationState.wholeEngineInterpretation,
     rule: interpretationState.rule
   }
 }
@@ -775,6 +1065,194 @@ function sanitizeHistoricalStates(
   return Array.from(uniqueStates.values()).slice(-4)
 }
 
+function buildExperimentModeInstruction(
+  experimentType: EquationEngineAIExperimentType,
+  historicalObservationCount: number
+): string {
+  if (experimentType === "snapshot-analysis") {
+    return [
+      "MODE: SNAPSHOT ANALYSIS",
+      "Analyze only the current authoritative interpretation as a single observation.",
+      "Do not make recurrent, directional, persistent, historical, or longitudinal claims.",
+      "Historical observations, if supplied, are context only and must not change the experiment type.",
+      "Return observed patterns grounded in the current observation.",
+      "Return at most one cautious hypothesis if materially supported.",
+      "Do not return predictions."
+    ].join("\n")
+  }
+
+  if (experimentType === "longitudinal-analysis") {
+    return [
+      "MODE: LONGITUDINAL ANALYSIS",
+      `The supplied historical window contains ${historicalObservationCount} identified observations.`,
+      "Prioritize recurrent, relational, directional, anomalous, and contradictory patterns across the supplied window.",
+      "Every recurrence claim must state the supporting count and evaluable count.",
+      "Use authoritative deterministic relationship summaries when available.",
+      "Do not generalize beyond the supplied observation window."
+    ].join("\n")
+  }
+
+  if (experimentType === "hypothesis-generation") {
+    return [
+      "MODE: HYPOTHESIS GENERATION",
+      "Prioritize a small number of materially grounded and falsifiable hypotheses.",
+      "Every hypothesis must distinguish weakening evidence from falsifying evidence.",
+      "Return patterns only when they directly support a hypothesis.",
+      "Return predictions only when necessary to test a returned hypothesis."
+    ].join("\n")
+  }
+
+  return [
+    "MODE: BOUNDED PREDICTION",
+    "Prioritize measurable and falsifiable predictions.",
+    "Every prediction must identify an authoritative future field or relationship.",
+    "Avoid unnecessary hypotheses.",
+    "Do not predict conditions that cannot be evaluated from future Equation Engine or Interpretation states."
+  ].join("\n")
+}
+
+function defaultExperimentQuestion(
+  experimentType: EquationEngineAIExperimentType
+): string {
+  if (experimentType === "snapshot-analysis") {
+    return "Analyze the current Equation Engine interpretation as one authoritative observation. Identify snapshot-level relationships only, avoid longitudinal claims, and return no prediction."
+  }
+
+  if (experimentType === "longitudinal-analysis") {
+    return "Identify evidence-bound patterns, relationships, contradictions, and changes across the supplied Equation Engine observation window. State the exact observation count supporting each longitudinal claim."
+  }
+
+  if (experimentType === "hypothesis-generation") {
+    return "Generate a small number of falsifiable hypotheses grounded in the supplied authoritative Equation Engine evidence. Clearly distinguish supporting, weakening, required, and falsifying future evidence."
+  }
+
+  return "Generate bounded predictions about fields or relationships observable in future authoritative Equation Engine interpretations. Include a measurable prediction window, falsification condition, and deterministic evaluation instruction."
+}
+
+function buildCrossObservationRelationshipSummaries(
+  historicalSummaries: EquationEngineAIExperimentHistoricalSummary[]
+): EquationEngineAIDeterministicRelationshipSummary[] {
+  const equationNames = Array.from(
+    new Set(
+      historicalSummaries.flatMap(summary =>
+        summary.equationSupport.map(item => item.equation)
+      )
+    )
+  ).sort()
+
+  const relationships: EquationEngineAIDeterministicRelationshipSummary[] = []
+
+  for (let leftIndex = 0; leftIndex < equationNames.length; leftIndex += 1) {
+    for (
+      let rightIndex = leftIndex + 1;
+      rightIndex < equationNames.length;
+      rightIndex += 1
+    ) {
+      const leftEquation = equationNames[leftIndex]
+      const rightEquation = equationNames[rightIndex]
+
+      const supportingObservationIds: string[] = []
+      const contradictingObservationIds: string[] = []
+      const equalObservationIds: string[] = []
+      const unavailableObservationIds: string[] = []
+
+      for (const summary of historicalSummaries) {
+        const observationId = summary.observationId
+
+        if (!observationId) {
+          continue
+        }
+
+        const left = summary.equationSupport.find(
+          item => item.equation === leftEquation
+        )
+
+        const right = summary.equationSupport.find(
+          item => item.equation === rightEquation
+        )
+
+        if (
+          typeof left?.normalizedSupport !== "number" ||
+          typeof right?.normalizedSupport !== "number"
+        ) {
+          unavailableObservationIds.push(observationId)
+          continue
+        }
+
+        if (left.normalizedSupport > right.normalizedSupport) {
+          supportingObservationIds.push(observationId)
+        } else if (left.normalizedSupport < right.normalizedSupport) {
+          contradictingObservationIds.push(observationId)
+        } else {
+          equalObservationIds.push(observationId)
+        }
+      }
+
+      const evaluableObservationCount =
+        supportingObservationIds.length +
+        contradictingObservationIds.length +
+        equalObservationIds.length
+
+      if (evaluableObservationCount === 0) {
+        continue
+      }
+
+      const supportRatio =
+        supportingObservationIds.length / evaluableObservationCount
+
+      const contradictionRatio =
+        contradictingObservationIds.length / evaluableObservationCount
+
+      const equalityRatio =
+        equalObservationIds.length / evaluableObservationCount
+
+      relationships.push({
+        relationId: `relation-${sanitizeIdentifierPart(
+          leftEquation
+        )}-greater-than-${sanitizeIdentifierPart(rightEquation)}`,
+
+        relationType: "support-ordering",
+
+        statement: `${leftEquation} normalized support exceeded ${rightEquation} normalized support in ${supportingObservationIds.length} of ${evaluableObservationCount} evaluable supplied observations, was lower in ${contradictingObservationIds.length}, and was equal in ${equalObservationIds.length}.`,
+
+        leftField: `${leftEquation}.normalizedSupport`,
+
+        operator: "greater-than",
+
+        rightField: `${rightEquation}.normalizedSupport`,
+
+        supportingObservationIds,
+
+        contradictingObservationIds,
+
+        equalObservationIds,
+
+        unavailableObservationIds,
+
+        supportingObservationCount: supportingObservationIds.length,
+
+        contradictingObservationCount: contradictingObservationIds.length,
+
+        equalObservationCount: equalObservationIds.length,
+
+        unavailableObservationCount: unavailableObservationIds.length,
+
+        evaluableObservationCount,
+
+        supportRatio,
+
+        contradictionRatio,
+
+        equalityRatio,
+
+        authoritative: true
+      })
+    }
+  }
+
+  return relationships
+}
+
 export function generateEquationEngineAIExperimentRequest(
   input: EquationEngineAIExperimentInput
 ): EquationEngineAIExperimentRequest {
@@ -798,9 +1276,7 @@ export function generateEquationEngineAIExperimentRequest(
 
   const experimentQuestion =
     input.experimentQuestion?.trim() ||
-    (historicalStates.length > 0
-      ? "Identify evidence-bound patterns across the supplied Equation Engine observations, form falsifiable hypotheses, and make bounded predictions that can be evaluated against future authoritative runtime states."
-      : "Analyze the current Equation Engine interpretation as a single experimental observation, identify only snapshot-level relationships, form cautious falsifiable hypotheses, and make only bounded predictions supported by the available evidence.")
+    defaultExperimentQuestion(experimentType)
 
   const generatedAt = new Date().toISOString()
 
@@ -811,6 +1287,13 @@ export function generateEquationEngineAIExperimentRequest(
 
   const historicalObservationIds =
     extractHistoricalObservationIds(historicalStates)
+
+  const historicalSummaries = historicalStates.map(
+    summarizeEquationEngineHistoricalState
+  )
+
+  const deterministicRelationshipSummaries =
+    buildCrossObservationRelationshipSummaries(historicalSummaries)
 
   const provenance: EquationEngineAIExperimentProvenance = {
     observationId: interpretationState.observationId,
@@ -829,6 +1312,11 @@ export function generateEquationEngineAIExperimentRequest(
     interpretationReady: interpretationState.interpretationReady
   }
 
+  const experimentModeInstruction = buildExperimentModeInstruction(
+    experimentType,
+    historicalObservationIds.length
+  )
+
   const groundedPayload = {
     experiment: {
       experimentId,
@@ -836,7 +1324,8 @@ export function generateEquationEngineAIExperimentRequest(
       experimentQuestion,
       audience,
       depth,
-      predictionWindow
+      predictionWindow,
+      experimentModeInstruction
     },
 
     provenance,
@@ -844,14 +1333,18 @@ export function generateEquationEngineAIExperimentRequest(
     authoritativeCurrentInterpretation:
       buildCompactCurrentInterpretation(interpretationState),
 
-    authoritativeHistoricalSummaries: historicalStates.map(
-      summarizeEquationEngineHistoricalState
-    ),
+    authoritativeHistoricalSummaries: historicalSummaries,
+
+    authoritativeDeterministicRelationshipSummaries:
+      deterministicRelationshipSummaries,
 
     evidenceAvailability: {
       currentInterpretationAvailable: interpretationState.interpretationReady,
 
       historicalObservationCount: historicalObservationIds.length,
+
+      deterministicRelationshipSummaryCount:
+        deterministicRelationshipSummaries.length,
 
       longitudinalAnalysisAvailable: historicalObservationIds.length >= 2,
 
@@ -867,8 +1360,9 @@ export function generateEquationEngineAIExperimentRequest(
     `Requested depth: ${depth}`,
     `Prediction window: ${predictionWindow}`,
     "",
-    `Experiment question: ${experimentQuestion}`,
+    experimentModeInstruction,
     "",
+    `Experiment question: ${experimentQuestion}`,
     "Grounded Equation Engine experimental evidence:",
     groundedEvidencePayload
   ].join("\n")
@@ -887,6 +1381,8 @@ export function generateEquationEngineAIExperimentRequest(
     depth,
 
     predictionWindow,
+
+    experimentModeInstruction,
 
     provenance,
 
@@ -962,10 +1458,28 @@ function parseObservedPatterns(
 
       observationIds: stringArray(item.observationIds),
 
-      persistenceCount:
-        typeof item.persistenceCount === "number" &&
-        Number.isFinite(item.persistenceCount)
-          ? Math.max(0, Math.floor(item.persistenceCount))
+      persistenceCount: nullableNonNegativeInteger(item.persistenceCount),
+
+      contradictingObservationIds: stringArray(
+        item.contradictingObservationIds
+      ),
+
+      supportingObservationCount: nullableNonNegativeInteger(
+        item.supportingObservationCount
+      ),
+
+      contradictingObservationCount: nullableNonNegativeInteger(
+        item.contradictingObservationCount
+      ),
+
+      evaluableObservationCount: nullableNonNegativeInteger(
+        item.evaluableObservationCount
+      ),
+
+      supportRatio:
+        typeof item.supportRatio === "number" &&
+        Number.isFinite(item.supportRatio)
+          ? normalizeConfidence(item.supportRatio)
           : null,
 
       competingExplanation: nullableString(item.competingExplanation),
@@ -999,6 +1513,11 @@ function parseHypotheses(value: unknown): EquationEngineAIHypothesis[] {
       observationIds: stringArray(item.observationIds),
 
       rationale: stringValue(item.rationale, "No rationale was returned."),
+
+      weakeningCondition: stringValue(
+        item.weakeningCondition,
+        "No separate weakening condition was returned."
+      ),
 
       falsificationCondition: stringValue(
         item.falsificationCondition,
@@ -1121,6 +1640,62 @@ export function parseEquationEngineAIExperiment(
     uncertaintyNotes.unshift(parseFailure)
   }
 
+  const parsedPatterns = parseObservedPatterns(parsed.observedPatterns)
+
+  const parsedHypotheses = parseHypotheses(parsed.hypotheses)
+
+  const parsedPredictions = parsePredictions(
+    parsed.predictions,
+    request.predictionWindow
+  )
+
+  const modeComplianceNotes: string[] = []
+
+  const observedPatterns =
+    request.experimentType === "snapshot-analysis"
+      ? parsedPatterns.filter(pattern => {
+          const permitted =
+            pattern.patternType === "single-observation" ||
+            pattern.patternType === "relational" ||
+            pattern.patternType === "anomalous" ||
+            pattern.patternType === "insufficient-evidence"
+
+          if (!permitted) {
+            modeComplianceNotes.push(
+              `${pattern.patternId} was removed because snapshot-analysis does not permit ${pattern.patternType} pattern output.`
+            )
+          }
+
+          return permitted
+        })
+      : parsedPatterns
+
+  const hypotheses =
+    request.experimentType === "snapshot-analysis"
+      ? parsedHypotheses.slice(0, 1)
+      : request.experimentType === "bounded-prediction"
+        ? parsedHypotheses.slice(0, 1)
+        : parsedHypotheses
+
+  if (parsedHypotheses.length > hypotheses.length) {
+    modeComplianceNotes.push(
+      `${parsedHypotheses.length - hypotheses.length} model-generated hypothesis result(s) were removed to enforce the selected experiment mode.`
+    )
+  }
+
+  const predictions =
+    request.experimentType === "snapshot-analysis"
+      ? []
+      : request.experimentType === "hypothesis-generation"
+        ? parsedPredictions.slice(0, 1)
+        : parsedPredictions
+
+  if (parsedPredictions.length > predictions.length) {
+    modeComplianceNotes.push(
+      `${parsedPredictions.length - predictions.length} model-generated prediction result(s) were removed to enforce the selected experiment mode.`
+    )
+  }
+
   return {
     phase: "Equation Engine AI Experiment",
 
@@ -1147,11 +1722,11 @@ export function parseEquationEngineAIExperiment(
         : "No experimental summary was returned."
     ),
 
-    observedPatterns: parseObservedPatterns(parsed.observedPatterns),
+    observedPatterns,
 
-    hypotheses: parseHypotheses(parsed.hypotheses),
+    hypotheses,
 
-    predictions: parsePredictions(parsed.predictions, request.predictionWindow),
+    predictions,
 
     unresolvedQuestions: stringArray(parsed.unresolvedQuestions),
 
@@ -1160,6 +1735,8 @@ export function parseEquationEngineAIExperiment(
     unavailableEvidence: stringArray(parsed.unavailableEvidence),
 
     uncertaintyNotes,
+
+    modeComplianceNotes,
 
     interpretationConfidence: request.provenance.interpretationConfidence,
 
@@ -1212,6 +1789,19 @@ export function buildEquationEngineAIExperimentResponse(
               ? pattern.observationIds.join(", ")
               : "none supplied"
           }`,
+          `supporting observations: ${
+            pattern.supportingObservationCount ?? "unavailable"
+          }`,
+
+          `contradicting observations: ${
+            pattern.contradictingObservationCount ?? "unavailable"
+          }`,
+
+          `evaluable observations: ${
+            pattern.evaluableObservationCount ?? "unavailable"
+          }`,
+
+          `support ratio: ${pattern.supportRatio ?? "unavailable"}`,
           `evidence: ${
             pattern.evidenceBasis.length > 0
               ? pattern.evidenceBasis.join(" | ")
@@ -1236,6 +1826,7 @@ export function buildEquationEngineAIExperimentResponse(
               ? hypothesis.evidenceBasis.join(" | ")
               : "none returned"
           }`,
+          `weakening condition: ${hypothesis.weakeningCondition}`,
           `falsification: ${hypothesis.falsificationCondition}`,
           `future support: ${
             hypothesis.supportingFutureEvidence.length > 0
@@ -1317,6 +1908,13 @@ export function buildEquationEngineAIExperimentResponse(
       : ["- No additional uncertainty notes were returned."]),
     "",
     "Experimental Status:",
+    "Mode Compliance Notes:",
+
+    ...(result.modeComplianceNotes.length > 0
+      ? result.modeComplianceNotes.map(item => `- ${item}`)
+      : ["- No output required deterministic mode correction."]),
+
+    "",
     "- authoritative: false",
     "- stateMutating: false",
     `- experimentGrounded: ${result.experimentGrounded}`,

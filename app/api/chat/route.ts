@@ -5360,61 +5360,112 @@ type EquationEngineAIExperimentMode = {
 function getEquationEngineAIExperimentMode(
   message: string
 ): EquationEngineAIExperimentMode | null {
-  const normalized = (message || "").toLowerCase().replace(/\s+/g, " ").trim()
+  const normalized = (message || "")
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+    .trim()
 
   const mentionsEquationEngine = normalized.includes("equation engine")
 
-  const requestsLongitudinalAnalysis =
-    normalized.includes("longitudinal") ||
-    normalized.includes("across observations") ||
-    normalized.includes("across historical observations") ||
-    normalized.includes("historical observations") ||
-    normalized.includes("over time") ||
-    normalized.includes("recurring pattern") ||
-    normalized.includes("recurring patterns") ||
-    normalized.includes("recurrent pattern") ||
-    normalized.includes("recurrent patterns") ||
-    normalized.includes("compare observations") ||
-    normalized.includes("compare all available observations") ||
-    normalized.includes("historical trend") ||
-    normalized.includes("historical trends")
+  const explicitlyRequestsSnapshot =
+    normalized.includes("snapshot analysis") ||
+    normalized.includes("snapshot-analysis") ||
+    normalized.includes("current snapshot") ||
+    normalized.includes("current observation only") ||
+    normalized.includes("single observation") ||
+    normalized.includes("single-observation") ||
+    normalized.includes("snapshot-level")
 
-  const requestsPrediction =
-    normalized.includes("prediction") ||
-    normalized.includes("predict") ||
-    normalized.includes("forecast") ||
-    normalized.includes("next observation") ||
-    normalized.includes("future observation")
+  const explicitlyRejectsLongitudinal =
+    normalized.includes("do not make a longitudinal") ||
+    normalized.includes("do not perform longitudinal") ||
+    normalized.includes("not longitudinal") ||
+    normalized.includes("without longitudinal") ||
+    normalized.includes("no longitudinal")
 
-  const requestsHypothesis =
-    normalized.includes("hypothesis") || normalized.includes("hypothesize")
+  const explicitlyRequestsLongitudinal =
+    !explicitlyRejectsLongitudinal &&
+    (
+      normalized.includes("longitudinal analysis") ||
+      normalized.includes("longitudinal-analysis") ||
+      normalized.includes("across observations") ||
+      normalized.includes("across historical observations") ||
+      normalized.includes("historical observations") ||
+      normalized.includes("over time") ||
+      normalized.includes("recurring pattern") ||
+      normalized.includes("recurring patterns") ||
+      normalized.includes("recurrent pattern") ||
+      normalized.includes("recurrent patterns") ||
+      normalized.includes("compare observations") ||
+      normalized.includes("compare all available observations") ||
+      normalized.includes("historical trend") ||
+      normalized.includes("historical trends")
+    )
+
+  const explicitlyRejectsPrediction =
+    normalized.includes("do not predict") ||
+    normalized.includes("no prediction") ||
+    normalized.includes("without prediction") ||
+    normalized.includes("not a prediction")
+
+  const explicitlyRequestsPrediction =
+    !explicitlyRejectsPrediction &&
+    (
+      normalized.includes("bounded prediction") ||
+      normalized.includes("bounded-prediction") ||
+      normalized.includes("make a prediction") ||
+      normalized.includes("generate a prediction") ||
+      normalized.includes("predict the next") ||
+      normalized.includes("forecast the next") ||
+      normalized.includes("next observation") ||
+      normalized.includes("future observation")
+    )
+
+  const explicitlyRejectsHypothesis =
+    normalized.includes("do not hypothesize") ||
+    normalized.includes("no hypothesis") ||
+    normalized.includes("without hypothesis") ||
+    normalized.includes("not a hypothesis")
+
+  const explicitlyRequestsHypothesis =
+    !explicitlyRejectsHypothesis &&
+    (
+      normalized.includes("hypothesis generation") ||
+      normalized.includes("hypothesis-generation") ||
+      normalized.includes("generate a hypothesis") ||
+      normalized.includes("form a hypothesis") ||
+      normalized.includes("hypothesize")
+    )
 
   const requestsExperiment =
     normalized.includes("experiment") ||
     normalized.includes("experimental") ||
-    requestsLongitudinalAnalysis ||
-    requestsPrediction ||
-    requestsHypothesis
+    explicitlyRequestsSnapshot ||
+    explicitlyRequestsLongitudinal ||
+    explicitlyRequestsPrediction ||
+    explicitlyRequestsHypothesis
 
   if (!mentionsEquationEngine || !requestsExperiment) {
     return null
   }
 
   /*
-   * Explicit longitudinal intent has priority over prediction intent.
+   * Explicit named modes have priority.
    *
-   * A longitudinal request may also ask the experiment to evaluate
-   * prior predictions. That secondary prediction language must not
-   * downgrade the overall experiment to bounded-prediction.
+   * Snapshot must win when the user explicitly restricts the request
+   * to a single observation, even if the prompt mentions longitudinal
+   * analysis only to prohibit it.
    */
   const experimentType: EquationEngineAIExperimentMode["experimentType"] =
-    requestsLongitudinalAnalysis
-      ? "longitudinal-analysis"
-      : requestsPrediction
-        ? "bounded-prediction"
-        : requestsHypothesis
-          ? "hypothesis-generation"
-          : "snapshot-analysis"
+    explicitlyRequestsSnapshot
+      ? "snapshot-analysis"
+      : explicitlyRequestsLongitudinal
+        ? "longitudinal-analysis"
+        : explicitlyRequestsPrediction
+          ? "bounded-prediction"
+          : explicitlyRequestsHypothesis
+            ? "hypothesis-generation"
+            : "snapshot-analysis"
 
   const audience: EquationEngineAIExperimentMode["audience"] =
     normalized.includes("developer")
@@ -8623,7 +8674,7 @@ export async function POST(req: Request) {
         {
           agentId: AGENT_ID,
           currentObservationId: equationEngineInterpretationState.observationId,
-          limit: 20
+          limit: 4
         }
       )
 
@@ -8731,6 +8782,8 @@ export async function POST(req: Request) {
             // interpretive freedom, but should remain
             // more disciplined than ordinary dialogue.
             temperature: 0.3,
+
+            max_tokens: 3000,
 
             response_format: {
               type: "json_object"
